@@ -3,7 +3,7 @@ import { usePageMeta } from '~/composables/usePageMeta'
 
 usePageMeta({
   title: 'Home',
-  description: 'Accept support. Start a membership. Setup a shop. It’s easier than you think.',
+  description: 'Empowering creators to do what they love, backed by the people who love their work.',
 })
 </script>
 
@@ -12,19 +12,19 @@ usePageMeta({
     <!-- Navbar -->
     <nav class="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-white/5">
       <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <img src="/logo.png" alt="TipCup Logo" class="w-8 h-8 object-contain" />
-          <span class="font-bold text-xl tracking-tight">TipCup</span>
+        <div class="flex items-center gap-3">
+          <img src="/logo.png" alt="TipCup Logo" class="w-10 h-10 object-contain" />
+          <span class="font-bold text-2xl tracking-tight">TipCup</span>
         </div>
         <div class="flex items-center gap-4">
-          <Button variant="outline" class="hidden sm:inline-flex">Log in</Button>
+          <Button variant="ghost" class="hidden sm:inline-flex">Log in</Button>
           <Button>Start my page</Button>
         </div>
       </div>
     </nav>
 
     <!-- Hero Section -->
-    <header class="relative py-20 lg:pt-[120px] px-6">
+    <header class="relative pt-32 pb-20 lg:pt-[120px] px-6">
       <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
         <!-- Text Content -->
@@ -51,9 +51,6 @@ usePageMeta({
                 Start my page
               </Button>
             </div>
-            <Button size="lg" variant="outline" class="w-full sm:w-auto h-14 px-8 text-lg border-2 hover:bg-surface">
-              View demo
-            </Button>
           </div>
 
           <div class="flex items-center gap-4 text-sm text-text-secondary pt-4">
@@ -262,13 +259,164 @@ usePageMeta({
                         One link to rule them all.
                     </h2>
                     <p class="text-lg text-text-secondary leading-relaxed">
-                        Claim your personal `tipcup.app/yourname` link. Showcase all your content, social profiles, and support options in one beautiful place.
+                        Claim your personal `tipcup.adedeji.xyz/yourname` link. Showcase all your content, social profiles, and support options in one beautiful place.
                     </p>
                     <div class="pt-4">
                         <Button size="lg" variant="secondary" class="gap-2">
                             Claim your link <ChevronRight class="w-4 h-4" />
                         </Button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section 3: Analytics & Insights -->
+    <section class="py-24 bg-surface border-y border-white/5 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                 <!-- Content -->
+                <div class="space-y-6">
+                    <Badge variant="warning" class="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                        Analytics & Insights
+                    </Badge>
+                    <h2 class="text-4xl lg:text-5xl font-bold">
+                        Watch your support grow.
+                    </h2>
+                    <p class="text-lg text-text-secondary leading-relaxed">
+                        Know exactly who your biggest fans are. Track earnings, views, and messages in real-time. No more guessing.
+                    </p>
+                    <div class="grid grid-cols-2 gap-6 pt-4">
+                        <div class="bg-background rounded-xl p-4 border border-border">
+                            <div class="text-3xl font-bold text-primary mb-1">$1,250</div>
+                            <div class="text-sm text-text-secondary">Earnings this month</div>
+                        </div>
+                        <div class="bg-background rounded-xl p-4 border border-border">
+                            <div class="text-3xl font-bold text-primary mb-1">842</div>
+                            <div class="text-sm text-text-secondary">Page views</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual: Dashboard Mock -->
+                <div class="relative">
+                    <div class="absolute inset-0 bg-gradient-to-l from-primary/10 to-transparent blur-3xl -z-10 rounded-full"></div>
+                    <div class="bg-background border border-white/10 rounded-3xl p-6 shadow-2xl space-y-6 relative overflow-hidden">
+                         <!-- Header -->
+                         <div class="flex items-center justify-between border-b border-white/5 pb-4">
+                            <div class="font-bold">Dashboard</div>
+                            <div class="flex gap-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                         </div>
+
+                         <!-- Chart Mock -->
+                         <div class="h-40 flex items-end gap-2 px-2">
+                            <div class="w-full bg-surface-hover rounded-t-sm h-[40%]"></div>
+                            <div class="w-full bg-surface-hover rounded-t-sm h-[60%]"></div>
+                            <div class="w-full bg-surface-hover rounded-t-sm h-[30%]"></div>
+                            <div class="w-full bg-surface-hover rounded-t-sm h-[70%]"></div>
+                            <div class="w-full bg-primary/80 rounded-t-sm h-[85%] relative group">
+                                <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-black text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                    $420.00
+                                </div>
+                            </div>
+                            <div class="w-full bg-surface-hover rounded-t-sm h-[50%]"></div>
+                            <div class="w-full bg-surface-hover rounded-t-sm h-[65%]"></div>
+                         </div>
+
+                         <!-- Recent Activity -->
+                         <div class="space-y-3">
+                            <div class="text-sm font-medium text-text-secondary">Recent Supporters</div>
+                            <div class="flex items-center gap-3 bg-surface p-3 rounded-xl border border-white/5">
+                                <div class="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs"> JD </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium truncate">John Doe bought you a coffee</div>
+                                </div>
+                                <div class="text-sm font-bold text-green-400">+$5.00</div>
+                            </div>
+                            <div class="flex items-center gap-3 bg-surface p-3 rounded-xl border border-white/5 opacity-60">
+                                <div class="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs"> AS </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium truncate">Anna Smith joined membership</div>
+                                </div>
+                                <div class="text-sm font-bold text-green-400">+$15.00</div>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section 4: Goal Tracking -->
+    <section class="py-24 relative">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                 <!-- Visual: Goal Card -->
+                <div class="order-2 lg:order-1 relative">
+                    <div class="bg-surface border border-white/10 rounded-3xl p-8 shadow-2xl max-w-md mx-auto">
+                        <div class="mb-6 relative">
+                           <!-- Image placeholder for goal -->
+                           <div class="aspect-video bg-surface-hover rounded-xl flex items-center justify-center text-4xl mb-4 border border-white/5">
+                                📷
+                           </div>
+                           <h3 class="text-2xl font-bold mb-1">New Camera Fund</h3>
+                           <p class="text-text-secondary text-sm">Help me upgrade my gear for better videos!</p>
+                        </div>
+
+                        <div class="space-y-2">
+                             <div class="flex justify-between text-sm font-medium">
+                                <span>$850 raised</span>
+                                <span class="text-text-secondary">Goal: $1,200</span>
+                             </div>
+                             <div class="h-4 bg-background rounded-full overflow-hidden border border-white/5">
+                                <div class="h-full bg-gradient-to-r from-primary to-accent w-[70%] rounded-full relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                </div>
+                             </div>
+                             <div class="text-right text-xs text-text-secondary pt-1">70% funded</div>
+                        </div>
+
+                        <div class="mt-8 flex items-center justify-between pt-6 border-t border-white/5">
+                            <div class="flex -space-x-2">
+                                <Avatar src="https://i.pravatar.cc/100?img=10" size="sm" class="border-2 border-surface" />
+                                <Avatar src="https://i.pravatar.cc/100?img=11" size="sm" class="border-2 border-surface" />
+                                <Avatar src="https://i.pravatar.cc/100?img=12" size="sm" class="border-2 border-surface" />
+                                <div class="h-8 w-8 rounded-full bg-background border-2 border-surface flex items-center justify-center text-xs font-medium text-text-secondary">+12</div>
+                            </div>
+                            <Button size="sm" variant="outline">View details</Button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="order-1 lg:order-2 space-y-6">
+                     <Badge variant="secondary" class="bg-green-500/10 text-green-500 border-green-500/20">
+                        Goal Tracking
+                    </Badge>
+                     <h2 class="text-4xl lg:text-5xl font-bold">
+                        Fund your next big project.
+                    </h2>
+                    <p class="text-lg text-text-secondary leading-relaxed">
+                        Whether it's new equipment, a passion project, or just paying the rent. Set a goal, share your progress, and let your community rally behind you.
+                    </p>
+                    <ul class="space-y-4 pt-4">
+                         <li class="flex items-center gap-3">
+                            <div class="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                <Check class="w-5 h-5" />
+                            </div>
+                            <span class="text-lg">Visual progress bars</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                <Check class="w-5 h-5" />
+                            </div>
+                            <span class="text-lg">Transparent fundraising</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -292,16 +440,7 @@ usePageMeta({
                     <h4 class="font-bold text-sm uppercase tracking-wider opacity-50">Product</h4>
                     <ul class="space-y-2 text-text-secondary">
                         <li><a href="#" class="hover:text-primary transition-colors">Features</a></li>
-                        <li><a href="#" class="hover:text-primary transition-colors">Pricing</a></li>
                         <li><a href="#" class="hover:text-primary transition-colors">Support</a></li>
-                    </ul>
-                </div>
-
-                <div class="space-y-4">
-                    <h4 class="font-bold text-sm uppercase tracking-wider opacity-50">Legal</h4>
-                    <ul class="space-y-2 text-text-secondary">
-                        <li><a href="#" class="hover:text-primary transition-colors">Privacy</a></li>
-                        <li><a href="#" class="hover:text-primary transition-colors">Terms</a></li>
                     </ul>
                 </div>
             </div>
