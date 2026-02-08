@@ -16,6 +16,9 @@ export const useAuth = () => {
 
     // Initialize Auth Listener
     const initAuth = () => {
+        // Ensure loading is true when we start checking
+        loading.value = true
+
         onAuthStateChanged($auth, async (currentUser) => {
             user.value = currentUser
 

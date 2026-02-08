@@ -2,7 +2,7 @@
 import { useAuth } from '~/composables/useAuth'
 
 definePageMeta({
-  middleware: 'auth'
+  layout: 'dashboard'
 })
 
 const { user, logout } = useAuth()

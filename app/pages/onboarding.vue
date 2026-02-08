@@ -7,12 +7,6 @@ usePageMeta({
   title: 'Onboarding'
 })
 
-
-definePageMeta({
-  layout: 'default',
-  middleware: 'auth'
-})
-
 const { user } = useAuth()
 const { checkUsernameAvailability, completeOnboarding } = useOnboarding()
 

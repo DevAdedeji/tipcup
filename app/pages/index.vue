@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { usePageMeta } from '~/composables/usePageMeta'
 import { ChevronRight, Check } from 'lucide-vue-next'
+import { useAuth } from '~/composables/useAuth'
 
 usePageMeta({
   title: 'Home',
   description: 'Empowering creators to do what they love, backed by the people who love their work.',
 })
+
+const { user } = useAuth()
 </script>
 
 <template>
@@ -18,8 +21,13 @@ usePageMeta({
           <span class="font-bold text-2xl tracking-tight">TipCup</span>
         </div>
         <div class="flex items-center gap-4">
-          <Button variant="ghost" class="hidden sm:inline-flex" to="/login">Log in</Button>
-          <Button to="/signup">Start my page</Button>
+          <template v-if="user">
+            <Button to="/dashboard" variant="primary" class="hidden sm:inline-flex">Dashboard</Button>
+          </template>
+          <template v-else>
+            <Button variant="ghost" class="hidden sm:inline-flex" to="/login">Log in</Button>
+            <Button to="/signup">Start my page</Button>
+          </template>
         </div>
       </div>
     </nav>
@@ -48,8 +56,8 @@ usePageMeta({
           <div class="flex flex-wrap items-center gap-4 pt-4">
             <div class="relative group">
               <div class="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <Button to="/signup" size="lg" class="relative w-full sm:w-auto h-14 px-8 text-lg shadow-xl shadow-primary/20">
-                Start my page
+              <Button :to="user ? '/dashboard' : '/signup'" size="lg" class="relative w-full sm:w-auto h-14 px-8 text-lg shadow-xl shadow-primary/20">
+                {{ user ? 'Go to Dashboard' : 'Start my page' }}
               </Button>
             </div>
           </div>
@@ -429,7 +437,7 @@ usePageMeta({
             <div class="grid md:grid-cols-4 gap-12 mb-12">
                 <div class="col-span-1 md:col-span-2 space-y-4">
                     <div class="flex items-center gap-2">
-                        <img src="/logo.png" alt="TipCup Logo" class="w-6 h-6 object-contain grayscale opacity-70" />
+                        <img src="/logo.png" alt="TipCup Logo" class="w-10 h-10 object-contain" />
                         <span class="font-bold text-lg tracking-tight opacity-70">TipCup</span>
                     </div>
                     <p class="text-text-secondary max-w-xs">

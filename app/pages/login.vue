@@ -4,10 +4,6 @@ import { useAuth } from '~/composables/useAuth'
 const route = useRoute()
 const isSignup = computed(() => route.path === '/signup')
 
-definePageMeta({
-  layout: 'default'
-})
-
 const { signInWithGoogle, user, userProfile } = useAuth()
 const isLoading = ref(false)
 
