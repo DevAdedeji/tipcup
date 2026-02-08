@@ -1,0 +1,89 @@
+import {
+    collection,
+    query,
+    where,
+    getDocs,
+    limit,
+    doc,
+    getDoc
+} from 'firebase/firestore'
+
+export interface PublicProfile {
+    uid: string
+    username: string
+    displayName: string
+    bio: string
+    avatarUrl: string
+    coverUrl?: string // Future proofing
+    tiers: any[]
+    socialLinks?: { platform: string, url: string }[]
+    createdAt: any
+}
+
+export const useProfile = () => {
+    const { $db } = useNuxtApp()
+    const loading = useState('profileLoading', () => false)
+    const error = useState('profileError', () => null)
+
+    const fetchProfileByUsername = async (username: string): Promise<PublicProfile | null> => {
+        loading.value = true
+        error.value = null
+
+        try {
+            // Username is stored in lowercase in the db
+            const normalizedUsername = username.toLowerCase()
+
+            const usersRef = collection($db, 'users')
+            const q = query(usersRef, where('username', '==', normalizedUsername), limit(1))
+            const querySnapshot = await getDocs(q)
+
+            const userDoc = querySnapshot.docs[0]
+
+            if (!userDoc) {
+                loading.value = false
+                return null
+            }
+
+            const userData = userDoc.data()
+
+            // Return only public data
+            const profile: PublicProfile = {
+                uid: userDoc.id,
+                username: userData.username,
+                displayName: userData.displayName,
+                bio: userData.bio || '',
+                avatarUrl: userData.avatarUrl || '',
+                coverUrl: userData.coverUrl || '',
+                tiers: userData.tiers || [],
+                socialLinks: userData.socialLinks || [],
+                createdAt: userData.createdAt
+            }
+
+            // Increment view count (fire and forget)
+            if (process.client) {
+                const userRef = doc($db, 'users', userDoc.id)
+                // Use increment from firestore
+                import('firebase/firestore').then(({ increment, updateDoc }) => {
+                    updateDoc(userRef, {
+                        views: increment(1)
+                    }).catch(e => console.error('Error incrementing views:', e))
+                })
+            }
+
+            loading.value = false
+            return profile
+
+        } catch (e: any) {
+            console.error('Error fetching profile:', e)
+            error.value = e.message
+            loading.value = false
+            return null
+        }
+    }
+
+    return {
+        fetchProfileByUsername,
+        loading,
+        error
+    }
+}

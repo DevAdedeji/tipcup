@@ -14,7 +14,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     }
 
     const publicRoutes = ['/', '/login', '/signup']
-    const isPublicRoute = publicRoutes.includes(to.path)
+    // DEBUG: Log route access
+    if (process.client) {
+        console.log('Middleware Check:', { toPath: to.path, toName: to.name, user: !!user.value })
+    }
+    // Allow dynamic profile route (name is usually 'username' for [username].vue)
+    const isPublicRoute = publicRoutes.includes(to.path) || to.name === 'username'
 
     // 1. If user is NOT logged in
     if (!user.value) {

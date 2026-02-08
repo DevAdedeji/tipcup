@@ -18,7 +18,13 @@ const { user, logout } = useAuth()
 
           <div class="bg-surface border border-white/5 p-6 rounded-2xl shadow-lg">
               <p class="text-lg mb-4">Welcome back, {{ user?.displayName }}!</p>
-              <p class="text-text-secondary">This is your dashboard placeholder.</p>
+              <p class="text-text-secondary mb-6">This is your dashboard placeholder.</p>
+
+              <div class="flex gap-4">
+                  <Button :to="`/${user?.displayName?.replace(/\s+/g, '').toLowerCase() || 'user'}`" variant="outline">
+                      View Public Profile
+                  </Button>
+              </div>
           </div>
       </div>
   </div>

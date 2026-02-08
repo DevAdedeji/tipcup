@@ -9,7 +9,9 @@ onMounted(() => {
 </script>
 <template>
   <div>
-    <NuxtPage />
-    <Toast />
+    <NuxtLayout>
+      <NuxtPage />
+      <Toast />
+    </NuxtLayout>
   </div>
 </template>
