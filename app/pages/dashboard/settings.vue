@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { doc, updateDoc } from 'firebase/firestore'
 import { useAuth } from '~/composables/useAuth'
+import { usePageMeta } from '~/composables/usePageMeta'
+import { db } from '~/firebase'
 
 definePageMeta({
   layout: 'dashboard'
 })
 
+usePageMeta({
+  title: 'Settings'
+})
+
 const { user, userProfile } = useAuth()
-const { $db } = useNuxtApp()
 const toast = useToast()
 
 // Form State
@@ -36,7 +41,7 @@ const saveProfile = async () => {
     saving.value = true
 
     try {
-        const userRef = doc($db, 'users', user.value.uid)
+        const userRef = doc(db, 'users', user.value.uid)
         await updateDoc(userRef, {
             displayName: form.displayName,
             bio: form.bio,

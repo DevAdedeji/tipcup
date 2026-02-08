@@ -7,6 +7,7 @@ import {
     doc,
     getDoc
 } from 'firebase/firestore'
+import { auth, db } from '~/firebase'
 
 export interface PublicProfile {
     uid: string
@@ -21,7 +22,6 @@ export interface PublicProfile {
 }
 
 export const useProfile = () => {
-    const { $db } = useNuxtApp()
     const loading = useState('profileLoading', () => false)
     const error = useState('profileError', () => null)
 
@@ -33,7 +33,7 @@ export const useProfile = () => {
             // Username is stored in lowercase in the db
             const normalizedUsername = username.toLowerCase()
 
-            const usersRef = collection($db, 'users')
+            const usersRef = collection(db, 'users')
             const q = query(usersRef, where('username', '==', normalizedUsername), limit(1))
             const querySnapshot = await getDocs(q)
 
@@ -61,11 +61,13 @@ export const useProfile = () => {
 
             // Increment view count (fire and forget)
             if (process.client) {
-                const userRef = doc($db, 'users', userDoc.id)
+                const userRef = doc(db, 'users', userDoc.id)
                 // Use increment from firestore
                 import('firebase/firestore').then(({ increment, updateDoc }) => {
+                    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
                     updateDoc(userRef, {
-                        views: increment(1)
+                        views: increment(1),
+                        [`analytics.${today}.views`]: increment(1)
                     }).catch(e => console.error('Error incrementing views:', e))
                 })
             }

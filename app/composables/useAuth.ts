@@ -6,9 +6,9 @@ import {
     type User
 } from 'firebase/auth'
 import { doc, getDoc, type DocumentData } from 'firebase/firestore'
+import { auth, db } from '~/firebase'
 
 export const useAuth = () => {
-    const { $auth, $db } = useNuxtApp()
 
     const user = useState<User | null>('user', () => null)
     const userProfile = useState<DocumentData | null>('userProfile', () => null)
@@ -19,13 +19,13 @@ export const useAuth = () => {
         // Ensure loading is true when we start checking
         loading.value = true
 
-        onAuthStateChanged($auth, async (currentUser) => {
+        onAuthStateChanged(auth, async (currentUser) => {
             user.value = currentUser
 
             if (currentUser) {
                 // Fetch profile if user exists
                 try {
-                    const docRef = doc($db, 'users', currentUser.uid)
+                    const docRef = doc(db, 'users', currentUser.uid)
                     const docSnap = await getDoc(docRef)
                     if (docSnap.exists()) {
                         userProfile.value = docSnap.data()
@@ -47,7 +47,14 @@ export const useAuth = () => {
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider()
         try {
-            const result = await signInWithPopup($auth, provider)
+            const result = await signInWithPopup(auth, provider)
+            const docRef = doc(db, 'users', result.user.uid)
+            const docSnap = await getDoc(docRef)
+            if (docSnap.exists()) {
+                userProfile.value = docSnap.data()
+            } else {
+                userProfile.value = null
+            }
             return result.user
         } catch (error: any) {
             console.error('Error signing in with Google:', error)
@@ -64,7 +71,7 @@ export const useAuth = () => {
 
     const logout = async () => {
         try {
-            await signOut($auth)
+            await signOut(auth)
             user.value = null
             userProfile.value = null
             navigateTo('/')

@@ -54,7 +54,6 @@ const showToast = (type: 'success' | 'error' | 'warning' | 'info') => {
           <Button variant="outline">Outline</Button>
           <Button variant="ghost">Ghost</Button>
           <Button variant="link">Link</Button>
-          <Button variant="destructive">Destructive</Button>
         </div>
         <div class="flex flex-wrap gap-4 items-center">
            <Button size="sm">Small</Button>

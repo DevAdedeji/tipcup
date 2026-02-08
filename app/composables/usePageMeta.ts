@@ -10,11 +10,10 @@ export interface PageMeta {
 
 export const usePageMeta = (meta: PageMeta) => {
     const route = useRoute()
-    const config = useRuntimeConfig()
 
     const title = meta.title
     const description = meta.description || 'TipCup - Accept support from your community.'
-    const appUrl = config.public.appUrl
+    const appUrl = import.meta.env.VITE_APP_URL
     const url = meta.url || `${appUrl}${route.path}`
     const image = meta.image || `${appUrl}/og-default.png`
     const type = meta.type || 'website'

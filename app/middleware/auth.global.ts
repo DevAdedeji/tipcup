@@ -1,39 +1,64 @@
+// middleware/auth.global.ts - FIXED VERSION
 export default defineNuxtRouteMiddleware(async (to, from) => {
+    if (process.server) return
+
     const { user, userProfile, loading } = useAuth()
 
-    // Wait for auth to initialize on client side
-    if (process.client && loading.value) {
+    // Wait for auth to initialize
+    if (loading.value) {
         await new Promise<void>((resolve) => {
             const stop = watch(loading, (newLoading) => {
                 if (!newLoading) {
                     stop()
                     resolve()
                 }
-            })
+            }, { immediate: true })
+
+            // Timeout after 5 seconds to prevent infinite waiting
+            setTimeout(() => {
+                stop()
+                resolve()
+            }, 5000)
         })
     }
 
-    const publicRoutes = ['/', '/login', '/signup']
-    // DEBUG: Log route access
-    if (process.client) {
-        console.log('Middleware Check:', { toPath: to.path, toName: to.name, user: !!user.value })
-    }
-    // Allow dynamic profile route (name is usually 'username' for [username].vue)
-    const isPublicRoute = publicRoutes.includes(to.path) || to.name === 'username'
+    // Define route categories
+    const authPages = ['/login', '/signup']  // Pages only for non-authenticated users
+    const publicPages = ['/']  // Homepage - accessible to all but redirects authenticated users
+    const profilePages = to.name === 'username'  // Dynamic profile pages - accessible to everyone
+    const protectedPages = ![...authPages, ...publicPages].includes(to.path) && !profilePages  // Everything else
 
     // 1. If user is NOT logged in
     if (!user.value) {
-        // Allow public routes
-        if (isPublicRoute) return
+        // Allow auth pages (login, signup)
+        if (authPages.includes(to.path)) return
 
-        // Redirect protected routes to login
+        // Allow homepage
+        if (publicPages.includes(to.path)) return
+
+        // Allow profile pages
+        if (profilePages) return
+
+        // Redirect protected pages to login
         return navigateTo('/login')
     }
 
     // 2. If user IS logged in
     if (user.value) {
-        // Redirect public routes to dashboard (or onboarding if no profile)
-        if (isPublicRoute) {
+        // Allow profile pages even for authenticated users
+        if (profilePages) return
+
+        // Redirect auth pages to dashboard/onboarding
+        if (authPages.includes(to.path)) {
+            if (userProfile.value) {
+                return navigateTo('/dashboard')
+            } else {
+                return navigateTo('/onboarding')
+            }
+        }
+
+        // Redirect homepage to dashboard/onboarding
+        if (publicPages.includes(to.path)) {
             if (userProfile.value) {
                 return navigateTo('/dashboard')
             } else {
@@ -51,5 +76,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         if (userProfile.value && to.path === '/onboarding') {
             return navigateTo('/dashboard')
         }
+
+        // Allow all other protected pages
+        return
     }
 })

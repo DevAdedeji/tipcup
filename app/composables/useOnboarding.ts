@@ -7,9 +7,9 @@ import {
     setDoc,
     serverTimestamp
 } from 'firebase/firestore'
+import { db } from '~/firebase'
 
 export const useOnboarding = () => {
-    const { $db } = useNuxtApp()
     const { user } = useAuth()
 
     // Check if a username is already taken
@@ -37,7 +37,7 @@ export const useOnboarding = () => {
         if (forbidden.includes(normalizedUsername)) return false
 
         try {
-            const usersRef = collection($db, 'users')
+            const usersRef = collection(db, 'users')
             const q = query(usersRef, where('username', '==', normalizedUsername))
             const querySnapshot = await getDocs(q)
 
@@ -102,7 +102,7 @@ export const useOnboarding = () => {
                 updatedAt: serverTimestamp()
             }
 
-            await setDoc(doc($db, 'users', user.value.uid), profileData)
+            await setDoc(doc(db, 'users', user.value.uid), profileData)
 
             // Update local state immediately to prevent middleware redirect loop
             const { userProfile } = useAuth()
