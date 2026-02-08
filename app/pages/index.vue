@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { usePageMeta } from '~/composables/usePageMeta'
+import { ChevronRight, Check } from 'lucide-vue-next'
 
 usePageMeta({
   title: 'Home',
@@ -17,8 +18,8 @@ usePageMeta({
           <span class="font-bold text-2xl tracking-tight">TipCup</span>
         </div>
         <div class="flex items-center gap-4">
-          <Button variant="ghost" class="hidden sm:inline-flex">Log in</Button>
-          <Button>Start my page</Button>
+          <Button variant="ghost" class="hidden sm:inline-flex" to="/login">Log in</Button>
+          <Button to="/signup">Start my page</Button>
         </div>
       </div>
     </nav>
@@ -47,7 +48,7 @@ usePageMeta({
           <div class="flex flex-wrap items-center gap-4 pt-4">
             <div class="relative group">
               <div class="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <Button size="lg" class="relative w-full sm:w-auto h-14 px-8 text-lg shadow-xl shadow-primary/20">
+              <Button to="/signup" size="lg" class="relative w-full sm:w-auto h-14 px-8 text-lg shadow-xl shadow-primary/20">
                 Start my page
               </Button>
             </div>
@@ -125,7 +126,7 @@ usePageMeta({
                     <Badge variant="warning" class="bg-accent/10 text-accent border-accent/20">
                         Flexible Support
                     </Badge>
-                    <h2 class="text-4xl lg:text-5xl font-bold">
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold">
                         Give your fans <br/> more ways to support.
                     </h2>
                     <p class="text-lg text-text-secondary leading-relaxed">
@@ -255,14 +256,14 @@ usePageMeta({
                     <Badge variant="secondary" class="bg-primary/10 text-primary border-primary/20">
                         Link in Bio
                     </Badge>
-                    <h2 class="text-4xl lg:text-5xl font-bold">
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold">
                         One link to rule them all.
                     </h2>
                     <p class="text-lg text-text-secondary leading-relaxed">
                         Claim your personal `tipcup.adedeji.xyz/yourname` link. Showcase all your content, social profiles, and support options in one beautiful place.
                     </p>
                     <div class="pt-4">
-                        <Button size="lg" variant="secondary" class="gap-2">
+                        <Button to="/signup" size="lg" variant="secondary" class="gap-2">
                             Claim your link <ChevronRight class="w-4 h-4" />
                         </Button>
                     </div>
@@ -280,7 +281,7 @@ usePageMeta({
                     <Badge variant="warning" class="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
                         Analytics & Insights
                     </Badge>
-                    <h2 class="text-4xl lg:text-5xl font-bold">
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold max-w-[90%]">
                         Watch your support grow.
                     </h2>
                     <p class="text-lg text-text-secondary leading-relaxed">
@@ -397,7 +398,7 @@ usePageMeta({
                      <Badge variant="secondary" class="bg-green-500/10 text-green-500 border-green-500/20">
                         Goal Tracking
                     </Badge>
-                     <h2 class="text-4xl lg:text-5xl font-bold">
+                     <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold">
                         Fund your next big project.
                     </h2>
                     <p class="text-lg text-text-secondary leading-relaxed">

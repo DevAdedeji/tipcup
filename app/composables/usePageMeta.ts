@@ -14,8 +14,9 @@ export const usePageMeta = (meta: PageMeta) => {
 
     const title = meta.title
     const description = meta.description || 'TipCup - Accept support from your community.'
-    const url = meta.url || `https://tipcup.adedeji.xyz${route.path}`
-    const image = meta.image || 'https://tipcup.adedeji.xyz/og-default.png'
+    const appUrl = config.public.appUrl
+    const url = meta.url || `${appUrl}${route.path}`
+    const image = meta.image || `${appUrl}/og-default.png`
     const type = meta.type || 'website'
     const twitterCard = meta.twitterCard || 'summary_large_image'
 

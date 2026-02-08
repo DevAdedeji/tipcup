@@ -23,6 +23,7 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     public: {
+      appUrl: process.env.APP_URL || 'http://localhost:3333',
       firebase: {
         apiKey: process.env.FIREBASE_API_KEY,
         authDomain: process.env.FIREBASE_AUTH_DOMAIN,

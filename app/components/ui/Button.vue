@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, resolveComponent } from 'vue'
 import { cn } from '~/utils/cn'
 import { Loader2 } from 'lucide-vue-next'
 
@@ -39,14 +39,14 @@ const sizes = {
 }
 
 const componentType = computed(() => {
-  if (props.to) return 'NuxtLink'
+  if (props.to) return resolveComponent('NuxtLink')
   if (props.href) return 'a'
   return props.as
 })
 
 const classes = computed(() => {
   return cn(
-    'inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 gap-2',
+    'inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 gap-2 cursor-pointer',
     variants[props.variant],
     sizes[props.size],
     props.block ? 'w-full' : '',
