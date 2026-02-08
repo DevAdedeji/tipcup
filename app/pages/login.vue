@@ -7,6 +7,11 @@ const isSignup = computed(() => route.path === '/signup')
 const { signInWithGoogle, user, userProfile } = useAuth()
 const isLoading = ref(false)
 
+useHead({
+  title: computed(() => isSignup.value ? 'Sign Up - TipCup' : 'Log In - TipCup')
+})
+
+
 const handleLogin = async () => {
   isLoading.value = true
   try {
@@ -61,6 +66,15 @@ watchEffect(() => {
         <p class="text-center text-sm text-text-secondary">
            By continuing, you agree to our Terms of Service and Privacy Policy.
         </p>
+
+        <div class="mt-6 text-center text-sm">
+            <span class="text-text-secondary">
+                {{ isSignup ? 'Already have an account?' : "Don't have an account?" }}
+            </span>
+            <NuxtLink :to="isSignup ? '/login' : '/signup'" class="ml-1 text-primary hover:underline font-medium">
+                {{ isSignup ? 'Log in' : 'Sign up' }}
+            </NuxtLink>
+        </div>
      </div>
   </div>
 </template>
