@@ -42,6 +42,12 @@ watchEffect(() => {
     }
   }
 })
+
+onMounted(() => {
+  console.log('Login component mounted')
+  const config = useRuntimeConfig()
+  console.log('Runtime config available:', !!config.public.firebase.apiKey)
+})
 </script>
 
 <template>
