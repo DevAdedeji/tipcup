@@ -13,9 +13,14 @@ useHead({
 
 
 const handleLogin = async () => {
+  console.log('handleLogin called')
   isLoading.value = true
   try {
+    const config = useRuntimeConfig()
+    console.log('Firebase config:', config.public.firebase)
+
     await signInWithGoogle()
+
     if (!userProfile.value) {
       navigateTo('/onboarding')
     } else {
@@ -23,6 +28,7 @@ const handleLogin = async () => {
     }
   } catch (error: any) {
     console.error('Login error in component:', error)
+    alert(`Login failed: ${error.message}`)
   } finally {
     isLoading.value = false
   }
