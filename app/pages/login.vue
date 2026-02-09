@@ -59,7 +59,7 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div class="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 bg-background">
+  <div class="min-h-screen flex items-center justify-center px-4 bg-background">
       <div class="w-full max-w-md space-y-8 mx-auto bg-surface border border-white/5 p-8 rounded-3xl shadow-2xl">
         <div class="text-center">
             <img src="/logo.png" alt="TipCup" class="w-12 h-12 mx-auto mb-4" />
