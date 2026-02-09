@@ -8,6 +8,8 @@ import { Eye, DollarSign, Heart, Settings, PenSquare, ClipboardCopy, ExternalLin
 
 definePageMeta({
   layout: 'dashboard',
+  title: 'Dashboard',
+  subtitle: 'Overview of your earnings and tips'
 })
 
 usePageMeta({
@@ -43,7 +45,7 @@ const copyLink = async () => {
 
 <template>
   <div class="min-h-screen bg-background text-text-primary pb-24">
-      <div class="max-w-6xl mx-auto space-y-8">
+      <div class="mx-auto space-y-8">
 
           <!-- Loading State -->
           <div v-if="loading" class="space-y-8 animate-fade-in-up">
@@ -151,7 +153,7 @@ const copyLink = async () => {
               </div>
 
               <!-- Main Content Grid -->
-              <div class="flex gap-8">
+              <div class="flex lg:flex-row flex-col gap-8">
 
                   <!-- Left: Chart & Activity -->
                   <div class="w-full lg:w-2/3 space-y-8">

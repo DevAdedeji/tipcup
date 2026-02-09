@@ -29,7 +29,7 @@ const isOpen = ref(false)
 <template>
     <div>
         <!-- Mobile Toggle -->
-        <button @click="isOpen = !isOpen" class="md:hidden fixed top-5 left-4 p-2 bg-surface border border-white/10 rounded-lg shadow-lg" :class="isOpen ? '' : 'z-50 pr-1'">
+        <button @click="isOpen = !isOpen" class="md:hidden fixed top-3 left-4 p-2 bg-surface border border-white/10 rounded-lg shadow-lg" :class="isOpen ? '' : 'z-50 pr-1'">
             <Menu v-if="!isOpen" class="w-6 h-6" />
             <!-- <X v-else class="w-6 h-6" /> -->
         </button>
@@ -39,7 +39,7 @@ const isOpen = ref(false)
 
         <!-- Sidebar -->
         <aside
-            class="fixed top-0 left-0 h-full w-64 bg-surface border-r border-white/5 z-40 transform transition-transform duration-300 md:translate-x-0 flex flex-col"
+            class="fixed top-0 left-0 h-[100dvh] w-64 bg-surface border-r border-white/5 z-40 transform transition-transform duration-300 md:translate-x-0 flex flex-col"
             :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
         >
             <!-- Logo -->
@@ -51,7 +51,7 @@ const isOpen = ref(false)
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 py-6 px-3 space-y-1">
+            <nav class="flex-1 overflow-y-auto min-h-0 py-6 px-3 space-y-1">
                 <NuxtLink
                     v-for="link in links"
                     :key="link.to"

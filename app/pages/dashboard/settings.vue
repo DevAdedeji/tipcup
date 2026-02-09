@@ -8,7 +8,9 @@ import Select from '~/components/ui/Select.vue'
 import { User, DollarSign, Link as LinkIcon, Save } from 'lucide-vue-next'
 
 definePageMeta({
-  layout: 'dashboard'
+  layout: 'dashboard',
+  title: 'Settings',
+  subtitle: 'Manage your profile and settings'
 })
 
 usePageMeta({
@@ -137,7 +139,7 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                 <div class="lg:col-span-2 space-y-8">
 
                     <!-- Basic Info -->
-                    <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-sm">
+                    <div class="bg-surface border border-white/5 rounded-2xl p-3 lg:p-6 shadow-sm">
                         <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
                             <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
                                 <User class="w-5 h-5" />
@@ -160,7 +162,7 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                     </div>
 
                     <!-- Support Tiers -->
-                    <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-sm">
+                    <div class="bg-surface border border-white/5 rounded-2xl p-3 lg:p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-xl font-bold flex items-center gap-2">
                                 <div class="p-2 bg-green-500/10 rounded-lg text-green-500">
@@ -172,20 +174,22 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                         </div>
 
                         <div class="space-y-4">
-                            <div v-for="(tier, index) in form.tiers" :key="index" class="flex gap-3 items-start p-4 bg-background rounded-xl border border-border">
-                                <div class="w-16">
-                                    <label class="text-xs text-text-secondary mb-1 block">Emoji</label>
-                                    <Input v-model="tier.emoji" class="text-center text-xl" maxlength="2" />
+                            <div v-for="(tier, index) in form.tiers" :key="index" class="flex flex-col sm:flex-row gap-3 items-start p-4 bg-background rounded-xl border border-border">
+                                <div class="flex gap-3 w-full sm:contents">
+                                    <div class="w-1/3 sm:w-16">
+                                        <label class="text-xs text-text-secondary mb-1 block">Emoji</label>
+                                        <Input v-model="tier.emoji" class="text-center text-xl" maxlength="2" />
+                                    </div>
+                                    <div class="flex-1 sm:flex-initial sm:w-24">
+                                        <label class="text-xs text-text-secondary mb-1 block">Price ($)</label>
+                                        <Input v-model="tier.price" type="number" min="1" />
+                                    </div>
                                 </div>
-                                <div class="flex-1">
-                                    <label class="text-xs text-text-secondary mb-1 block">Price ($)</label>
-                                    <Input v-model="tier.price" type="number" min="1" />
-                                </div>
-                                <div class="flex-1">
+                                <div class="w-full sm:flex-1">
                                     <label class="text-xs text-text-secondary mb-1 block">Label</label>
                                     <Input v-model="tier.label" placeholder="e.g. Coffee" />
                                 </div>
-                                <button @click="removeTier(index)" class="mt-6 text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+                                <button @click="removeTier(index)" class="self-end sm:mt-6 text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
                                     ✕
                                 </button>
                             </div>
@@ -197,7 +201,7 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                     </div>
 
                     <!-- Social Links -->
-                    <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-sm">
+                    <div class="bg-surface border border-white/5 rounded-2xl p-3 lg:p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-xl font-bold flex items-center gap-2">
                                 <div class="p-2 bg-purple-500/10 rounded-lg text-purple-500">
