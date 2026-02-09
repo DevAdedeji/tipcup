@@ -1,11 +1,14 @@
-<script setup lang="ts">
+<script lang="ts">
 import { useAuth } from '~/composables/useAuth'
+import { Loader2 } from 'lucide-vue-next'
+import Modal from '~/components/ui/Modal.vue'
 
 const route = useRoute()
 const isSignup = computed(() => route.path === '/signup')
 
 const { signInWithGoogle, user, userProfile } = useAuth()
 const isLoading = ref(false)
+const showAuthCheckModal = ref(false)
 
 useHead({
   title: computed(() => isSignup.value ? 'Sign Up - TipCup' : 'Log In - TipCup')
@@ -16,10 +19,17 @@ const handleLogin = async () => {
   isLoading.value = true
   try {
     await signInWithGoogle()
-    if (!userProfile.value) {
-      navigateTo('/onboarding')
-    } else {
+
+    // Show modal while checking profile
+    showAuthCheckModal.value = true
+
+    // Small delay for UX
+    await new Promise(resolve => setTimeout(resolve, 1500))
+
+    if (userProfile.value) {
       navigateTo('/dashboard')
+    } else {
+      navigateTo('/onboarding')
     }
   } catch (error: any) {
     const toast = useToast()
@@ -30,10 +40,15 @@ const handleLogin = async () => {
     })
   } finally {
     isLoading.value = false
+    // hide modal only if error occurred or we are not logged in
+    if (!user.value) {
+        showAuthCheckModal.value = false
+    }
   }
 }
 watchEffect(() => {
-  if (user.value) {
+    // If user is already logged in and land here, just redirect
+  if (user.value && !showAuthCheckModal.value) {
     if (userProfile.value) {
       navigateTo('/dashboard')
     } else {
@@ -81,5 +96,18 @@ watchEffect(() => {
             </NuxtLink>
         </div>
       </div>
+
+       <!-- Auth Check Modal -->
+       <Modal :isOpen="showAuthCheckModal" :width="'max-w-sm'">
+          <div class="flex flex-col items-center justify-center py-8 space-y-4">
+             <Loader2 class="w-10 h-10 animate-spin text-primary" />
+             <h3 class="text-lg font-medium leading-6 text-white">
+                Loading your account
+             </h3>
+             <p class="text-sm text-text-secondary">
+                Please wait while we set things up...
+             </p>
+          </div>
+       </Modal>
   </div>
 </template>
