@@ -175,10 +175,13 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
 
                         <div class="space-y-4">
                             <div v-for="(tier, index) in form.tiers" :key="index" class="flex flex-col sm:flex-row gap-3 items-start p-4 bg-background rounded-xl border border-border">
+                                <button @click="removeTier(index)" class="lg:hidden block self-end sm:mt-6 text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+                                    ✕
+                                </button>
                                 <div class="flex gap-3 w-full sm:contents">
-                                    <div class="w-1/3 sm:w-16">
+                                    <div class="w-[20%] sm:w-16">
                                         <label class="text-xs text-text-secondary mb-1 block">Emoji</label>
-                                        <Input v-model="tier.emoji" class="text-center text-xl" maxlength="2" />
+                                        <Input v-model="tier.emoji" class="text-center text-xl" maxlength="1" />
                                     </div>
                                     <div class="flex-1 sm:flex-initial sm:w-24">
                                         <label class="text-xs text-text-secondary mb-1 block">Price ($)</label>
@@ -189,7 +192,7 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                                     <label class="text-xs text-text-secondary mb-1 block">Label</label>
                                     <Input v-model="tier.label" placeholder="e.g. Coffee" />
                                 </div>
-                                <button @click="removeTier(index)" class="self-end sm:mt-6 text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+                                <button @click="removeTier(index)" class="lg:block hidden self-end sm:mt-6 text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
                                     ✕
                                 </button>
                             </div>
@@ -214,13 +217,16 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
 
                         <div class="space-y-4">
                             <div v-for="(link, index) in form.socialLinks" :key="index" class="flex flex-col sm:flex-row gap-3 items-start p-4 bg-background rounded-xl border border-border">
+                                <button @click="removeSocial(index)" class="lg:hidden block self-end sm:self-center text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+                                    ✕
+                                </button>
                                 <div class="w-full sm:w-48">
                                     <Select v-model="link.platform" :options="platforms" placeholder="Platform" />
                                 </div>
                                 <div class="flex-1 w-full">
                                     <Input v-model="link.url" placeholder="https://..." />
                                 </div>
-                                <button @click="removeSocial(index)" class="self-end sm:self-center text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+                                <button @click="removeSocial(index)" class="lg:block hidden self-end sm:self-center text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
                                     ✕
                                 </button>
                             </div>
@@ -232,7 +238,7 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                     </div>
 
                     <!-- Submit Button -->
-                    <div class="flex justify-end pt-4">
+                    <div class="hidden lg:flex justify-end pt-4">
                         <Button :disabled="saving" @click="saveProfile" size="lg" class="w-full sm:w-auto min-w-[150px]">
                             <span v-if="saving" class="animate-spin mr-2">⏳</span>
                             <span v-else class="mr-2"><Save class="w-4 h-4" /></span>
@@ -274,6 +280,11 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                         </div>
                     </div>
                 </div>
+                <Button :disabled="saving" @click="saveProfile" size="lg" class="lg:hidden block w-full min-w-[150px]">
+                    <span v-if="saving" class="animate-spin mr-2">⏳</span>
+                    <span v-else class="mr-2"><Save class="w-4 h-4" /></span>
+                    {{ saving ? 'Saving...' : 'Save Changes' }}
+                </Button>
             </div>
         </div>
     </div>

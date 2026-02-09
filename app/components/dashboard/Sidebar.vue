@@ -29,7 +29,7 @@ const isOpen = ref(false)
 <template>
     <div>
         <!-- Mobile Toggle -->
-        <button @click="isOpen = !isOpen" class="md:hidden fixed top-3 left-4 p-2 bg-surface border border-white/10 rounded-lg shadow-lg" :class="isOpen ? '' : 'z-50 pr-1'">
+        <button @click="isOpen = !isOpen" class="md:hidden fixed top-4 left-4 p-2 bg-surface border border-white/10 rounded-lg shadow-lg" :class="isOpen ? '' : 'z-50 pr-1'">
             <Menu v-if="!isOpen" class="w-6 h-6" />
             <!-- <X v-else class="w-6 h-6" /> -->
         </button>

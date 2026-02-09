@@ -3,10 +3,10 @@ import { useAuth } from '~/composables/useAuth'
 import Sidebar from '~/components/dashboard/Sidebar.vue'
 import Topbar from '~/components/dashboard/Topbar.vue'
 
-const { loading, userProfile } = useAuth()
+const { loading, userProfile, user } = useAuth()
 
 const isLoading = computed(() => {
-  return loading.value || !userProfile.value
+  return loading.value || (user.value && !userProfile.value)
 })
 </script>
 

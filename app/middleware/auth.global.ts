@@ -1,20 +1,9 @@
-// middleware/auth.global.ts - FIXED VERSION
 export default defineNuxtRouteMiddleware(async (to, from) => {
     if (process.server) return
 
     const { user, userProfile, loading } = useAuth()
 
-    // Wait for auth to initialize
-    if (loading.value) {
-        await new Promise<void>((resolve) => {
-            const stop = watch(loading, (newLoading) => {
-                if (!newLoading) {
-                    stop()
-                    resolve()
-                }
-            }, { immediate: true })
-        })
-    }
+    if (loading.value) return
 
     // Define route categories
     const authPages = ['/login', '/signup']  // Pages only for non-authenticated users
