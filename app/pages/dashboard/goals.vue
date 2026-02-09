@@ -111,7 +111,8 @@ const getProgress = (current: number, target: number) => {
                     <p class="text-text-secondary text-sm mt-1">Create goals to encourage your supporters.</p>
                 </div>
                 <Button @click="openCreateModal" class="gap-2">
-                    <Plus class="w-4 h-4" /> New Goal
+                    <Plus class="w-4 h-4" />
+                    <span class="md:block hidden">New Goal</span>
                 </Button>
             </div>
 

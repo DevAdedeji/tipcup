@@ -129,11 +129,6 @@ const selectedTier = ref<any>(null)
                         <p v-if="profile?.bio" class="mt-2 max-w-lg text-text-secondary leading-relaxed">{{ profile?.bio }}</p>
                     </div>
 
-                    <!-- Goal Progress Widget (Mobile/Desktop) -->
-                    <div v-if="profile?.fundraisingGoal" class="w-full mt-6 sm:mt-0 sm:absolute sm:bottom-0 sm:right-6 sm:w-80 z-20">
-                         <GoalProgress :goal="profile.fundraisingGoal" />
-                    </div>
-
                     <!-- Follow / Share Actions (Placeholder) -->
                     <div class="mt-6 sm:mt-24 flex gap-3">
                         <Button @click="shareProfile" variant="outline" size="sm">
@@ -161,8 +156,12 @@ const selectedTier = ref<any>(null)
                  </div>
 
                  <!-- Tab Content: Home (Support) -->
-                 <div v-if="activeTab === 'home'" class="max-w-lg mx-auto">
-                     <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-xl">
+                 <div v-if="activeTab === 'home'" class="max-w-lg mx-auto space-y-2">
+                    <!-- Goal Progress Widget (Mobile/Desktop) -->
+                    <div v-if="profile?.fundraisingGoal" class="w-full">
+                         <GoalProgress :goal="profile.fundraisingGoal" />
+                    </div>
+                    <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-xl">
                          <h3 class="font-bold text-xl mb-4 text-center">Support {{ profile?.displayName?.split(' ')[0] }}</h3>
 
                          <!-- Tiers Grid -->
@@ -192,7 +191,7 @@ const selectedTier = ref<any>(null)
                                  Only secure payments.
                              </p>
                          </div>
-                     </div>
+                    </div>
                  </div>
 
                  <!-- Tab Content: Socials (Link in Bio) -->
