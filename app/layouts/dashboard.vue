@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useAuth } from '~/composables/useAuth'
+import Sidebar from '~/components/dashboard/Sidebar.vue'
+import Topbar from '~/components/dashboard/Topbar.vue'
 
-const { loading, user } = useAuth()
+const { loading } = useAuth()
 </script>
 
 <template>
-  <div class="min-h-screen bg-background text-text-primary">
+  <div class="min-h-screen bg-background text-text-primary flex">
     <!-- Dashboard Loader -->
     <div v-if="loading" class="fixed inset-0 z-[9999] w-screen h-screen flex flex-col items-center justify-center bg-background">
       <div class="relative flex flex-col items-center gap-6">
@@ -20,7 +22,19 @@ const { loading, user } = useAuth()
       </div>
     </div>
 
-    <!-- Dashboard Content -->
-    <slot v-else />
+    <!-- Layout Structure -->
+    <template v-else>
+        <!-- Sidebar -->
+        <Sidebar />
+
+        <!-- Main Area -->
+        <div class="flex-1 flex flex-col min-w-0 md:pl-64 transition-all duration-300">
+            <Topbar />
+
+            <main class="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full animate-fade-in-up">
+                <slot />
+            </main>
+        </div>
+    </template>
   </div>
 </template>

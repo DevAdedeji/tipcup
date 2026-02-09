@@ -1,4 +1,4 @@
-<script lang="ts">
+<script setup lang="ts">
 import { useAuth } from '~/composables/useAuth'
 import { Loader2 } from 'lucide-vue-next'
 import Modal from '~/components/ui/Modal.vue'

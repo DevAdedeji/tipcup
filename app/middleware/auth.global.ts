@@ -13,12 +13,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
                     resolve()
                 }
             }, { immediate: true })
-
-            // Timeout after 5 seconds to prevent infinite waiting
-            setTimeout(() => {
-                stop()
-                resolve()
-            }, 5000)
         })
     }
 

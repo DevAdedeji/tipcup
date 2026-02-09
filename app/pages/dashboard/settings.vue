@@ -3,16 +3,21 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { useAuth } from '~/composables/useAuth'
 import { usePageMeta } from '~/composables/usePageMeta'
 import { db } from '~/firebase'
+import Skeleton from '~/components/ui/Skeleton.vue'
+import Select from '~/components/ui/Select.vue'
+import { User, DollarSign, Link as LinkIcon, Save } from 'lucide-vue-next'
 
 definePageMeta({
   layout: 'dashboard'
 })
 
 usePageMeta({
-  title: 'Settings'
+  title: 'Settings',
 })
 
-const { user, userProfile } = useAuth()
+
+
+const { user, userProfile, loading } = useAuth()
 const toast = useToast()
 
 // Form State
@@ -23,15 +28,25 @@ const form = reactive({
     socialLinks: [] as any[]
 })
 
+const emojis = ['☕', '🍕', '🍺', '🍪', '🥐', '🌮', '🍣', '🍦', '🍩', '🍫']
+const getRandomEmoji = () => emojis[Math.floor(Math.random() * emojis.length)]
 // Initialize form with user data
-watchEffect(() => {
-    if (userProfile.value) {
-        form.displayName = userProfile.value.displayName || ''
-        form.bio = userProfile.value.bio || ''
-        form.tiers = userProfile.value.tiers ? JSON.parse(JSON.stringify(userProfile.value.tiers)) : []
-        form.socialLinks = userProfile.value.socialLinks ? JSON.parse(JSON.stringify(userProfile.value.socialLinks)) : []
+watch(() => userProfile.value, (newProfile) => {
+    if (newProfile) {
+        form.displayName = newProfile.displayName || ''
+        form.bio = newProfile.bio || ''
+        // Deep copy arrays to avoid reactivity issues with original object
+        form.tiers = newProfile.tiers ? JSON.parse(JSON.stringify(newProfile.tiers)) : []
+        form.socialLinks = newProfile.socialLinks ? JSON.parse(JSON.stringify(newProfile.socialLinks)) : []
+
+        // Auto-assign emojis to existing tiers if missing
+        form.tiers.forEach(tier => {
+            if (!tier.emoji) {
+                tier.emoji = getRandomEmoji()
+            }
+        })
     }
-})
+}, { immediate: true })
 
 // Saving state
 const saving = ref(false)
@@ -59,7 +74,7 @@ const saveProfile = async () => {
 
 // Tiers Management
 const addTier = () => {
-    form.tiers.push({ amount: 5, emoji: '☕', label: 'Coffee' })
+    form.tiers.push({ price: 5, emoji: getRandomEmoji(), label: 'Support' })
 }
 const removeTier = (index: number) => {
     form.tiers.splice(index, 1)
@@ -77,27 +92,57 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
 </script>
 
 <template>
-    <div class="min-h-screen bg-background text-text-primary p-6 md:p-12 pb-24">
-        <div class="max-w-4xl mx-auto">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h1 class="text-3xl font-bold mb-2">Settings</h1>
-                    <p class="text-text-secondary">Manage your public profile and support options.</p>
-                </div>
-                <Button :disabled="saving" @click="saveProfile" size="lg">
-                    <span v-if="saving" class="animate-spin mr-2">⏳</span>
-                    {{ saving ? 'Saving...' : 'Save Changes' }}
-                </Button>
+    <div class="min-h-screen bg-background text-text-primary pb-24">
+        <div class="mx-auto">
+
+
+            <!-- Loading Skeleton -->
+            <div v-if="loading" class="grid lg:grid-cols-3 gap-8 animate-fade-in-up">
+                 <div class="lg:col-span-2 space-y-8">
+                     <div class="bg-surface border border-white/5 rounded-2xl p-6">
+                         <Skeleton class="h-6 w-32 mb-6" />
+                         <div class="space-y-4">
+                             <div>
+                                 <Skeleton class="h-4 w-24 mb-2" />
+                                 <Skeleton class="h-10 w-full" />
+                             </div>
+                             <div>
+                                 <Skeleton class="h-4 w-12 mb-2" />
+                                 <Skeleton class="h-32 w-full" />
+                             </div>
+                         </div>
+                     </div>
+                     <div class="bg-surface border border-white/5 rounded-2xl p-6">
+                         <div class="flex justify-between mb-6">
+                             <Skeleton class="h-6 w-32" />
+                             <Skeleton class="h-8 w-24" />
+                         </div>
+                         <div class="space-y-4">
+                             <Skeleton class="h-20 w-full rounded-xl" />
+                             <Skeleton class="h-20 w-full rounded-xl" />
+                         </div>
+                     </div>
+                 </div>
+                 <div class="lg:col-span-1">
+                      <div class="bg-surface border border-white/5 rounded-2xl p-6">
+                          <Skeleton class="h-4 w-24 mb-4" />
+                          <Skeleton class="h-64 w-full rounded-xl" />
+                      </div>
+                 </div>
             </div>
 
-            <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Main Settings Grid -->
+            <div v-else class="grid lg:grid-cols-3 gap-8 animate-fade-in-up">
                 <!-- Main Settings Column -->
                 <div class="lg:col-span-2 space-y-8">
 
                     <!-- Basic Info -->
                     <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-sm">
                         <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-                            <span>👤</span> Profile Details
+                            <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                                <User class="w-5 h-5" />
+                            </div>
+                            <span>Profile Details</span>
                         </h2>
 
                         <div class="space-y-4">
@@ -118,7 +163,10 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                     <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-xl font-bold flex items-center gap-2">
-                                <span>💰</span> Support Tiers
+                                <div class="p-2 bg-green-500/10 rounded-lg text-green-500">
+                                    <DollarSign class="w-5 h-5" />
+                                </div>
+                                <span>Support Tiers</span>
                             </h2>
                             <Button @click="addTier" variant="outline" size="sm">+ Add Tier</Button>
                         </div>
@@ -130,8 +178,8 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                                     <Input v-model="tier.emoji" class="text-center text-xl" maxlength="2" />
                                 </div>
                                 <div class="flex-1">
-                                    <label class="text-xs text-text-secondary mb-1 block">Amount ($)</label>
-                                    <Input v-model="tier.amount" type="number" min="1" />
+                                    <label class="text-xs text-text-secondary mb-1 block">Price ($)</label>
+                                    <Input v-model="tier.price" type="number" min="1" />
                                 </div>
                                 <div class="flex-1">
                                     <label class="text-xs text-text-secondary mb-1 block">Label</label>
@@ -152,17 +200,18 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                     <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-xl font-bold flex items-center gap-2">
-                                <span>🔗</span> Social Links
+                                <div class="p-2 bg-purple-500/10 rounded-lg text-purple-500">
+                                    <LinkIcon class="w-5 h-5" />
+                                </div>
+                                <span>Social Links</span>
                             </h2>
                             <Button @click="addSocial" variant="outline" size="sm">+ Add Link</Button>
                         </div>
 
                         <div class="space-y-4">
                             <div v-for="(link, index) in form.socialLinks" :key="index" class="flex flex-col sm:flex-row gap-3 items-start p-4 bg-background rounded-xl border border-border">
-                                <div class="w-full sm:w-40">
-                                    <select v-model="link.platform" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none">
-                                        <option v-for="p in platforms" :key="p" :value="p">{{ p }}</option>
-                                    </select>
+                                <div class="w-full sm:w-48">
+                                    <Select v-model="link.platform" :options="platforms" placeholder="Platform" />
                                 </div>
                                 <div class="flex-1 w-full">
                                     <Input v-model="link.url" placeholder="https://..." />
@@ -176,6 +225,15 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                                 Add your social media profiles to appear on your page.
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end pt-4">
+                        <Button :disabled="saving" @click="saveProfile" size="lg" class="w-full sm:w-auto min-w-[150px]">
+                            <span v-if="saving" class="animate-spin mr-2">⏳</span>
+                            <span v-else class="mr-2"><Save class="w-4 h-4" /></span>
+                            {{ saving ? 'Saving...' : 'Save Changes' }}
+                        </Button>
                     </div>
 
                 </div>
@@ -197,8 +255,8 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                                      <p class="text-sm text-text-secondary line-clamp-3 mb-4">{{ form.bio || 'Your bio will appear here...' }}</p>
 
                                      <div class="flex gap-2 overflow-x-auto pb-2">
-                                         <span v-for="tier in form.tiers" :key="tier.amount" class="text-xs bg-surface border border-border px-2 py-1 rounded-md whitespace-nowrap">
-                                             {{ tier.emoji }} ${{ tier.amount }}
+                                         <span v-for="tier in form.tiers" :key="tier.price" class="text-xs bg-surface border border-border px-2 py-1 rounded-md whitespace-nowrap">
+                                             {{ tier.emoji }} ${{ tier.price }}
                                          </span>
                                      </div>
                                 </div>

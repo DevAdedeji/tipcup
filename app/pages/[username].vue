@@ -1,12 +1,26 @@
 <script setup lang="ts">
 import { useProfile, type PublicProfile } from '~/composables/useProfile'
-import { ChevronRight, Check } from 'lucide-vue-next'
+import { ChevronRight, Check, Twitter, Instagram, Youtube, Linkedin, Globe, Link as LinkIcon, Facebook, Github } from 'lucide-vue-next'
+import Skeleton from '~/components/ui/Skeleton.vue'
 
 const route = useRoute()
 const username = computed(() => route.params.username as string)
 
 const { fetchProfileByUsername, loading, error } = useProfile()
 const profile = ref<PublicProfile | null>(null)
+
+// Icon mapping
+const getSocialIcon = (platform: string) => {
+    const p = platform.toLowerCase()
+    if (p.includes('twitter')) return Twitter
+    if (p.includes('instagram')) return Instagram
+    if (p.includes('youtube')) return Youtube
+    if (p.includes('linkedin')) return Linkedin
+    if (p.includes('website')) return Globe
+    if (p.includes('facebook')) return Facebook
+    if (p.includes('github')) return Github
+    return LinkIcon
+}
 
 // Fetch profile on mount
 onMounted(async () => {
@@ -19,6 +33,16 @@ onMounted(async () => {
 useHead({
     title: computed(() => profile.value ? `${profile.value.displayName} (@${profile.value.username})` : 'Profile Not Found')
 })
+
+const toast = useToast()
+const shareProfile = async () => {
+    try {
+        await navigator.clipboard.writeText(window.location.href)
+        toast.add({ title: 'Copied!', description: 'Profile link copied to clipboard.', type: 'success' })
+    } catch (e) {
+        toast.add({ title: 'Error', description: 'Could not copy link.', type: 'error' })
+    }
+}
 
 const activeTab = ref('home')
 const tabs = [
@@ -33,8 +57,46 @@ const selectedTier = ref<any>(null)
 <template>
     <div class="min-h-screen bg-background text-text-primary pb-20">
         <!-- Loading State -->
-        <div v-if="loading" class="flex items-center justify-center min-h-[50vh]">
-             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div v-if="loading" class="animate-fade-in-up">
+            <!-- Header Skeleton -->
+             <div class="h-48 md:h-64 bg-white/5 animate-pulse relative"></div>
+
+             <div class="max-w-4xl mx-auto px-4 sm:px-6 relative">
+                 <!-- Avatar Skeleton -->
+                 <div class="-mt-20 mb-6 flex flex-col items-center sm:items-start sm:flex-row sm:gap-6">
+                    <Skeleton class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-background" />
+
+                    <div class="mt-4 sm:mt-24 text-center sm:text-left flex-1 w-full flex flex-col items-center sm:items-start">
+                        <Skeleton class="h-8 w-48 mb-2" />
+                        <Skeleton class="h-4 w-32 mb-4" />
+                        <div class="space-y-2 w-full max-w-lg">
+                            <Skeleton class="h-3 w-full" />
+                            <Skeleton class="h-3 w-2/3" />
+                        </div>
+                    </div>
+
+                    <!-- Actions Skeleton -->
+                    <div class="mt-6 sm:mt-24 flex gap-3">
+                        <Skeleton class="h-9 w-24" />
+                    </div>
+                 </div>
+
+                 <!-- Tabs Skeleton -->
+                 <div class="flex border-b border-border mb-8 gap-6">
+                     <Skeleton class="h-10 w-20" />
+                     <Skeleton class="h-10 w-20" />
+                 </div>
+
+                 <!-- Content Skeleton -->
+                 <div class="grid md:grid-cols-3 gap-8">
+                     <div class="md:col-span-2 space-y-6">
+                        <Skeleton class="h-32 w-full rounded-2xl" />
+                     </div>
+                     <div class="md:col-span-1">
+                        <Skeleton class="h-64 w-full rounded-2xl" />
+                     </div>
+                 </div>
+             </div>
         </div>
 
         <!-- 404 State -->
@@ -68,7 +130,7 @@ const selectedTier = ref<any>(null)
 
                     <!-- Follow / Share Actions (Placeholder) -->
                     <div class="mt-6 sm:mt-24 flex gap-3">
-                        <Button variant="outline" size="sm">
+                        <Button @click="shareProfile" variant="outline" size="sm">
                             <span class="mr-2">🔗</span> Share
                         </Button>
                          <!-- <Button size="sm">Follow</Button> -->
@@ -93,48 +155,37 @@ const selectedTier = ref<any>(null)
                  </div>
 
                  <!-- Tab Content: Home (Support) -->
-                 <div v-if="activeTab === 'home'" class="grid md:grid-cols-3 gap-8">
-                     <!-- Left: About / Feed (Placeholder) -->
-                     <div class="md:col-span-2 space-y-6">
-                        <div class="bg-surface border border-white/5 rounded-2xl p-6 sm:p-8 text-center text-text-secondary italic">
-                            Authorization required to view posts. <br/>
-                            Support {{ profile?.displayName }} to unlock exclusive content!
-                        </div>
-                     </div>
+                 <div v-if="activeTab === 'home'" class="max-w-lg mx-auto">
+                     <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-xl">
+                         <h3 class="font-bold text-xl mb-4 text-center">Support {{ profile?.displayName?.split(' ')[0] }}</h3>
 
-                     <!-- Right: Support Panel (Sticky on Desktop) -->
-                     <div class="md:col-span-1">
-                        <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-xl sticky top-24">
-                            <h3 class="font-bold text-xl mb-4">Support {{ profile?.displayName?.split(' ')[0] }}</h3>
+                         <!-- Tiers Grid -->
+                         <div class="grid grid-cols-3 gap-3 mb-6">
+                             <button
+                                 v-for="tier in profile?.tiers"
+                                 :key="tier.price"
+                                 @click="selectedTier = tier"
+                                 class="flex flex-col items-center justify-center p-3 rounded-xl border transition-all"
+                                 :class="[
+                                     selectedTier === tier
+                                     ? 'border-primary bg-primary/10 text-primary scale-105 shadow-[0_0_15px_rgba(255,107,53,0.2)]'
+                                     : 'border-border bg-background hover:border-primary/50'
+                                 ]"
+                             >
+                                 <span class="text-2xl mb-1">{{ tier.emoji || '☕' }}</span>
+                                 <span class="font-bold">${{ tier.price }}</span>
+                             </button>
+                         </div>
 
-                            <!-- Tiers Grid -->
-                            <div class="grid grid-cols-3 gap-3 mb-6">
-                                <button
-                                    v-for="tier in profile?.tiers"
-                                    :key="tier.amount"
-                                    @click="selectedTier = tier"
-                                    class="flex flex-col items-center justify-center p-3 rounded-xl border transition-all"
-                                    :class="[
-                                        selectedTier === tier
-                                        ? 'border-primary bg-primary/10 text-primary scale-105 shadow-[0_0_15px_rgba(255,107,53,0.2)]'
-                                        : 'border-border bg-background hover:border-primary/50'
-                                    ]"
-                                >
-                                    <span class="text-2xl mb-1">{{ tier.emoji || '☕' }}</span>
-                                    <span class="font-bold">${{ tier.amount }}</span>
-                                </button>
-                            </div>
-
-                            <div class="space-y-4">
-                                <Input placeholder="Say something nice..." class="bg-background" />
-                                <Button size="lg" class="w-full font-bold shadow-lg shadow-primary/20">
-                                    Support ${{ selectedTier?.amount || '...' }}
-                                </Button>
-                                <p class="text-xs text-center text-text-secondary">
-                                    Only secure payments.
-                                </p>
-                            </div>
-                        </div>
+                         <div class="space-y-4">
+                             <Input placeholder="Say something nice..." class="bg-background" />
+                             <Button size="lg" class="w-full font-bold shadow-lg shadow-primary/20">
+                                 Support ${{ selectedTier?.price || '...' }}
+                             </Button>
+                             <p class="text-xs text-center text-text-secondary">
+                                 Only secure payments.
+                             </p>
+                         </div>
                      </div>
                  </div>
 
@@ -150,16 +201,9 @@ const selectedTier = ref<any>(null)
                             class="block bg-surface hover:bg-surface-hover border border-border rounded-xl py-4 px-6 font-medium transition-all hover:-translate-y-1 flex items-center justify-between group shadow-sm"
                         >
                             <span class="flex items-center gap-4">
-                                <!-- Platform Icon Logic (Simplified) -->
-                                <span class="text-2xl group-hover:scale-110 transition-transform">
-                                    {{
-                                        link.platform.toLowerCase().includes('twitter') ? '🐦' :
-                                        link.platform.toLowerCase().includes('instagram') ? '📸' :
-                                        link.platform.toLowerCase().includes('youtube') ? '📺' :
-                                        link.platform.toLowerCase().includes('linkedin') ? '💼' :
-                                        '🔗'
-                                    }}
-                                </span>
+                                <div class="p-2 bg-primary/10 rounded-full text-primary group-hover:scale-110 transition-transform">
+                                    <component :is="getSocialIcon(link.platform)" class="w-5 h-5" />
+                                </div>
                                 <span class="text-lg">{{ link.platform }}</span>
                             </span>
                             <ChevronRight class="w-5 h-5 text-text-secondary" />
