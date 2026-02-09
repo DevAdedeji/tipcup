@@ -5,7 +5,8 @@ import {
     getDocs,
     limit,
     doc,
-    getDoc
+    getDoc,
+    orderBy
 } from 'firebase/firestore'
 import { auth, db } from '~/firebase'
 
@@ -18,6 +19,7 @@ export interface PublicProfile {
     coverUrl?: string // Future proofing
     tiers: any[]
     socialLinks?: { platform: string, url: string }[]
+    fundraisingGoal?: any // Goal
     createdAt: any
 }
 
@@ -57,6 +59,20 @@ export const useProfile = () => {
                 tiers: userData.tiers || [],
                 socialLinks: userData.socialLinks || [],
                 createdAt: userData.createdAt
+            }
+
+            // Fetch active goal
+            const goalsReff = collection(db, 'users', userDoc.id, 'goals')
+            const qGoal = query(goalsReff, where('status', '==', 'active'), orderBy('createdAt', 'desc'), limit(1))
+            const goalSnapshot = await getDocs(qGoal)
+
+            const goalDoc = goalSnapshot.docs[0]
+
+            if (goalDoc) {
+                profile.fundraisingGoal = {
+                    id: goalDoc.id,
+                    ...goalDoc.data()
+                }
             }
 
             // Increment view count (fire and forget)

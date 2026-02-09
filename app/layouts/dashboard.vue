@@ -17,9 +17,9 @@ const isLoading = computed(() => {
       <div class="relative flex flex-col items-center gap-6">
           <!-- Logo or Icon -->
           <div class="relative">
-              <div class="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary"></div>
-              <div class="absolute inset-0 flex items-center justify-center">
-                  <img src="/logo.png" alt="TipCup Logo" class="w-10 h-10 object-contain animate-bounce" />
+              <div class="animate-spin rounded-full min-h-16 min-w-16 border-4 border-primary/20 border-t-primary"></div>
+              <div class="absolute inset-0 flex items-center justify-center p-2">
+                  <img src="/logo.png" alt="TipCup Logo" class="w-10 h-10 object-contain" />
               </div>
           </div>
           <p class="text-xl font-medium text-text-secondary animate-pulse tracking-wide">Loading Dashboard...</p>

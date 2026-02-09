@@ -2,6 +2,7 @@
 import { useProfile, type PublicProfile } from '~/composables/useProfile'
 import { ChevronRight, Check, Twitter, Instagram, Youtube, Linkedin, Globe, Link as LinkIcon, Facebook, Github } from 'lucide-vue-next'
 import Skeleton from '~/components/ui/Skeleton.vue'
+import GoalProgress from '~/components/GoalProgress.vue'
 
 const route = useRoute()
 const username = computed(() => route.params.username as string)
@@ -128,6 +129,11 @@ const selectedTier = ref<any>(null)
                         <p v-if="profile?.bio" class="mt-2 max-w-lg text-text-secondary leading-relaxed">{{ profile?.bio }}</p>
                     </div>
 
+                    <!-- Goal Progress Widget (Mobile/Desktop) -->
+                    <div v-if="profile?.fundraisingGoal" class="w-full mt-6 sm:mt-0 sm:absolute sm:bottom-0 sm:right-6 sm:w-80 z-20">
+                         <GoalProgress :goal="profile.fundraisingGoal" />
+                    </div>
+
                     <!-- Follow / Share Actions (Placeholder) -->
                     <div class="mt-6 sm:mt-24 flex gap-3">
                         <Button @click="shareProfile" variant="outline" size="sm">
@@ -190,7 +196,7 @@ const selectedTier = ref<any>(null)
                  </div>
 
                  <!-- Tab Content: Socials (Link in Bio) -->
-                 <div v-else-if="activeTab === 'socials'" class="max-w-md mx-auto space-y-4 py-8">
+                 <div v-else-if="activeTab === 'socials'" class="max-w-md mx-auto space-y-4">
                     <div v-if="profile?.socialLinks && profile.socialLinks.length > 0" class="space-y-3">
                         <a
                             v-for="link in profile.socialLinks"
