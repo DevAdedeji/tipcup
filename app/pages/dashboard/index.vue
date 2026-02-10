@@ -5,6 +5,7 @@ import { usePayments } from '~/composables/usePayments'
 import Skeleton from '~/components/ui/Skeleton.vue'
 import Table from '~/components/ui/Table.vue'
 import { Eye, DollarSign, Heart } from 'lucide-vue-next'
+import { formatCurrency } from '~/utils/format'
 
 definePageMeta({
   layout: 'dashboard',
@@ -19,7 +20,7 @@ usePageMeta({
 
 
 
-const { user, userProfile, logout, loading } = useAuth()
+const { userProfile, loading } = useAuth()
 const { payments, loading: paymentsLoading, fetchRecentPayments } = usePayments()
 const toast = useToast()
 
@@ -108,7 +109,7 @@ const copyLink = async () => {
 
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <!-- Total Views -->
-                  <div class="bg-surface border border-white/5 p-6 rounded-2xl shadow-sm hover:border-primary/20 transition-colors group">
+                  <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm transition-colors group">
                       <div class="flex items-center justify-between mb-4">
                           <span class="text-text-secondary font-medium">Total Views</span>
                           <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500 group-hover:scale-110 transition-transform">
@@ -122,21 +123,21 @@ const copyLink = async () => {
                   </div>
 
                   <!-- Earnings -->
-                  <div class="bg-surface border border-white/5 p-6 rounded-2xl shadow-sm hover:border-primary/20 transition-colors group">
+                  <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm transition-colors group">
                       <div class="flex items-center justify-between mb-4">
                           <span class="text-text-secondary font-medium">Earnings</span>
                           <div class="p-2 bg-green-500/10 rounded-lg text-green-500 group-hover:scale-110 transition-transform">
                             <DollarSign class="w-5 h-5" />
                           </div>
                       </div>
-                      <div class="text-4xl font-bold">${{ userProfile?.totalEarnings || '0.00' }}</div>
+                      <div class="text-4xl font-bold">{{ formatCurrency(userProfile?.totalEarnings || 0) }}</div>
                       <div class="text-sm text-text-secondary mt-1">
                           Total received support
                       </div>
                   </div>
 
                   <!-- Supporters -->
-                  <div class="bg-surface border border-white/5 p-6 rounded-2xl shadow-sm hover:border-primary/20 transition-colors group">
+                  <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm transition-colors group">
                       <div class="flex items-center justify-between mb-4">
                           <span class="text-text-secondary font-medium">Supporters</span>
                           <div class="p-2 bg-red-500/10 rounded-lg text-red-500 group-hover:scale-110 transition-transform">
@@ -154,7 +155,7 @@ const copyLink = async () => {
 
 
                   <div class="w-full lg:w-2/3 space-y-8">
-                      <div class="bg-surface border border-white/5 p-6 rounded-2xl shadow-sm">
+                      <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm">
                           <h2 class="text-xl font-bold mb-6">Views Overview</h2>
                           <ViewsChart :analytics="userProfile?.analytics" />
                       </div>
@@ -212,7 +213,7 @@ const copyLink = async () => {
                         </template>
 
                         <template #amount="{ row }">
-                            <span class="font-bold text-green-500">+${{ row.amount }}</span>
+                            <span class="font-bold text-green-500">+{{ formatCurrency(row.amount) }}</span>
                         </template>
 
                         <template #message="{ row }">

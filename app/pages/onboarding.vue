@@ -2,6 +2,8 @@
 import { useAuth } from '~/composables/useAuth'
 import { useOnboarding } from '~/composables/useOnboarding'
 import { usePageMeta } from '~/composables/usePageMeta'
+import { useBankDetails } from '~/composables/useBankDetails'
+import { ChevronDown } from 'lucide-vue-next'
 
 usePageMeta({
   title: 'Onboarding'
@@ -9,6 +11,7 @@ usePageMeta({
 
 const { user } = useAuth()
 const { checkUsernameAvailability, completeOnboarding } = useOnboarding()
+const { addAccount } = useBankDetails()
 
 const step = ref(1)
 const steps = ['Claim Link', 'Profile', 'Membership', 'Payouts']
@@ -24,9 +27,72 @@ const formData = reactive({
   ],
   payoutDetails: {
       bankName: '',
-      accountNumber: ''
+      bankCode: '',
+      accountNumber: '',
+      accountName: ''
   }
 })
+
+const banks = ref<any[]>([])
+const loadingBanks = ref(false)
+const verifyingAccount = ref(false)
+
+onMounted(async () => {
+    loadingBanks.value = true
+    try {
+        const { data } = await useFetch<any>('/api/paystack/banks')
+        if (data.value && data.value.status === 'success') {
+            banks.value = data.value.data
+        }
+    } catch (e) {
+        console.error('Failed to fetch banks', e)
+    } finally {
+        loadingBanks.value = false
+    }
+})
+
+const resolveAccount = async () => {
+    if (formData.payoutDetails.accountNumber.length < 10 || !formData.payoutDetails.bankCode) return
+
+    verifyingAccount.value = true
+    formData.payoutDetails.accountName = ''
+
+    try {
+        const { data } = await useFetch<any>('/api/paystack/resolve', {
+            params: {
+                account_number: formData.payoutDetails.accountNumber,
+                bank_code: formData.payoutDetails.bankCode
+            }
+        })
+
+        if (data.value && data.value.status === 'success') {
+            formData.payoutDetails.accountName = data.value.data.account_name
+        } else {
+             const toast = useToast()
+            toast.add({ title: 'Invalid Account', description: 'Could not resolve account details.', type: 'error' })
+        }
+    } catch (e) {
+         const toast = useToast()
+        toast.add({ title: 'Error', description: 'Failed to resolve account.', type: 'error' })
+    } finally {
+        verifyingAccount.value = false
+    }
+}
+
+watch(() => [formData.payoutDetails.accountNumber, formData.payoutDetails.bankCode], () => {
+    if (formData.payoutDetails.accountNumber.length === 10 && formData.payoutDetails.bankCode) {
+        resolveAccount()
+    } else {
+        formData.payoutDetails.accountName = ''
+    }
+})
+
+const handleBankChange = (event: any) => {
+    const code = event.target.value
+    formData.payoutDetails.bankCode = code
+    const bank = banks.value.find(b => b.code === code)
+    formData.payoutDetails.bankName = bank ? bank.name : ''
+}
 
 const usernameError = ref('')
 const isCheckingUsername = ref(false)
@@ -78,17 +144,50 @@ const nextStep = () => {
 
 const complete = async () => {
     isLoading.value = true
+    const toast = useToast()
+
     try {
+        // 1. Create Profile
         await completeOnboarding({
             username: formData.username,
             displayName: formData.displayName,
             bio: formData.bio,
             tiers: formData.tiers,
-            payoutDetails: formData.payoutDetails.bankName ? formData.payoutDetails : null
+            payoutDetails: null // Don't save to profile doc anymore
         })
+
+        // 2. Add Bank Account if provided
+        if (formData.payoutDetails.bankCode && formData.payoutDetails.accountNumber && formData.payoutDetails.accountName) {
+            try {
+                // Create Recipient
+                const { data } = await useFetch<any>('/api/paystack/recipient', {
+                    method: 'POST',
+                    body: {
+                        name: formData.payoutDetails.accountName,
+                        account_number: formData.payoutDetails.accountNumber,
+                        bank_code: formData.payoutDetails.bankCode
+                    }
+                })
+
+                if (data.value && data.value.status === 'success') {
+                    await addAccount({
+                        bankName: formData.payoutDetails.bankName,
+                        accountNumber: formData.payoutDetails.accountNumber,
+                        accountName: formData.payoutDetails.accountName,
+                        bank_code: formData.payoutDetails.bankCode,
+                        recipient_code: data.value.data.recipient_code
+                    })
+                }
+            } catch (e) {
+                console.error('Failed to add bank account during onboarding', e)
+                toast.add({ title: 'Bank Account Error', description: 'Profile created, but failed to add bank account. Please add it in settings.', type: 'warning' })
+            }
+        }
+
         navigateTo('/dashboard')
     } catch (error: any) {
         console.error('Onboarding failed:', error)
+         toast.add({ title: 'Error', description: 'Onboarding failed. Please try again.', type: 'error' })
     } finally {
         isLoading.value = false
     }
@@ -195,7 +294,7 @@ const complete = async () => {
                         </button>
                         <div class="grid grid-cols-3 gap-4">
                              <div class="col-span-1">
-                                 <label class="text-xs text-text-secondary block mb-1">Price ($)</label>
+                                 <label class="text-xs text-text-secondary block mb-1">Price (₦)</label>
                                  <Input v-model="tier.price" type="number" />
                              </div>
                              <div class="col-span-2">
@@ -227,11 +326,34 @@ const complete = async () => {
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Bank Name</label>
-                            <Input v-model="formData.payoutDetails.bankName" placeholder="e.g. Chase" />
+                            <div class="relative">
+                                <select
+                                    v-if="!loadingBanks"
+                                    :value="formData.payoutDetails.bankCode"
+                                    @change="handleBankChange"
+                                    class="flex h-10 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-text-primary ring-offset-background placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none pr-10"
+                                >
+                                    <option value="" disabled selected>Select a bank</option>
+                                    <option v-for="bank in banks" :key="bank.id" :value="bank.code">
+                                        {{ bank.name }}
+                                    </option>
+                                </select>
+                                <div v-else class="text-sm text-text-secondary h-10 flex items-center">Loading banks...</div>
+                                <ChevronDown v-if="!loadingBanks" class="absolute right-3 top-3 h-4 w-4 text-text-secondary pointer-events-none" />
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Account Number</label>
-                            <Input v-model="formData.payoutDetails.accountNumber" placeholder="•••• •••• •••• 1234" />
+                            <Input v-model="formData.payoutDetails.accountNumber" placeholder="•••• •••• •••• 1234" maxlength="10" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Account Name</label>
+                             <div class="relative">
+                                <Input v-model="formData.payoutDetails.accountName" placeholder="Fetched automatically..." disabled class="opacity-70 cursor-not-allowed bg-gray-50" />
+                                <div v-if="verifyingAccount" class="absolute right-3 top-2.5">
+                                    <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

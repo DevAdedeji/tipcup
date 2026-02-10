@@ -2,12 +2,13 @@
 import { useProfile, type PublicProfile } from '~/composables/useProfile'
 import { ChevronRight, Twitter, Instagram, Youtube, Linkedin, Globe, Link as LinkIcon, Facebook, Github } from 'lucide-vue-next'
 import Skeleton from '~/components/ui/Skeleton.vue'
-import GoalProgress from '~/components/GoalProgress.vue'
+import GoalProgress from '~/components/dashboard/GoalProgress.vue'
+import { formatCurrency } from '~/utils/format'
 
 const route = useRoute()
 const username = computed(() => route.params.username as string)
 
-const { fetchProfileByUsername, loading, error } = useProfile()
+const { fetchProfileByUsername, loading } = useProfile()
 const profile = ref<PublicProfile | null>(null)
 
 const getSocialIcon = (platform: string) => {
@@ -28,8 +29,10 @@ onMounted(async () => {
     }
 })
 
-useHead({
-    title: computed(() => profile.value ? `${profile.value.displayName} (@${profile.value.username})` : 'Profile Not Found')
+const pageTitle = computed(() => loading.value ? 'Loading...' : profile.value ? `${profile.value.displayName} (@${profile.value.username})` : 'Profile Not Found')
+
+usePageMeta({
+    title: pageTitle
 })
 
 const toast = useToast()
@@ -49,6 +52,87 @@ const tabs = [
 ]
 
 const selectedTier = ref<any>(null)
+const supportMessage = ref('')
+const tipperEmail = ref('')
+const processingPayment = ref(false)
+const { user } = useAuth()
+
+const handleSupport = async () => {
+    if (!selectedTier.value) {
+        toast.add({ title: 'Select a Tier', description: 'Please select an amount to support.', type: 'error' })
+        return
+    }
+
+    const email = user.value?.email || tipperEmail.value
+    if (!email) {
+        toast.add({ title: 'Email Required', description: 'Please enter your email address.', type: 'error' })
+        return
+    }
+
+    processingPayment.value = true
+    try {
+        // Initialize on Server
+        const { data: initData } = await useFetch<any>('/api/paystack/initialize', {
+            method: 'POST',
+            body: {
+                email,
+                amount: selectedTier.value.price,
+                callback_url: window.location.href,
+                metadata: {
+                    toUserId: profile.value?.uid,
+                    goalId: profile.value?.fundraisingGoal?.id,
+                    tier: selectedTier.value,
+                    message: supportMessage.value,
+                    fromUserId: user.value?.uid
+                }
+            }
+        })
+
+        if (initData.value && initData.value.access_code) {
+            const accessCode = initData.value.access_code
+
+            // Open Paystack Popup
+            const handler = (window as any).PaystackPop.setup({
+                key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+                email: email,
+                amount: selectedTier.value.price * 100,
+                ref: initData.value.reference,
+                onClose: function() {
+                    processingPayment.value = false
+                    toast.add({ title: 'Payment Cancelled', description: 'You cancelled the payment.', type: 'info' })
+                },
+                callback: function(response: any) {
+                    // Verify payment on server
+                    $fetch('/api/paystack/verify', {
+                        method: 'POST',
+                        body: { reference: response.reference }
+                    }).then((verifyData: any) => {
+                        if (verifyData && verifyData.status === 'success') {
+                            toast.add({ title: 'Thank You!', description: `Successfully supported ${profile.value?.displayName}!`, type: 'success' })
+                            supportMessage.value = ''
+                            tipperEmail.value = ''
+                            location.reload()
+                        } else {
+                            toast.add({ title: 'Verification Failed', description: 'Payment was made but verification failed.', type: 'warning' })
+                        }
+                    }).catch((e) => {
+                        toast.add({ title: 'Error', description: 'Failed to verify payment.', type: 'error' })
+                    }).finally(() => {
+                        processingPayment.value = false
+                    })
+                }
+            })
+            handler.openIframe()
+        } else {
+             throw new Error('Initialization failed')
+        }
+
+    } catch (e) {
+        console.error(e)
+        toast.add({ title: 'Error', description: 'Could not start payment.', type: 'error' })
+        processingPayment.value = false
+    }
+}
 </script>
 
 <template>
@@ -142,7 +226,7 @@ const selectedTier = ref<any>(null)
                     <div v-if="profile?.fundraisingGoal" class="w-full">
                          <GoalProgress :goal="profile.fundraisingGoal" />
                     </div>
-                    <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-xl">
+                    <div class="bg-surface border border-primary/20 rounded-2xl p-6 shadow-xl">
                          <h3 class="font-bold text-xl mb-4 text-center">Support {{ profile?.displayName?.split(' ')[0] }}</h3>
 
                          <!-- Tiers Grid -->
@@ -159,23 +243,27 @@ const selectedTier = ref<any>(null)
                                  ]"
                              >
                                  <span class="text-2xl mb-1">{{ tier.emoji || '☕' }}</span>
-                                 <span class="font-bold">${{ tier.price }}</span>
+                                 <span class="font-bold">{{ formatCurrency(tier.price) }}</span>
                              </button>
                          </div>
 
                          <div class="space-y-4">
-                             <Input placeholder="Say something nice..." class="bg-background" />
-                             <Button size="lg" class="w-full font-bold shadow-lg shadow-primary/20">
-                                 Support ${{ selectedTier?.price || '...' }}
+                             <Input v-model="supportMessage" placeholder="Say something nice..." class="bg-background" />
+                             <!-- Email Input for Paystack -->
+                             <Input v-if="!user" v-model="tipperEmail" type="email" placeholder="Your Email (for receipt)" class="bg-background" />
+
+                             <Button :loading="processingPayment" @click="handleSupport" size="lg" class="w-full font-bold shadow-lg shadow-primary/20">
+                                 Support {{ selectedTier ? formatCurrency(selectedTier.price) : '...' }}
                              </Button>
                              <p class="text-xs text-center text-text-secondary">
-                                 Only secure payments.
+                                 Secured by Paystack
                              </p>
                          </div>
                     </div>
                  </div>
 
                  <div v-else-if="activeTab === 'socials'" class="max-w-md mx-auto space-y-4">
+                     <!-- Socials Content -->
                     <div v-if="profile?.socialLinks && profile.socialLinks.length > 0" class="space-y-3">
                         <a
                             v-for="link in profile.socialLinks"
@@ -183,7 +271,7 @@ const selectedTier = ref<any>(null)
                             :href="link.url"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="block bg-surface hover:bg-surface-hover border border-border rounded-xl py-4 px-6 font-medium transition-all hover:-translate-y-1 flex items-center justify-between group shadow-sm"
+                            class="bg-surface hover:bg-surface-hover border border-primary/20 rounded-xl py-4 px-6 font-medium transition-all hover:-translate-y-1 flex items-center justify-between group shadow-sm"
                         >
                             <span class="flex items-center gap-4">
                                 <div class="p-2 bg-primary/10 rounded-full text-primary group-hover:scale-110 transition-transform">
@@ -194,13 +282,15 @@ const selectedTier = ref<any>(null)
                             <ChevronRight class="w-5 h-5 text-text-secondary" />
                         </a>
                     </div>
-
                     <!-- Empty State for Socials -->
                     <div v-else class="text-center py-12 bg-surface/50 rounded-2xl border border-dashed border-border">
                         <div class="text-4xl mb-3 opacity-50">📭</div>
                         <p class="text-text-secondary">No social links added yet.</p>
                     </div>
                  </div>
+
+                <!-- Paystack Inline Script -->
+                <Script src="https://js.paystack.co/v1/inline.js" />
             </div>
         </div>
     </div>

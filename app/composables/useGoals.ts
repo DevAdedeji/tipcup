@@ -50,12 +50,32 @@ export const useGoals = () => {
         try {
             loading.value = true
 
-            await addDoc(collection(db, 'users', user.value.uid, 'goals'), {
+            // If creating an active goal (default), pause others
+            // Query all active goals
+            const q = query(
+                collection(db, 'users', user.value.uid, 'goals'),
+                where('status', '==', 'active')
+            )
+            const snapshot = await getDocs(q)
+
+            // Batch writes for atomicity
+            const { writeBatch } = await import('firebase/firestore')
+            const batch = writeBatch(db)
+
+            snapshot.docs.forEach(doc => {
+                batch.update(doc.ref, { status: 'paused' })
+            })
+
+            const newGoalRef = doc(collection(db, 'users', user.value.uid, 'goals'))
+            batch.set(newGoalRef, {
                 ...goal,
                 currentAmount: 0,
                 status: 'active',
                 createdAt: Timestamp.now()
             })
+
+            await batch.commit()
+
             loading.value = false
             return true
         } catch (e) {
@@ -71,8 +91,32 @@ export const useGoals = () => {
         if (!user.value) return
 
         try {
-            const goalRef = doc(db, 'users', user.value.uid, 'goals', id)
-            await updateDoc(goalRef, data)
+            // If setting status to active, pause others
+            if (data.status === 'active') {
+                const q = query(
+                    collection(db, 'users', user.value.uid, 'goals'),
+                    where('status', '==', 'active')
+                )
+                const snapshot = await getDocs(q)
+
+                const { writeBatch } = await import('firebase/firestore')
+                const batch = writeBatch(db)
+
+                snapshot.docs.forEach(d => {
+                    if (d.id !== id) { // Don't pause self (though we are updating it anyway)
+                        batch.update(d.ref, { status: 'paused' })
+                    }
+                })
+
+                const goalRef = doc(db, 'users', user.value.uid, 'goals', id)
+                batch.update(goalRef, data)
+
+                await batch.commit()
+            } else {
+                // Normal update
+                const goalRef = doc(db, 'users', user.value.uid, 'goals', id)
+                await updateDoc(goalRef, data)
+            }
             return true
         } catch (e) {
             console.error(e)

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Target } from 'lucide-vue-next'
 import type { Goal } from '~/composables/useGoals'
+import { formatCurrency } from '~/utils/format'
 
 const props = defineProps<{
     goal: Goal
@@ -14,7 +15,7 @@ const percentage = computed(() => {
 
 <template>
     <div class="w-full max-w-lg mx-auto mb-8 animate-fade-in-up">
-        <div class="bg-surface border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-lg hover:border-primary/30 transition-colors group">
+        <div class="bg-surface border border-primary/20 rounded-2xl p-6 relative overflow-hidden shadow-lg transition-colors group">
             <!-- Background Glow -->
             <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-10 -mt-10 group-hover:bg-primary/10 transition-colors"></div>
 
@@ -32,8 +33,8 @@ const percentage = computed(() => {
                 <div class="space-y-3">
                     <div class="flex justify-between items-end">
                         <div class="text-2xl font-bold">
-                            ${{ goal.currentAmount }}
-                            <span class="text-sm text-text-secondary font-normal">raised of ${{ goal.targetAmount }}</span>
+                            {{ formatCurrency(goal.currentAmount) }}
+                            <span class="text-sm text-text-secondary font-normal">raised of {{ formatCurrency(goal.targetAmount) }}</span>
                         </div>
                         <div class="text-primary font-bold">{{ percentage }}%</div>
                     </div>

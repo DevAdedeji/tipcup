@@ -14,7 +14,7 @@ defineProps<{
 </script>
 
 <template>
-    <div class="bg-surface border border-white/5 rounded-2xl overflow-hidden shadow-sm">
+    <div class="bg-surface border border-primary/20 rounded-2xl overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead class="bg-white/5 text-text-secondary uppercase text-xs">

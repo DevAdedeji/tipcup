@@ -1,6 +1,7 @@
+import type { Ref, ComputedRef } from 'vue'
 
 export interface PageMeta {
-    title: string
+    title: string | Ref<string> | ComputedRef<string>
     description?: string
     image?: string
     url?: string
