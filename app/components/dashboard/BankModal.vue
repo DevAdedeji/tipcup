@@ -62,7 +62,7 @@ const resolveAccount = async () => {
     bankForm.accountName = ''
 
     try {
-        const { data } = await useFetch<any>('/api/paystack/resolve', {
+        const { data } = await $fetch<any>('/api/paystack/resolve', {
             params: {
                 account_number: bankForm.accountNumber,
                 bank_code: bankForm.bankCode
@@ -107,7 +107,7 @@ const handleAddBank = async () => {
 
     // Create Recipient
     try {
-        const { data } = await useFetch<any>('/api/paystack/recipient', {
+        const { data } = await $fetch<any>('/api/paystack/recipient', {
             method: 'POST',
             body: {
                 name: bankForm.accountName,

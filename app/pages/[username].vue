@@ -29,6 +29,16 @@ onMounted(async () => {
     }
 })
 
+// Load Paystack Inline Script
+useHead({
+    script: [
+        {
+            src: 'https://js.paystack.co/v1/inline.js',
+            async: true
+        }
+    ]
+})
+
 const pageTitle = computed(() => loading.value ? 'Loading...' : profile.value ? `${profile.value.displayName} (@${profile.value.username})` : 'Profile Not Found')
 
 usePageMeta({
@@ -55,7 +65,7 @@ const selectedTier = ref<any>(null)
 const supportMessage = ref('')
 const tipperEmail = ref('')
 const processingPayment = ref(false)
-const { user } = useAuth()
+const { user, userProfile } = useAuth()
 
 const handleSupport = async () => {
     if (!selectedTier.value) {
@@ -72,7 +82,7 @@ const handleSupport = async () => {
     processingPayment.value = true
     try {
         // Initialize on Server
-        const { data: initData } = await useFetch<any>('/api/paystack/initialize', {
+        const { data: initData } = await $fetch<any>('/api/paystack/initialize', {
             method: 'POST',
             body: {
                 email,
@@ -83,7 +93,8 @@ const handleSupport = async () => {
                     goalId: profile.value?.fundraisingGoal?.id,
                     tier: selectedTier.value,
                     message: supportMessage.value,
-                    fromUserId: user.value?.uid
+                    fromUserId: user.value?.uid,
+                    fromName: user.value?.displayName || userProfile.value?.displayName || 'Anonymous'
                 }
             }
         })
@@ -111,7 +122,12 @@ const handleSupport = async () => {
                             toast.add({ title: 'Thank You!', description: `Successfully supported ${profile.value?.displayName}!`, type: 'success' })
                             supportMessage.value = ''
                             tipperEmail.value = ''
-                            location.reload()
+                            // Refetch profile to show updated goal
+                            if (username.value) {
+                                fetchProfileByUsername(username.value).then(updatedProfile => {
+                                    profile.value = updatedProfile
+                                })
+                            }
                         } else {
                             toast.add({ title: 'Verification Failed', description: 'Payment was made but verification failed.', type: 'warning' })
                         }

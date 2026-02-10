@@ -189,7 +189,7 @@ const copyLink = async () => {
                 <div class="space-y-6">
                     <div class="flex justify-between items-center px-2">
                         <h2 class="text-xl font-bold">Recent Supporters</h2>
-                        <Button variant="ghost" size="sm" class="text-primary">View All</Button>
+                        <!-- <Button variant="ghost" size="sm" class="text-primary">View All</Button> -->
                     </div>
 
                     <Table
@@ -206,9 +206,9 @@ const copyLink = async () => {
                         <template #supporter="{ row }">
                             <div class="flex items-center gap-3 font-medium">
                                 <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                                    {{ (row.name || 'A').charAt(0) }}
+                                    {{ (row.name || row.fromName || 'A').charAt(0) }}
                                 </div>
-                                {{ row.name || 'Anonymous' }}
+                                {{ row.name || row.fromName || userProfile?.displayName || 'Anonymous' }}
                             </div>
                         </template>
 

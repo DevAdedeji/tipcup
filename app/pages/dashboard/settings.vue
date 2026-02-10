@@ -19,11 +19,8 @@ usePageMeta({
   title: 'Settings',
 })
 
-
-
 const { user, userProfile, loading } = useAuth()
 const toast = useToast()
-
 
 const form = reactive({
     displayName: '',
@@ -48,7 +45,6 @@ watch(() => userProfile.value, (newProfile) => {
         })
     }
 }, { immediate: true })
-
 
 const saving = ref(false)
 
@@ -80,8 +76,6 @@ const addTier = () => {
 const removeTier = (index: number) => {
     form.tiers.splice(index, 1)
 }
-
-
 const addSocial = () => {
     form.socialLinks.push({ platform: 'Twitter', url: '' })
 }

@@ -3,13 +3,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   ssr: false,
-  app: {
-    head: {
-      meta: [
-        { name: 'Cross-Origin-Opener-Policy', content: 'same-origin-allow-popups' }
-      ]
-    }
-  },
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/google-fonts'],
   googleFonts: {
     families: {

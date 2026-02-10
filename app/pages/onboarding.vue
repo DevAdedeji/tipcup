@@ -40,7 +40,7 @@ const verifyingAccount = ref(false)
 onMounted(async () => {
     loadingBanks.value = true
     try {
-        const { data } = await useFetch<any>('/api/paystack/banks')
+        const { data } = await $fetch<any>('/api/paystack/banks')
         if (data.value && data.value.status === 'success') {
             banks.value = data.value.data
         }
@@ -58,7 +58,7 @@ const resolveAccount = async () => {
     formData.payoutDetails.accountName = ''
 
     try {
-        const { data } = await useFetch<any>('/api/paystack/resolve', {
+        const { data } = await $fetch<any>('/api/paystack/resolve', {
             params: {
                 account_number: formData.payoutDetails.accountNumber,
                 bank_code: formData.payoutDetails.bankCode
@@ -160,7 +160,7 @@ const complete = async () => {
         if (formData.payoutDetails.bankCode && formData.payoutDetails.accountNumber && formData.payoutDetails.accountName) {
             try {
                 // Create Recipient
-                const { data } = await useFetch<any>('/api/paystack/recipient', {
+                const { data } = await $fetch<any>('/api/paystack/recipient', {
                     method: 'POST',
                     body: {
                         name: formData.payoutDetails.accountName,
