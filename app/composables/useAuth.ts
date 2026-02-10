@@ -5,7 +5,7 @@ import {
     onAuthStateChanged,
     type User
 } from 'firebase/auth'
-import { doc, getDoc, type DocumentData } from 'firebase/firestore'
+import { doc, getDoc, onSnapshot, type DocumentData } from 'firebase/firestore'
 import { auth, db } from '~/firebase'
 
 export const useAuth = () => {
@@ -14,24 +14,36 @@ export const useAuth = () => {
     const userProfile = useState<DocumentData | null>('userProfile', () => null)
     const loading = useState<boolean>('authLoading', () => true)
 
+    let unsubscribeProfile: (() => void) | undefined
 
     const initAuth = () => {
         loading.value = true
         onAuthStateChanged(auth, async (currentUser) => {
             user.value = currentUser
 
-            if (currentUser) {
+            // Unsubscribe from previous profile listener
+            if (unsubscribeProfile) {
+                unsubscribeProfile()
+                unsubscribeProfile = undefined
+            }
 
+            if (currentUser) {
                 try {
                     const docRef = doc(db, 'users', currentUser.uid)
-                    const docSnap = await getDoc(docRef)
-                    if (docSnap.exists()) {
-                        userProfile.value = docSnap.data()
-                    } else {
+
+                    // Set up real-time listener for user profile
+                    unsubscribeProfile = onSnapshot(docRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            userProfile.value = docSnap.data()
+                        } else {
+                            userProfile.value = null
+                        }
+                    }, (error) => {
+                        console.error('Error fetching user profile:', error)
                         userProfile.value = null
-                    }
+                    })
                 } catch (e) {
-                    console.error('Error fetching user profile:', e)
+                    console.error('Error setting up profile listener:', e)
                     userProfile.value = null
                 }
             } else {

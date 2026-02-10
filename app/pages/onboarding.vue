@@ -4,6 +4,7 @@ import { useOnboarding } from '~/composables/useOnboarding'
 import { usePageMeta } from '~/composables/usePageMeta'
 import { useBankDetails } from '~/composables/useBankDetails'
 import { ChevronDown } from 'lucide-vue-next'
+import Select from '~/components/ui/Select.vue'
 
 usePageMeta({
   title: 'Onboarding'
@@ -40,7 +41,7 @@ const verifyingAccount = ref(false)
 onMounted(async () => {
     loadingBanks.value = true
     try {
-        const { data } = await $fetch<any>('/api/paystack/banks')
+        const { data } = await useFetch<any>('/api/paystack/banks')
         if (data.value && data.value.status === 'success') {
             banks.value = data.value.data
         }
@@ -58,7 +59,7 @@ const resolveAccount = async () => {
     formData.payoutDetails.accountName = ''
 
     try {
-        const { data } = await $fetch<any>('/api/paystack/resolve', {
+        const { data } = await useFetch<any>('/api/paystack/resolve', {
             params: {
                 account_number: formData.payoutDetails.accountNumber,
                 bank_code: formData.payoutDetails.bankCode
@@ -87,12 +88,13 @@ watch(() => [formData.payoutDetails.accountNumber, formData.payoutDetails.bankCo
     }
 })
 
-const handleBankChange = (event: any) => {
-    const code = event.target.value
-    formData.payoutDetails.bankCode = code
-    const bank = banks.value.find(b => b.code === code)
-    formData.payoutDetails.bankName = bank ? bank.name : ''
-}
+// Update bank name when bank code changes
+watch(() => formData.payoutDetails.bankCode, (code) => {
+    if (code) {
+        const bank = banks.value.find(b => b.code === code)
+        formData.payoutDetails.bankName = bank ? bank.name : ''
+    }
+})
 
 const usernameError = ref('')
 const isCheckingUsername = ref(false)
@@ -160,7 +162,7 @@ const complete = async () => {
         if (formData.payoutDetails.bankCode && formData.payoutDetails.accountNumber && formData.payoutDetails.accountName) {
             try {
                 // Create Recipient
-                const { data } = await $fetch<any>('/api/paystack/recipient', {
+                const { data } = await useFetch<any>('/api/paystack/recipient', {
                     method: 'POST',
                     body: {
                         name: formData.payoutDetails.accountName,
@@ -326,21 +328,13 @@ const complete = async () => {
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Bank Name</label>
-                            <div class="relative">
-                                <select
-                                    v-if="!loadingBanks"
-                                    :value="formData.payoutDetails.bankCode"
-                                    @change="handleBankChange"
-                                    class="flex h-10 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-text-primary ring-offset-background placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none pr-10"
-                                >
-                                    <option value="" disabled selected>Select a bank</option>
-                                    <option v-for="bank in banks" :key="bank.id" :value="bank.code">
-                                        {{ bank.name }}
-                                    </option>
-                                </select>
-                                <div v-else class="text-sm text-text-secondary h-10 flex items-center">Loading banks...</div>
-                                <ChevronDown v-if="!loadingBanks" class="absolute right-3 top-3 h-4 w-4 text-text-secondary pointer-events-none" />
-                            </div>
+                            <Select
+                                v-if="!loadingBanks"
+                                v-model="formData.payoutDetails.bankCode"
+                                :options="banks.map(b => ({ value: b.code, label: b.name }))"
+                                placeholder="Select a bank"
+                            />
+                            <div v-else class="text-sm text-text-secondary h-10 flex items-center">Loading banks...</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Account Number</label>

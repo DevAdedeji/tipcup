@@ -82,7 +82,7 @@ const handleSupport = async () => {
     processingPayment.value = true
     try {
         // Initialize on Server
-        const { data: initData } = await $fetch<any>('/api/paystack/initialize', {
+        const { data: initData } = await useFetch<any>('/api/paystack/initialize', {
             method: 'POST',
             body: {
                 email,
@@ -98,6 +98,7 @@ const handleSupport = async () => {
                 }
             }
         })
+
 
         if (initData.value && initData.value.access_code) {
             const accessCode = initData.value.access_code

@@ -27,7 +27,7 @@ const getTypeClasses = (type: string | undefined) => {
 </script>
 
 <template>
-  <div class="fixed top-4 right-4 z-50 flex flex-col gap-2 w-full max-w-sm pointer-events-none p-4 sm:p-0">
+  <div class="fixed top-4 right-1 md:right-4 z-50 flex flex-col gap-2 w-full max-w-sm pointer-events-none p-4 sm:p-0">
     <TransitionGroup
       enter-active-class="transform ease-out duration-300 transition"
       enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"

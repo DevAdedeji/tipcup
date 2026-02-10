@@ -37,11 +37,27 @@ export default defineEventHandler(async (event) => {
                     verifiedViaClient: true
                 })
 
-                // Update user's total earnings
+                // Update user's total earnings and supporter count
                 const userRef = adminDb.collection('users').doc(metadata.toUserId)
                 const { FieldValue } = await import('firebase-admin/firestore')
+
+                // Calculate unique supporters
+                const allPayments = await adminDb.collection('payments')
+                    .where('toUserId', '==', metadata.toUserId)
+                    .get()
+
+                const uniqueSupporters = new Set()
+                allPayments.forEach(doc => {
+                    const data = doc.data()
+                    // Count by email (for both logged-in and anonymous supporters)
+                    if (data.fromEmail) {
+                        uniqueSupporters.add(data.fromEmail)
+                    }
+                })
+
                 await userRef.update({
-                    totalEarnings: FieldValue.increment(amount / 100)
+                    totalEarnings: FieldValue.increment(amount / 100),
+                    supporterCount: uniqueSupporters.size
                 })
 
                 // Update goal if applicable

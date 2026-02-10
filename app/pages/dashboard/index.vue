@@ -24,8 +24,16 @@ const { userProfile, loading } = useAuth()
 const { payments, loading: paymentsLoading, fetchRecentPayments } = usePayments()
 const toast = useToast()
 
+let unsubscribePayments: (() => void) | undefined
+
 onMounted(() => {
-    fetchRecentPayments()
+    unsubscribePayments = fetchRecentPayments()
+})
+
+onUnmounted(() => {
+    if (unsubscribePayments) {
+        unsubscribePayments()
+    }
 })
 
 const profileUrl = computed(() => {
