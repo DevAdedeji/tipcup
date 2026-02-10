@@ -20,11 +20,7 @@ const handleLogin = async () => {
   try {
     await signInWithGoogle()
 
-    // Show modal while checking profile
     showAuthCheckModal.value = true
-
-    // Small delay for UX
-    await new Promise(resolve => setTimeout(resolve, 1500))
 
     if (userProfile.value) {
       navigateTo('/dashboard')
@@ -40,22 +36,11 @@ const handleLogin = async () => {
     })
   } finally {
     isLoading.value = false
-    // hide modal only if error occurred or we are not logged in
     if (!user.value) {
         showAuthCheckModal.value = false
     }
   }
 }
-watchEffect(() => {
-    // If user is already logged in and land here, just redirect
-  if (user.value && !showAuthCheckModal.value) {
-    if (userProfile.value) {
-      navigateTo('/dashboard')
-    } else {
-      navigateTo('/onboarding')
-    }
-  }
-})
 </script>
 
 <template>
@@ -97,7 +82,6 @@ watchEffect(() => {
         </div>
       </div>
 
-       <!-- Auth Check Modal -->
        <Modal :isOpen="showAuthCheckModal" :width="'max-w-sm'">
           <div class="flex flex-col items-center justify-center py-8 space-y-4">
              <Loader2 class="w-10 h-10 animate-spin text-primary" />

@@ -4,7 +4,7 @@ import { usePageMeta } from '~/composables/usePageMeta'
 import { usePayments } from '~/composables/usePayments'
 import Skeleton from '~/components/ui/Skeleton.vue'
 import Table from '~/components/ui/Table.vue'
-import { Eye, DollarSign, Heart, Settings, PenSquare, ClipboardCopy, ExternalLink } from 'lucide-vue-next'
+import { Eye, DollarSign, Heart } from 'lucide-vue-next'
 
 definePageMeta({
   layout: 'dashboard',
@@ -47,9 +47,9 @@ const copyLink = async () => {
   <div class="min-h-screen bg-background text-text-primary pb-24">
       <div class="mx-auto space-y-8">
 
-          <!-- Loading State -->
+
           <div v-if="loading" class="space-y-8 animate-fade-in-up">
-              <!-- Header Skeleton -->
+
               <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
                       <Skeleton class="h-8 w-48 mb-2" />
@@ -61,7 +61,7 @@ const copyLink = async () => {
                   </div>
               </div>
 
-              <!-- Stats Grid Skeleton -->
+
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div v-for="i in 3" :key="i" class="bg-surface border border-white/5 p-6 rounded-2xl">
                       <div class="flex justify-between mb-4">
@@ -73,10 +73,9 @@ const copyLink = async () => {
                   </div>
               </div>
 
-              <!-- Content Grid Skeleton -->
               <div class="grid lg:grid-cols-3 gap-8">
                   <div class="lg:col-span-2 space-y-8">
-                      <!-- Chart Skeleton -->
+
                       <div class="bg-surface border border-white/5 p-6 rounded-2xl h-80">
                            <Skeleton class="h-6 w-32 mb-6" />
                            <div class="flex items-end gap-2 h-56 px-4">
@@ -90,24 +89,23 @@ const copyLink = async () => {
                            </div>
                       </div>
 
-                      <!-- Quick Actions Skeleton -->
                       <div class="grid sm:grid-cols-2 gap-4">
                           <Skeleton class="h-24 rounded-2xl" />
                           <Skeleton class="h-24 rounded-2xl" />
                       </div>
                   </div>
 
-                  <!-- Right Col Skeleton -->
+
                   <div class="space-y-6">
                       <Skeleton class="h-64 rounded-2xl" />
                   </div>
               </div>
           </div>
 
-          <!-- Main Content -->
+
           <div v-else class="space-y-8 animate-fade-in-up">
 
-              <!-- Stats Grid -->
+
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <!-- Total Views -->
                   <div class="bg-surface border border-white/5 p-6 rounded-2xl shadow-sm hover:border-primary/20 transition-colors group">
@@ -152,12 +150,10 @@ const copyLink = async () => {
                   </div>
               </div>
 
-              <!-- Main Content Grid -->
               <div class="flex lg:flex-row flex-col gap-8">
 
-                  <!-- Left: Chart & Activity -->
+
                   <div class="w-full lg:w-2/3 space-y-8">
-                      <!-- Views Chart -->
                       <div class="bg-surface border border-white/5 p-6 rounded-2xl shadow-sm">
                           <h2 class="text-xl font-bold mb-6">Views Overview</h2>
                           <ViewsChart :analytics="userProfile?.analytics" />
@@ -165,9 +161,8 @@ const copyLink = async () => {
 
                   </div>
 
-                  <!-- Right: Share & Profile Card -->
+
                   <div class="w-full lg:w-1/3 space-y-6">
-                      <!-- Share Card -->
                       <div class="bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/20 p-6 rounded-2xl shadow-lg relative overflow-hidden">
                           <div class="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full -mr-10 -mt-10"></div>
 
@@ -189,7 +184,7 @@ const copyLink = async () => {
                   </div>
 
               </div>
-              <!-- Recent Transactions -->
+
                 <div class="space-y-6">
                     <div class="flex justify-between items-center px-2">
                         <h2 class="text-xl font-bold">Recent Supporters</h2>

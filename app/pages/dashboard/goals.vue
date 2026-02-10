@@ -3,6 +3,7 @@ import { useGoals, type Goal } from '~/composables/useGoals'
 import { Plus, Target, MoreVertical, Trash2, Edit2, PlayCircle, PauseCircle, CheckCircle2 } from 'lucide-vue-next'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import Skeleton from '~/components/ui/Skeleton.vue'
+import GoalModal from '~/components/dashboard/GoalModal.vue'
 
 definePageMeta({
   layout: 'dashboard',
@@ -24,60 +25,18 @@ onMounted(() => {
 // Create Modal State
 const showCreateModal = ref(false)
 const editingGoal = ref<Goal | null>(null)
-const form = reactive({
-    title: '',
-    description: '',
-    targetAmount: ''
-})
 
 const openCreateModal = () => {
     editingGoal.value = null
-    form.title = ''
-    form.description = ''
-    form.targetAmount = ''
     showCreateModal.value = true
 }
 
 const openEditModal = (goal: Goal) => {
     editingGoal.value = goal
-    form.title = goal.title
-    form.description = goal.description
-    form.targetAmount = goal.targetAmount.toString()
     showCreateModal.value = true
 }
 
-const submitting = ref(false)
 
-const handleSubmit = async () => {
-    if (!form.title || !form.targetAmount) {
-        toast.add({ title: 'Error', description: 'Please fill in all required fields.', type: 'error' })
-        return
-    }
-
-    submitting.value = true
-    try {
-        if (editingGoal.value) {
-            await updateGoal(editingGoal.value.id, {
-                title: form.title,
-                description: form.description,
-                targetAmount: Number(form.targetAmount)
-            })
-            toast.add({ title: 'Success', description: 'Goal updated successfully!' })
-        } else {
-            await createGoal({
-                title: form.title,
-                description: form.description,
-                targetAmount: Number(form.targetAmount)
-            })
-            toast.add({ title: 'Success', description: 'Goal created successfully!' })
-        }
-        showCreateModal.value = false
-    } catch (e) {
-        toast.add({ title: 'Error', description: 'Something went wrong.', type: 'error' })
-    } finally {
-        submitting.value = false
-    }
-}
 
 const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this goal?')) {
@@ -137,7 +96,6 @@ const getProgress = (current: number, target: number) => {
                 </div>
             </div>
 
-            <!-- Empty State -->
             <div v-else-if="goals.length === 0" class="text-center py-24 bg-surface/30 border border-white/5 rounded-2xl border-dashed">
                 <div class="bg-surface inline-block p-4 rounded-full mb-4">
                     <Target class="w-8 h-8 text-text-secondary" />
@@ -147,7 +105,6 @@ const getProgress = (current: number, target: number) => {
                 <Button @click="openCreateModal" variant="outline">Create your first goal</Button>
             </div>
 
-            <!-- Goals Grid -->
             <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
                 <div v-for="goal in goals" :key="goal.id" class="bg-surface border border-white/5 p-6 rounded-2xl relative group hover:border-primary/20 transition-all shadow-sm">
 
@@ -207,7 +164,6 @@ const getProgress = (current: number, target: number) => {
 
                     <p class="text-text-secondary text-sm mb-6 line-clamp-2 h-10">{{ goal.description || 'No description provided.' }}</p>
 
-                    <!-- Progress -->
                     <div class="space-y-2">
                         <div class="flex justify-between text-sm font-medium">
                             <span class="text-primary">${{ goal.currentAmount }}</span>
@@ -227,70 +183,14 @@ const getProgress = (current: number, target: number) => {
             </div>
         </div>
 
-        <!-- Create/Edit Modal -->
-        <TransitionRoot appear :show="showCreateModal" as="template">
-            <Dialog as="div" @close="showCreateModal = false" class="relative z-50">
-                <TransitionChild
-                    as="template"
-                    enter="duration-300 ease-out"
-                    enter-from="opacity-0"
-                    enter-to="opacity-100"
-                    leave="duration-200 ease-in"
-                    leave-from="opacity-100"
-                    leave-to="opacity-0"
-                >
-                    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" />
-                </TransitionChild>
-
-                <div class="fixed inset-0 overflow-y-auto">
-                    <div class="flex min-h-full items-center justify-center p-4 text-center">
-                        <TransitionChild
-                            as="template"
-                            enter="duration-300 ease-out"
-                            enter-from="opacity-0 scale-95"
-                            enter-to="opacity-100 scale-100"
-                            leave="duration-200 ease-in"
-                            leave-from="opacity-100 scale-100"
-                            leave-to="opacity-0 scale-95"
-                        >
-                            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-surface border border-white/10 p-6 text-left align-middle shadow-xl transition-all">
-                                <DialogTitle as="h3" class="text-lg font-bold leading-6 text-text-primary mb-4">
-                                    {{ editingGoal ? 'Edit Goal' : 'Create New Goal' }}
-                                </DialogTitle>
-
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-text-secondary mb-1">Goal Title</label>
-                                        <Input v-model="form.title" placeholder="e.g. New Camera Lens" auto-focus />
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-text-secondary mb-1">Target Amount ($)</label>
-                                        <Input v-model="form.targetAmount" type="number" placeholder="500" min="1" />
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-text-secondary mb-1">Description (Optional)</label>
-                                        <Textarea v-model="form.description" placeholder="Explain why you are raising this money..." />
-                                    </div>
-                                </div>
-
-                                <div class="mt-6 flex justify-end gap-3">
-                                    <Button variant="ghost" @click="showCreateModal = false">Cancel</Button>
-                                    <Button :disabled="submitting" @click="handleSubmit">
-                                        <span v-if="submitting" class="animate-spin mr-2">⏳</span>
-                                        {{ editingGoal ? 'Update Goal' : 'Create Goal' }}
-                                    </Button>
-                                </div>
-                            </DialogPanel>
-                        </TransitionChild>
-                    </div>
-                </div>
-            </Dialog>
-        </TransitionRoot>
+            <!-- Create/Edit Modal -->
+            <GoalModal
+                :isOpen="showCreateModal"
+                :goalToEdit="editingGoal"
+                @close="showCreateModal = false"
+                @saved="showCreateModal = false"
+            />
     </div>
 </template>
 
-<script lang="ts">
-import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
-</script>
+

@@ -14,16 +14,14 @@ export const useAuth = () => {
     const userProfile = useState<DocumentData | null>('userProfile', () => null)
     const loading = useState<boolean>('authLoading', () => true)
 
-    // Initialize Auth Listener
-    const initAuth = () => {
-        // Ensure loading is true when we start checking
-        loading.value = true
 
+    const initAuth = () => {
+        loading.value = true
         onAuthStateChanged(auth, async (currentUser) => {
             user.value = currentUser
 
             if (currentUser) {
-                // Fetch profile if user exists
+
                 try {
                     const docRef = doc(db, 'users', currentUser.uid)
                     const docSnap = await getDoc(docRef)
@@ -58,7 +56,6 @@ export const useAuth = () => {
             return result.user
         } catch (error: any) {
             console.error('Error signing in with Google:', error)
-            // Use toast instead of just console
             const toast = useToast()
             toast.add({
                 title: 'Sign in failed',

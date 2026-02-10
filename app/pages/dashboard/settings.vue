@@ -22,7 +22,7 @@ usePageMeta({
 const { user, userProfile, loading } = useAuth()
 const toast = useToast()
 
-// Form State
+
 const form = reactive({
     displayName: '',
     bio: '',
@@ -32,16 +32,13 @@ const form = reactive({
 
 const emojis = ['☕', '🍕', '🍺', '🍪', '🥐', '🌮', '🍣', '🍦', '🍩', '🍫']
 const getRandomEmoji = () => emojis[Math.floor(Math.random() * emojis.length)]
-// Initialize form with user data
+
 watch(() => userProfile.value, (newProfile) => {
     if (newProfile) {
         form.displayName = newProfile.displayName || ''
         form.bio = newProfile.bio || ''
-        // Deep copy arrays to avoid reactivity issues with original object
         form.tiers = newProfile.tiers ? JSON.parse(JSON.stringify(newProfile.tiers)) : []
         form.socialLinks = newProfile.socialLinks ? JSON.parse(JSON.stringify(newProfile.socialLinks)) : []
-
-        // Auto-assign emojis to existing tiers if missing
         form.tiers.forEach(tier => {
             if (!tier.emoji) {
                 tier.emoji = getRandomEmoji()
@@ -50,7 +47,7 @@ watch(() => userProfile.value, (newProfile) => {
     }
 }, { immediate: true })
 
-// Saving state
+
 const saving = ref(false)
 
 const saveProfile = async () => {
@@ -74,7 +71,7 @@ const saveProfile = async () => {
     }
 }
 
-// Tiers Management
+
 const addTier = () => {
     form.tiers.push({ price: 5, emoji: getRandomEmoji(), label: 'Support' })
 }
@@ -82,7 +79,7 @@ const removeTier = (index: number) => {
     form.tiers.splice(index, 1)
 }
 
-// Socials Management
+
 const addSocial = () => {
     form.socialLinks.push({ platform: 'Twitter', url: '' })
 }
@@ -133,12 +130,9 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                  </div>
             </div>
 
-            <!-- Main Settings Grid -->
             <div v-else class="grid lg:grid-cols-3 gap-8 animate-fade-in-up">
-                <!-- Main Settings Column -->
                 <div class="lg:col-span-2 space-y-8">
 
-                    <!-- Basic Info -->
                     <div class="bg-surface border border-white/5 rounded-2xl p-3 lg:p-6 shadow-sm">
                         <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
                             <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
@@ -161,7 +155,6 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                         </div>
                     </div>
 
-                    <!-- Support Tiers -->
                     <div class="bg-surface border border-white/5 rounded-2xl p-3 lg:p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-xl font-bold flex items-center gap-2">
@@ -203,7 +196,6 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                         </div>
                     </div>
 
-                    <!-- Social Links -->
                     <div class="bg-surface border border-white/5 rounded-2xl p-3 lg:p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-xl font-bold flex items-center gap-2">
@@ -237,24 +229,22 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                         </div>
                     </div>
 
-                    <!-- Submit Button -->
                     <div class="hidden lg:flex justify-end pt-4">
-                        <Button :disabled="saving" @click="saveProfile" size="lg" class="w-full sm:w-auto min-w-[150px]">
-                            <span v-if="saving" class="animate-spin mr-2">⏳</span>
-                            <span v-else class="mr-2"><Save class="w-4 h-4" /></span>
-                            {{ saving ? 'Saving...' : 'Save Changes' }}
+                        <Button :loading="saving" @click="saveProfile" size="lg" class="w-full sm:w-auto min-w-[150px]">
+                            <template #prefix>
+                                <Save class="w-4 h-4" />
+                            </template>
+                            Save Changes
                         </Button>
                     </div>
 
                 </div>
 
-                <!-- Preview Column (Sticky) -->
                 <div class="lg:col-span-1">
                     <div class="sticky top-24 space-y-6">
                         <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-lg">
                             <h3 class="font-bold mb-4 text-text-secondary uppercase text-xs tracking-wider">Live Preview</h3>
 
-                            <!-- Mini Profile Card Preview -->
                             <div class="bg-background rounded-xl overflow-hidden border border-border">
                                 <div class="h-24 bg-gradient-to-r from-primary to-accent relative">
                                     <Avatar :src="userProfile?.avatarUrl" class="absolute -bottom-6 left-4 w-16 h-16 border-4 border-background" />
@@ -280,10 +270,11 @@ const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'Ti
                         </div>
                     </div>
                 </div>
-                <Button :disabled="saving" @click="saveProfile" size="lg" class="lg:hidden block w-full min-w-[150px]">
-                    <span v-if="saving" class="animate-spin mr-2">⏳</span>
-                    <span v-else class="mr-2"><Save class="w-4 h-4" /></span>
-                    {{ saving ? 'Saving...' : 'Save Changes' }}
+                <Button :loading="saving" @click="saveProfile" size="lg" class="lg:hidden block w-full min-w-[150px]">
+                    <template #prefix>
+                        <Save class="w-4 h-4" />
+                    </template>
+                    Save Changes
                 </Button>
             </div>
         </div>

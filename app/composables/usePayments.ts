@@ -12,8 +12,6 @@ export const usePayments = () => {
 
         loading.value = true
         try {
-            // Assuming a top-level 'payments' collection where 'toUserId' matches current user
-            // Indexing might be required: 'toUserId' Asc/Desc, 'createdAt' Desc
             const paymentsRef = collection(db, 'payments')
             const q = query(
                 paymentsRef,
@@ -26,12 +24,10 @@ export const usePayments = () => {
             payments.value = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
-                // Format timestamp if needed, or do it in the component
                 date: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString() : 'Just now'
             }))
         } catch (e) {
             console.error('Error fetching payments:', e)
-            // Fallback to empty if error (e.g. missing index) or simple mock for now if requested
         } finally {
             loading.value = false
         }

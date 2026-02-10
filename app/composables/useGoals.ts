@@ -9,7 +9,7 @@ export interface Goal {
     targetAmount: number
     currentAmount: number
     status: 'active' | 'paused' | 'completed'
-    createdAt: any // Timestamp
+    createdAt: any
 }
 
 export const useGoals = () => {

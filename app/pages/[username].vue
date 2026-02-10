@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useProfile, type PublicProfile } from '~/composables/useProfile'
-import { ChevronRight, Check, Twitter, Instagram, Youtube, Linkedin, Globe, Link as LinkIcon, Facebook, Github } from 'lucide-vue-next'
+import { ChevronRight, Twitter, Instagram, Youtube, Linkedin, Globe, Link as LinkIcon, Facebook, Github } from 'lucide-vue-next'
 import Skeleton from '~/components/ui/Skeleton.vue'
 import GoalProgress from '~/components/GoalProgress.vue'
 
@@ -10,7 +10,6 @@ const username = computed(() => route.params.username as string)
 const { fetchProfileByUsername, loading, error } = useProfile()
 const profile = ref<PublicProfile | null>(null)
 
-// Icon mapping
 const getSocialIcon = (platform: string) => {
     const p = platform.toLowerCase()
     if (p.includes('twitter')) return Twitter
@@ -23,14 +22,12 @@ const getSocialIcon = (platform: string) => {
     return LinkIcon
 }
 
-// Fetch profile on mount
 onMounted(async () => {
     if (username.value) {
         profile.value = await fetchProfileByUsername(username.value)
     }
 })
 
-// SEO
 useHead({
     title: computed(() => profile.value ? `${profile.value.displayName} (@${profile.value.username})` : 'Profile Not Found')
 })
@@ -49,7 +46,6 @@ const activeTab = ref('home')
 const tabs = [
     { id: 'home', label: 'Home' },
     { id: 'socials', label: 'Socials' },
-    // { id: 'posts', label: 'Posts' } // Future
 ]
 
 const selectedTier = ref<any>(null)
@@ -57,13 +53,10 @@ const selectedTier = ref<any>(null)
 
 <template>
     <div class="min-h-screen bg-background text-text-primary pb-20">
-        <!-- Loading State -->
         <div v-if="loading" class="animate-fade-in-up">
-            <!-- Header Skeleton -->
              <div class="h-48 md:h-64 bg-white/5 animate-pulse relative"></div>
 
              <div class="max-w-4xl mx-auto px-4 sm:px-6 relative">
-                 <!-- Avatar Skeleton -->
                  <div class="-mt-20 mb-6 flex flex-col items-center sm:items-start sm:flex-row sm:gap-6">
                     <Skeleton class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-background" />
 
@@ -82,13 +75,11 @@ const selectedTier = ref<any>(null)
                     </div>
                  </div>
 
-                 <!-- Tabs Skeleton -->
                  <div class="flex border-b border-border mb-8 gap-6">
                      <Skeleton class="h-10 w-20" />
                      <Skeleton class="h-10 w-20" />
                  </div>
 
-                 <!-- Content Skeleton -->
                  <div class="grid md:grid-cols-3 gap-8">
                      <div class="md:col-span-2 space-y-6">
                         <Skeleton class="h-32 w-full rounded-2xl" />
@@ -100,7 +91,6 @@ const selectedTier = ref<any>(null)
              </div>
         </div>
 
-        <!-- 404 State -->
         <div v-else-if="!profile && !loading" class="flex flex-col items-center justify-center min-h-screen text-center px-4">
              <div class="h-[50vh] flex flex-col items-center justify-center">
                 <div class="text-6xl mb-4">😕</div>
@@ -110,16 +100,12 @@ const selectedTier = ref<any>(null)
              </div>
         </div>
 
-        <!-- Profile Content -->
-        <!-- Use v-else-if="profile" top satisfy TS that profile is not null here -->
         <div v-else-if="profile" class="animate-fade-in-up">
-            <!-- Header / Cover -->
             <div class="h-48 md:h-64 bg-gradient-to-r from-primary/80 to-accent/80 relative">
                 <div class="absolute inset-0 bg-black/10"></div>
             </div>
 
             <div class="max-w-4xl mx-auto px-4 sm:px-6 relative">
-                 <!-- Avatar -->
                  <div class="-mt-20 mb-6 flex flex-col items-center sm:items-start sm:flex-row sm:gap-6">
                     <Avatar :src="profile?.avatarUrl" size="xl" class="w-32 h-32 md:w-40 md:h-40 border-4 border-background shadow-xl" />
 
@@ -129,16 +115,13 @@ const selectedTier = ref<any>(null)
                         <p v-if="profile?.bio" class="mt-2 max-w-lg text-text-secondary leading-relaxed">{{ profile?.bio }}</p>
                     </div>
 
-                    <!-- Follow / Share Actions (Placeholder) -->
                     <div class="mt-6 sm:mt-24 flex gap-3">
                         <Button @click="shareProfile" variant="outline" size="sm">
                             <span class="mr-2">🔗</span> Share
                         </Button>
-                         <!-- <Button size="sm">Follow</Button> -->
                     </div>
                  </div>
 
-                 <!-- Navigation Tabs -->
                  <div class="flex border-b border-border mb-8 overflow-x-auto">
                     <button
                         v-for="tab in tabs"
@@ -155,9 +138,7 @@ const selectedTier = ref<any>(null)
                     </button>
                  </div>
 
-                 <!-- Tab Content: Home (Support) -->
                  <div v-if="activeTab === 'home'" class="max-w-lg mx-auto space-y-2">
-                    <!-- Goal Progress Widget (Mobile/Desktop) -->
                     <div v-if="profile?.fundraisingGoal" class="w-full">
                          <GoalProgress :goal="profile.fundraisingGoal" />
                     </div>
@@ -194,7 +175,6 @@ const selectedTier = ref<any>(null)
                     </div>
                  </div>
 
-                 <!-- Tab Content: Socials (Link in Bio) -->
                  <div v-else-if="activeTab === 'socials'" class="max-w-md mx-auto space-y-4">
                     <div v-if="profile?.socialLinks && profile.socialLinks.length > 0" class="space-y-3">
                         <a

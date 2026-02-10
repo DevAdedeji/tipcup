@@ -12,12 +12,9 @@ import { db } from '~/firebase'
 export const useOnboarding = () => {
     const { user } = useAuth()
 
-    // Check if a username is already taken
     const checkUsernameAvailability = async (username: string): Promise<boolean> => {
-        // Basic validation
         if (!username || username.length < 3) return false
 
-        // Normalize
         const normalizedUsername = username.toLowerCase()
 
         // Regex Validation: alphanumeric, hyphens, underscores only. No spaces.
@@ -104,7 +101,6 @@ export const useOnboarding = () => {
 
             await setDoc(doc(db, 'users', user.value.uid), profileData)
 
-            // Update local state immediately to prevent middleware redirect loop
             const { userProfile } = useAuth()
             userProfile.value = profileData
 

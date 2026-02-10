@@ -5,10 +5,9 @@ import {
     getDocs,
     limit,
     doc,
-    getDoc,
     orderBy
 } from 'firebase/firestore'
-import { auth, db } from '~/firebase'
+import { db } from '~/firebase'
 
 export interface PublicProfile {
     uid: string
@@ -16,10 +15,10 @@ export interface PublicProfile {
     displayName: string
     bio: string
     avatarUrl: string
-    coverUrl?: string // Future proofing
+    coverUrl?: string
     tiers: any[]
     socialLinks?: { platform: string, url: string }[]
-    fundraisingGoal?: any // Goal
+    fundraisingGoal?: any
     createdAt: any
 }
 
@@ -32,7 +31,6 @@ export const useProfile = () => {
         error.value = null
 
         try {
-            // Username is stored in lowercase in the db
             const normalizedUsername = username.toLowerCase()
 
             const usersRef = collection(db, 'users')
@@ -48,7 +46,6 @@ export const useProfile = () => {
 
             const userData = userDoc.data()
 
-            // Return only public data
             const profile: PublicProfile = {
                 uid: userDoc.id,
                 username: userData.username,
@@ -80,7 +77,7 @@ export const useProfile = () => {
                 const userRef = doc(db, 'users', userDoc.id)
                 // Use increment from firestore
                 import('firebase/firestore').then(({ increment, updateDoc }) => {
-                    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+                    const today = new Date().toISOString().split('T')[0]
                     updateDoc(userRef, {
                         views: increment(1),
                         [`analytics.${today}.views`]: increment(1)

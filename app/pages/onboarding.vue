@@ -14,7 +14,6 @@ const step = ref(1)
 const steps = ['Claim Link', 'Profile', 'Membership', 'Payouts']
 const isLoading = ref(false)
 
-// Data State
 const formData = reactive({
   username: '',
   displayName: user.value?.displayName || '',
@@ -29,7 +28,6 @@ const formData = reactive({
   }
 })
 
-// Validation State
 const usernameError = ref('')
 const isCheckingUsername = ref(false)
 const usernameAvailable = ref(false)
@@ -55,7 +53,6 @@ const checkUsername = async () => {
     }
 }
 
-// Debounce username check
 let timeout: NodeJS.Timeout
 watch(() => formData.username, (newVal) => {
     clearTimeout(timeout)
@@ -92,7 +89,6 @@ const complete = async () => {
         navigateTo('/dashboard')
     } catch (error: any) {
         console.error('Onboarding failed:', error)
-        // Error already toasted in composable
     } finally {
         isLoading.value = false
     }
@@ -102,9 +98,7 @@ const complete = async () => {
 <template>
   <div class="min-h-screen bg-background text-text-primary px-4 py-12 font-sans">
       <div class="max-w-2xl mx-auto">
-          <!-- Progress -->
           <div class="flex items-start justify-between mb-12 relative px-4">
-              <!-- Connecting Line Background -->
               <div class="absolute top-5 left-16 right-16 h-[2px] bg-gray-200"></div>
 
               <div v-for="(s, i) in steps" :key="s" class="flex flex-col items-center relative z-10 w-24">

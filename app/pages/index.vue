@@ -13,7 +13,6 @@ const { user } = useAuth()
 
 <template>
   <div class="min-h-screen bg-background text-text-primary font-sans overflow-x-hidden selection:bg-primary/20 selection:text-primary">
-    <!-- Navbar -->
     <nav class="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-white/5">
       <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div class="flex items-center gap-3">
