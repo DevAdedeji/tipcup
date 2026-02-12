@@ -89,3 +89,27 @@ export const resolveBankAccount = async (account_number: string, bank_code: stri
         })
     }
 }
+
+
+export const initiateTransfer = async (amount: number, recipient: string, reason?: string) => {
+    try {
+        const response: any = await $fetch(`${PAYSTACK_API_URL}/transfer`, {
+            method: 'POST',
+            headers,
+            body: {
+                source: 'balance',
+                amount: amount * 100, // Convert to kobo
+                recipient,
+                reason,
+                currency: 'NGN'
+            }
+        })
+        return response
+    } catch (error: any) {
+        console.error('Paystack Transfer Error:', error)
+        throw createError({
+            statusCode: error.response?.status || 500,
+            statusMessage: error.response?._data?.message || 'Failed to initiate transfer'
+        })
+    }
+}

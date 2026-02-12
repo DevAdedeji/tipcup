@@ -17,14 +17,14 @@ defineProps<{
     <div class="bg-surface border border-primary/20 rounded-2xl overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
-                <thead class="bg-white/5 text-text-secondary uppercase text-xs">
+                <thead class="bg-white/5 text-text-secondary uppercase text-xs border-b border-primary/20">
                     <tr>
                         <th v-for="col in columns" :key="col.key" class="px-6 py-4 font-medium" :class="col.class">
                             {{ col.label }}
                         </th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/5">
+                <tbody class="divide-y divide-primary/10">
                     <!-- Loading State -->
                     <tr v-if="loading">
                         <td :colspan="columns.length" class="px-6 py-8 text-center text-text-secondary">

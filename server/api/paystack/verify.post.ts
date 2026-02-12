@@ -57,6 +57,7 @@ export default defineEventHandler(async (event) => {
 
                 await userRef.update({
                     totalEarnings: FieldValue.increment(amount / 100),
+                    currentBalance: FieldValue.increment(amount / 100),
                     supporterCount: uniqueSupporters.size
                 })
 

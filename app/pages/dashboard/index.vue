@@ -4,6 +4,7 @@ import { usePageMeta } from '~/composables/usePageMeta'
 import { usePayments } from '~/composables/usePayments'
 import Skeleton from '~/components/ui/Skeleton.vue'
 import Table from '~/components/ui/Table.vue'
+import WithdrawalModal from '~/components/dashboard/WithdrawalModal.vue'
 import { Eye, DollarSign, Heart } from 'lucide-vue-next'
 import { formatCurrency } from '~/utils/format'
 
@@ -18,11 +19,10 @@ usePageMeta({
 })
 
 
-
-
 const { userProfile, loading } = useAuth()
 const { payments, loading: paymentsLoading, fetchRecentPayments } = usePayments()
 const toast = useToast()
+const showWithdrawalModal = ref(false)
 
 let unsubscribePayments: (() => void) | undefined
 
@@ -130,18 +130,27 @@ const copyLink = async () => {
                       </div>
                   </div>
 
-                  <!-- Earnings -->
-                  <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm transition-colors group">
-                      <div class="flex items-center justify-between mb-4">
-                          <span class="text-text-secondary font-medium">Earnings</span>
-                          <div class="p-2 bg-green-500/10 rounded-lg text-green-500 group-hover:scale-110 transition-transform">
+                  <!-- Earnings & Balance -->
+                  <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm transition-colors group relative overflow-hidden">
+                      <div class="flex items-center justify-between mb-4 relative z-10">
+                          <span class="text-text-secondary font-medium">Available Balance</span>
+                          <div class="p-2 bg-green-500/10 rounded-lg text-green-500 group-hover:scale-110 transition-transform cursor-pointer" @click="showWithdrawalModal = true">
                             <DollarSign class="w-5 h-5" />
                           </div>
                       </div>
-                      <div class="text-4xl font-bold">{{ formatCurrency(userProfile?.totalEarnings || 0) }}</div>
-                      <div class="text-sm text-text-secondary mt-1">
-                          Total received support
+                      <div class="flex items-end gap-2 relative z-10">
+                          <div class="text-4xl font-bold">{{ formatCurrency(userProfile?.currentBalance || 0) }}</div>
+                          <div class="text-sm text-text-secondary mb-1.5">/ {{ formatCurrency(userProfile?.totalEarnings || 0) }} earned</div>
                       </div>
+
+                      <div class="mt-4 relative z-10">
+                          <Button size="sm" class="w-full" @click="showWithdrawalModal = true">
+                              Withdraw Funds
+                          </Button>
+                      </div>
+
+                      <!-- Decorative -->
+                      <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-colors"></div>
                   </div>
 
                   <!-- Supporters -->
@@ -235,5 +244,10 @@ const copyLink = async () => {
                 </div>
           </div>
       </div>
+      <WithdrawalModal
+          :isOpen="showWithdrawalModal"
+          @close="showWithdrawalModal = false"
+          @success="showWithdrawalModal = false"
+      />
   </div>
 </template>

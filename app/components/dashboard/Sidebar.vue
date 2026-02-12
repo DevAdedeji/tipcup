@@ -8,7 +8,8 @@ import {
     Menu,
     X,
     ExternalLink,
-    Target
+    Target,
+    Wallet
 } from 'lucide-vue-next'
 
 const { userProfile, logout } = useAuth()
@@ -16,6 +17,7 @@ const route = useRoute()
 
 const links = [
     { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
+    { label: 'Earnings', to: '/dashboard/earnings', icon: Wallet },
     { label: 'Goals', to: '/dashboard/goals', icon: Target },
     { label: 'Settings', to: '/dashboard/settings', icon: Settings },
 ]
@@ -53,7 +55,7 @@ const isOpen = ref(false)
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 overflow-y-auto min-h-0 py-6 px-3 space-y-1">
+            <nav class="flex-1 overflow-y-auto min-h-0 py-6 px-3 space-y-2">
                 <NuxtLink
                     v-for="link in links"
                     :key="link.to"

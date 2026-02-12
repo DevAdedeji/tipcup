@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { usePageMeta } from '~/composables/usePageMeta'
+// import { usePageMeta } from '~/composables/usePageMeta'
 import { ChevronRight, Check } from 'lucide-vue-next'
 import { useAuth } from '~/composables/useAuth'
 
-usePageMeta({
-  title: 'Home',
-  description: 'Empowering creators to do what they love, backed by the people who love their work.',
-})
+// usePageMeta({
+//   title: 'Home',
+//   description: 'Empowering creators to do what they love, backed by the people who love their work.',
+// })
 
 const { user } = useAuth()
 </script>

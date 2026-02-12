@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   ssr: false,
   app: {
     head: {
-      title: 'TipCup',
+      title: 'TipCup ',
       titleTemplate: '%s | TipCup',
       meta: [
         { charset: 'utf-8' },
