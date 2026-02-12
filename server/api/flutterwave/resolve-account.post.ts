@@ -12,9 +12,7 @@ export default defineEventHandler(async (event) => {
             })
         }
 
-        console.log('Resolving account:', { account_number, bank_code })
         const response = await resolveBankAccount(account_number, bank_code)
-        console.log('Flutterwave response:', response)
 
         if (response.status === 'success') {
             return {

@@ -70,7 +70,6 @@ export const getBanks = async (country: string = 'NG') => {
 
 export const resolveBankAccount = async (account_number: string, account_bank: string) => {
     try {
-        console.log('Calling Flutterwave resolve with:', { account_number, account_bank })
         const response: any = await $fetch(`${FLUTTERWAVE_API_URL}/accounts/resolve`, {
             method: 'POST',
             headers,
@@ -79,7 +78,6 @@ export const resolveBankAccount = async (account_number: string, account_bank: s
                 account_bank
             }
         })
-        console.log('Flutterwave raw response:', response)
         return response
     } catch (error: any) {
         console.error('Flutterwave Resolve Account Error:', error)

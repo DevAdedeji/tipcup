@@ -157,6 +157,14 @@ watch(modelValue, () => {
               <div v-if="filteredOptions.length === 0" class="p-3 text-sm text-gray-500 text-center">
                   No results found
               </div>
+
+              <!-- Show message when results are limited -->
+              <div
+                v-else-if="!debouncedSearch && normalizedOptions.length > maxVisibleOptions"
+                class="sticky bottom-0 bg-blue-50 border-t border-blue-100 p-2 text-xs text-blue-600 text-center"
+              >
+                Showing {{ filteredOptions.length }} of {{ normalizedOptions.length }} options. Use search to find more.
+              </div>
           </div>
         </ListboxOptions>
       </transition>

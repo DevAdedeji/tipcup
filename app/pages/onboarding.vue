@@ -42,7 +42,6 @@ onMounted(async () => {
     loadingBanks.value = true
     try {
         const { data } = await useFetch<any>('/api/flutterwave/banks')
-            console.log(data.value)
         if (data.value && data.value.status === 'success') {
             banks.value = data.value.data
         }
