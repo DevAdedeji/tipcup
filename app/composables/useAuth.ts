@@ -21,7 +21,6 @@ export const useAuth = () => {
         onAuthStateChanged(auth, async (currentUser) => {
             user.value = currentUser
 
-            // Unsubscribe from previous profile listener
             if (unsubscribeProfile) {
                 unsubscribeProfile()
                 unsubscribeProfile = undefined
@@ -31,7 +30,6 @@ export const useAuth = () => {
                 try {
                     const docRef = doc(db, 'users', currentUser.uid)
 
-                    // Set up real-time listener for user profile
                     unsubscribeProfile = onSnapshot(docRef, (docSnap) => {
                         if (docSnap.exists()) {
                             userProfile.value = docSnap.data()

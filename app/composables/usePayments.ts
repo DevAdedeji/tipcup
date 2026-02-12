@@ -10,8 +10,8 @@ export const usePayments = () => {
     // Page-based pagination state
     const paginatedPayments = useState<any[]>('paginatedPayments', () => [])
     const currentPage = useState<number>('paymentsCurrentPage', () => 1)
-    const cursorStack = useState<any[]>('paymentsCursorStack', () => [null]) // Stack of startAfter cursors. index 0 is null (page 1)
-    const itemsPerPage = 5 // Configurable
+    const cursorStack = useState<any[]>('paymentsCursorStack', () => [null])
+    const itemsPerPage = 5
     const hasNextPage = useState<boolean>('paymentsHasNextPage', () => true)
     const hasPrevPage = computed(() => currentPage.value > 1)
 
@@ -27,7 +27,6 @@ export const usePayments = () => {
             limit(limitCount)
         )
 
-        // Set up real-time listener for dashboard (recent only)
         const unsubscribe = onSnapshot(q, (snapshot) => {
             payments.value = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -43,12 +42,19 @@ export const usePayments = () => {
         return unsubscribe
     }
 
+    let unsubscribePaginated: (() => void) | undefined
+
     const fetchPaymentsPage = async (direction: 'next' | 'prev' | 'first' = 'first') => {
         if (!user.value) return
 
         loading.value = true
 
         try {
+            // Unsubscribe from previous listener if exists
+            if (unsubscribePaginated) {
+                unsubscribePaginated()
+            }
+
             const paymentsRef = collection(db, 'payments')
             let q = query(
                 paymentsRef,
@@ -69,7 +75,6 @@ export const usePayments = () => {
                 if (paginatedPayments.value.length > 0) {
                     const lastDoc = paginatedPayments.value[paginatedPayments.value.length - 1].doc
                     cursor = lastDoc
-                    // Ensure we don't push duplicates if we rapid fire. Check if current page index matches stack length
                     if (cursorStack.value.length === currentPage.value) {
                         cursorStack.value.push(cursor)
                     }
@@ -87,23 +92,23 @@ export const usePayments = () => {
                 q = query(q, startAfter(cursor))
             }
 
-            const snapshot = await getDocs(q)
+            unsubscribePaginated = onSnapshot(q, (snapshot) => {
+                paginatedPayments.value = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    date: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString() : 'Just now',
+                    doc: doc
+                }))
 
-            paginatedPayments.value = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                date: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString() : 'Just now',
-                doc: doc // Store doc for cursor
-            }))
-
-            // Update hasNextPage
-            // We can check if we got full page. If less, then no more next.
-            // Even if full, we might check one more ahead, but for simple UI, length < limit is enough.
-            hasNextPage.value = snapshot.docs.length === itemsPerPage
+                hasNextPage.value = snapshot.docs.length === itemsPerPage
+                loading.value = false
+            }, (error) => {
+                console.error('Error fetching paginated payments:', error)
+                loading.value = false
+            })
 
         } catch (error) {
-            console.error('Error fetching paginated payments:', error)
-        } finally {
+            console.error('Error setting up payments listener:', error)
             loading.value = false
         }
     }

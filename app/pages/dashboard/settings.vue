@@ -282,16 +282,16 @@ const handleSetPrimaryBank = async (id: string) => {
 
                             <template v-else>
                                 <div v-for="account in bankAccounts" :key="account.id"
-                                    class="flex flex-col sm:flex-row gap-4 items-center justify-between p-4 bg-background rounded-xl border transition-all"
+                                    class="flex flex-col sm:flex-row gap-4 items-center justify-between p-3 md:p-4 bg-background rounded-xl border transition-all"
                                     :class="account.isPrimary ? 'border-primary/50 bg-primary/5' : 'border-border'"
                                 >
-                                    <div class="flex items-center gap-4 w-full sm:w-auto">
-                                        <div class="p-3 bg-surface rounded-lg border border-white/5">
-                                            <CreditCard class="w-6 h-6 text-text-secondary" />
+                                    <div class="flex items-start md:items-center gap-4 w-full sm:w-auto">
+                                        <div class="p-2 md:p-3 bg-surface rounded-lg border border-white/5">
+                                            <CreditCard class="size-4 md:size-6 text-text-secondary" />
                                         </div>
                                         <div>
                                             <div class="font-bold flex items-center gap-2">
-                                                {{ account.bankName }}
+                                                <p class="text-sm md:text-base">{{ account.bankName }}</p>
                                                 <span v-if="account.isPrimary" class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
                                                     Primary
                                                 </span>

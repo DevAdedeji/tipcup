@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import EarningsChart from '~/components/dashboard/EarningsChart.vue'
 import { formatCurrency } from '~/utils/format'
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore'
+import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore'
 import { db } from '~/firebase'
 import { useAuth } from '~/composables/useAuth'
 import { usePayments } from '~/composables/usePayments'
@@ -27,30 +27,23 @@ usePageMeta({
 
 const { user, userProfile } = useAuth()
 const { paginatedPayments, loading: paymentsLoading, currentPage: paymentPage, hasNextPage: paymentHasNext, hasPrevPage: paymentHasPrev, fetchPaymentsPage } = usePayments()
-const { withdrawals, loading: withdrawalsLoading, fetchWithdrawals } = useWithdrawals()
+const { paginatedWithdrawals, loading: withdrawalsLoading, currentPage: withdrawalPage, hasNextPage: withdrawalHasNext, hasPrevPage: withdrawalHasPrev, fetchWithdrawalsPage } = useWithdrawals()
 const showWithdrawalModal = ref(false)
 const chartData = ref<any[]>([])
+const chartLoading = ref(false)
 const activeTab = ref(0)
 const tabs = ['Transaction History', 'Withdrawal History']
 
-// Withdrawal Pagination (Client-side)
-const withdrawalPage = ref(1)
-const withdrawalItemsPerPage = 5
-const paginatedWithdrawals = computed(() => {
-    const start = (withdrawalPage.value - 1) * withdrawalItemsPerPage
-    const end = start + withdrawalItemsPerPage
-    return withdrawals.value.slice(start, end)
-})
-const withdrawalHasNext = computed(() => withdrawalPage.value * withdrawalItemsPerPage < withdrawals.value.length)
-const withdrawalHasPrev = computed(() => withdrawalPage.value > 1)
+let unsubscribeChart: (() => void) | undefined
 
 // Initial fetch
 onMounted(async () => {
     fetchPaymentsPage('first')
-    fetchWithdrawals()
+    fetchWithdrawalsPage('first')
 
-    // Fetch data for chart (last 30 days or 50 items)
+    // Setup real-time listener for chart data (last 50 transactions)
     if (user.value) {
+        chartLoading.value = true
         try {
             const paymentsRef = collection(db, 'payments')
             const q = query(
@@ -59,14 +52,28 @@ onMounted(async () => {
                 orderBy('createdAt', 'desc'),
                 limit(50)
             )
-            const snapshot = await getDocs(q)
-            chartData.value = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }))
+
+            // Real-time listener
+            unsubscribeChart = onSnapshot(q, (snapshot) => {
+                chartData.value = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }))
+                chartLoading.value = false
+            }, (error) => {
+                console.error('Failed to fetch chart data', error)
+                chartLoading.value = false
+            })
         } catch (e) {
-            console.error('Failed to fetch chart data', e)
+            console.error('Failed to setup chart listener', e)
+            chartLoading.value = false
         }
+    }
+})
+
+onUnmounted(() => {
+    if (unsubscribeChart) {
+        unsubscribeChart()
     }
 })
 </script>
@@ -75,15 +82,9 @@ onMounted(async () => {
     <div class="space-y-8 pb-24">
         <!-- Header -->
         <div class="flex justify-end">
-            <div class="flex gap-3">
-                <!-- <Button variant="outline">
-                    <Download class="w-4 h-4 mr-2" />
-                    Export CSV
-                </Button> -->
-                <Button @click="showWithdrawalModal = true">
-                    Withdraw Funds
-                </Button>
-            </div>
+            <Button @click="showWithdrawalModal = true">
+                Withdraw Funds
+            </Button>
         </div>
 
         <!-- Stats Cards -->
@@ -130,7 +131,10 @@ onMounted(async () => {
         <!-- Earnings Chart -->
         <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm">
             <h2 class="text-xl font-bold mb-6">Earnings Overview</h2>
-            <div v-if="chartData.length > 0">
+            <div v-if="chartLoading" class="h-[300px] flex items-center justify-center">
+                <Skeleton class="h-full w-full rounded-lg" />
+            </div>
+            <div v-else-if="chartData.length > 0">
                 <EarningsChart :transactions="chartData" />
             </div>
             <div v-else class="h-[300px] flex items-center justify-center text-text-secondary">
@@ -260,22 +264,22 @@ onMounted(async () => {
                         </Table>
 
                         <!-- Withdrawals Pagination Controls -->
-                        <div v-if="withdrawals.length > 0" class="p-4 border-t border-white/5 flex items-center justify-between">
-                            <span class="text-sm text-text-secondary">Page {{ withdrawalPage }} of {{ Math.ceil(withdrawals.length / withdrawalItemsPerPage) }}</span>
+                        <div v-if="paginatedWithdrawals.length > 0" class="p-4 border-t border-white/5 flex items-center justify-between">
+                            <span class="text-sm text-text-secondary">Page {{ withdrawalPage }}</span>
                             <div class="flex gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    :disabled="!withdrawalHasPrev"
-                                    @click="withdrawalPage--"
+                                    :disabled="!withdrawalHasPrev || withdrawalsLoading"
+                                    @click="fetchWithdrawalsPage('prev')"
                                 >
                                     <ChevronLeft class="w-4 h-4 mr-1" /> Prev
                                 </Button>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    :disabled="!withdrawalHasNext"
-                                    @click="withdrawalPage++"
+                                    :disabled="!withdrawalHasNext || withdrawalsLoading"
+                                    @click="fetchWithdrawalsPage('next')"
                                 >
                                     Next <ChevronRight class="w-4 h-4 ml-1" />
                                 </Button>

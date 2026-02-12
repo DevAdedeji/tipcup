@@ -81,8 +81,6 @@ export const resolveBankAccount = async (account_number: string, account_bank: s
         return response
     } catch (error: any) {
         console.error('Flutterwave Resolve Account Error:', error)
-        console.error('Error data:', error.data)
-        console.error('Error response:', error.response)
 
         let errorMessage = 'Could not resolve account. Please check details.'
 

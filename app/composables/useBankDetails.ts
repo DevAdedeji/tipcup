@@ -18,7 +18,6 @@ export const useBankDetails = () => {
     const loading = ref(false)
     const error = ref<string | null>(null)
 
-    // Fetch accounts (real-time listener)
     const fetchAccounts = () => {
         if (!user.value) return
 
@@ -42,7 +41,6 @@ export const useBankDetails = () => {
         return unsubscribe
     }
 
-    // Add a new bank account
     const addAccount = async (account: Omit<BankAccount, 'id' | 'createdAt' | 'isPrimary'>) => {
         if (!user.value) return
 
@@ -77,7 +75,6 @@ export const useBankDetails = () => {
         }
     }
 
-    // Set an account as primary
     const setPrimaryAccount = async (id: string) => {
         if (!user.value) return
 
@@ -104,7 +101,6 @@ export const useBankDetails = () => {
         }
     }
 
-    // Delete an account
     const deleteAccount = async (id: string) => {
         if (!user.value) return
 
@@ -119,7 +115,6 @@ export const useBankDetails = () => {
         }
     }
 
-    // Fetch list of banks from server (Flutterwave)
     const fetchBanks = async () => {
         try {
             const data: any = await $fetch('/api/flutterwave/banks')
@@ -130,7 +125,6 @@ export const useBankDetails = () => {
         }
     }
 
-    // Resolve bank account
     const resolveAccount = async (accountNumber: string, bankCode: string) => {
         try {
             const data: any = await $fetch('/api/flutterwave/resolve-account', {

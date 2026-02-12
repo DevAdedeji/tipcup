@@ -1,12 +1,6 @@
 <script setup lang="ts">
-// import { usePageMeta } from '~/composables/usePageMeta'
 import { ChevronRight, Check } from 'lucide-vue-next'
 import { useAuth } from '~/composables/useAuth'
-
-// usePageMeta({
-//   title: 'Home',
-//   description: 'Empowering creators to do what they love, backed by the people who love their work.',
-// })
 
 const { user } = useAuth()
 </script>
@@ -221,21 +215,21 @@ const { user } = useAuth()
                             <p class="text-text-secondary text-sm mb-6">Digital artist & content creator.</p>
 
                             <div class="space-y-3">
-                                <a href="#" class="block bg-background hover:bg-surface-hover border border-border rounded-xl py-3 px-4 font-medium transition-colors flex items-center justify-between group">
+                                <a href="#" class="bg-background hover:bg-surface-hover border border-border rounded-xl py-3 px-4 font-medium transition-colors flex items-center justify-between group">
                                     <span class="flex items-center gap-3">
                                        <span class="text-primary group-hover:scale-110 transition-transform">📺</span>
                                        Latest YouTube Video
                                     </span>
                                     <ChevronRight class="w-4 h-4 text-text-secondary" />
                                 </a>
-                                <a href="#" class="block bg-background hover:bg-surface-hover border border-border rounded-xl py-3 px-4 font-medium transition-colors flex items-center justify-between group">
+                                <a href="#" class="bg-background hover:bg-surface-hover border border-border rounded-xl py-3 px-4 font-medium transition-colors flex items-center justify-between group">
                                     <span class="flex items-center gap-3">
                                        <span class="text-blue-400 group-hover:scale-110 transition-transform">🐦</span>
                                        Follow on Twitter
                                     </span>
                                     <ChevronRight class="w-4 h-4 text-text-secondary" />
                                 </a>
-                                 <a href="#" class="block bg-background hover:bg-surface-hover border border-border rounded-xl py-3 px-4 font-medium transition-colors flex items-center justify-between group">
+                                 <a href="#" class="bg-background hover:bg-surface-hover border border-border rounded-xl py-3 px-4 font-medium transition-colors flex items-center justify-between group">
                                     <span class="flex items-center gap-3">
                                        <span class="text-pink-500 group-hover:scale-110 transition-transform">📸</span>
                                        Instagram Portfolio

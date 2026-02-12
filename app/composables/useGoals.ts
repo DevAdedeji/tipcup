@@ -18,7 +18,6 @@ export const useGoals = () => {
     const loading = ref(false)
     const error = ref<string | null>(null)
 
-    // Fetch goals (real-time listener)
     const fetchGoals = () => {
         if (!user.value) return
 
@@ -43,15 +42,12 @@ export const useGoals = () => {
         return unsubscribe
     }
 
-    // Create a new goal
     const createGoal = async (goal: Omit<Goal, 'id' | 'createdAt' | 'currentAmount' | 'status'>) => {
         if (!user.value) return
 
         try {
             loading.value = true
 
-            // If creating an active goal (default), pause others
-            // Query all active goals
             const q = query(
                 collection(db, 'users', user.value.uid, 'goals'),
                 where('status', '==', 'active')
@@ -86,7 +82,6 @@ export const useGoals = () => {
         }
     }
 
-    // Update a goal
     const updateGoal = async (id: string, data: Partial<Goal>) => {
         if (!user.value) return
 
@@ -103,7 +98,7 @@ export const useGoals = () => {
                 const batch = writeBatch(db)
 
                 snapshot.docs.forEach(d => {
-                    if (d.id !== id) { // Don't pause self (though we are updating it anyway)
+                    if (d.id !== id) {
                         batch.update(d.ref, { status: 'paused' })
                     }
                 })
@@ -125,7 +120,6 @@ export const useGoals = () => {
         }
     }
 
-    // Delete a goal
     const deleteGoal = async (id: string) => {
         if (!user.value) return
 
