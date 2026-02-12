@@ -245,8 +245,8 @@ onMounted(async () => {
 
                             <template #bank="{ row }">
                                 <div class="text-sm">
-                                    <div class="text-text-primary">Unknown Bank</div>
-                                    <div class="text-xs text-text-secondary font-mono">{{ row.recipientCode }}</div>
+                                    <div class="text-text-primary">{{ row.bank_name || 'Unknown Bank' }}</div>
+                                    <div class="text-xs text-text-secondary font-mono">{{ row.account_number }}</div>
                                 </div>
                             </template>
 
