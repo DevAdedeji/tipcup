@@ -70,6 +70,7 @@ export const getBanks = async (country: string = 'NG') => {
 
 export const resolveBankAccount = async (account_number: string, account_bank: string) => {
     try {
+        console.log('Calling Flutterwave resolve with:', { account_number, account_bank })
         const response: any = await $fetch(`${FLUTTERWAVE_API_URL}/accounts/resolve`, {
             method: 'POST',
             headers,
@@ -78,12 +79,25 @@ export const resolveBankAccount = async (account_number: string, account_bank: s
                 account_bank
             }
         })
+        console.log('Flutterwave raw response:', response)
         return response
     } catch (error: any) {
         console.error('Flutterwave Resolve Account Error:', error)
+        console.error('Error data:', error.data)
+        console.error('Error response:', error.response)
+
+        let errorMessage = 'Could not resolve account. Please check details.'
+
+        // Check for test environment restriction
+        if (error.data?.message?.includes('only 044 is allowed')) {
+            errorMessage = 'Test mode: Only Access Bank (044) is supported. Use production keys for all banks, or select Access Bank for testing.'
+        } else if (error.data?.message) {
+            errorMessage = error.data.message
+        }
+
         throw createError({
-            statusCode: error.response?.status || 500,
-            statusMessage: 'Could not resolve account. Please check details.'
+            statusCode: error.response?.status || error.statusCode || 400,
+            statusMessage: errorMessage
         })
     }
 }

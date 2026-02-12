@@ -28,14 +28,19 @@ const error = ref('')
 // Fetch banks on mount
 onMounted(async () => {
     listLoading.value = true
-    const bankList = await fetchBanks()
-    if (bankList && Array.isArray(bankList)) {
-        banks.value = bankList.map((b: any) => ({
-            label: b.name,
-            value: b.code
-        }))
+    try {
+        const response: any = await fetchBanks()
+        if (response && response.status === 'success' && Array.isArray(response.data)) {
+            banks.value = response.data.map((b: any) => ({
+                label: b.name,
+                value: b.code
+            }))
+        }
+    } catch (e) {
+        console.error('Failed to load banks', e)
+    } finally {
+        listLoading.value = false
     }
-    listLoading.value = false
 })
 
 const resolveLoading = ref(false)

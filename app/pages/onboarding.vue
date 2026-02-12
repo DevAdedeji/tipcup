@@ -42,6 +42,7 @@ onMounted(async () => {
     loadingBanks.value = true
     try {
         const { data } = await useFetch<any>('/api/flutterwave/banks')
+            console.log(data.value)
         if (data.value && data.value.status === 'success') {
             banks.value = data.value.data
         }
@@ -67,7 +68,7 @@ const resolveAccount = async () => {
             }
         })
 
-        if (data.value && data.value.status === 'success') {
+        if (data.value && data.value.status === 'success' && data.value.data) {
             formData.payoutDetails.accountName = data.value.data.account_name
         } else {
              const toast = useToast()
@@ -214,7 +215,7 @@ const complete = async () => {
                   <p class="text-text-secondary">Choose a unique username for your page.</p>
               </div>
 
-              <div class="bg-surface shadow-xl shadow-gray-200/50 border border-white/50 rounded-2xl p-8 max-w-lg mx-auto">
+              <div class="bg-surface shadow-xl shadow-gray-200/50 border border-primary/20 rounded-2xl p-8 max-w-lg mx-auto">
                   <div class="space-y-6">
                       <div>
                           <label class="block text-sm font-medium mb-4 ml-1">Username</label>
@@ -250,7 +251,7 @@ const complete = async () => {
                   <p class="text-text-secondary">Tell your supporters who you are.</p>
               </div>
 
-              <div class="bg-surface shadow-xl shadow-gray-200/50 border border-white/50 rounded-2xl p-8 max-w-lg mx-auto space-y-6">
+              <div class="bg-surface shadow-xl shadow-gray-200/50 border border-primary/20 rounded-2xl p-8 max-w-lg mx-auto space-y-6">
                    <div class="flex justify-center">
                         <Avatar :src="user?.photoURL || undefined" size="lg" class="w-24 h-24 ring-4 ring-gray-50" />
                    </div>
@@ -277,7 +278,7 @@ const complete = async () => {
                   <p class="text-text-secondary">Give your fans ways to support you.</p>
               </div>
 
-              <div class="bg-surface shadow-xl shadow-gray-200/50 border border-white/50 rounded-2xl p-8 max-w-lg mx-auto space-y-4">
+              <div class="bg-surface shadow-xl shadow-gray-200/50 border border-primary/20 rounded-2xl p-8 max-w-lg mx-auto space-y-4">
                   <div v-for="(tier, index) in formData.tiers" :key="index" class="bg-gray-50 border border-gray-200 p-4 rounded-xl relative group hover:border-primary/50 transition-colors">
                         <button @click="removeTier(index)" class="absolute top-2 right-2 p-1 text-text-secondary hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                              ✕

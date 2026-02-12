@@ -141,9 +141,9 @@ onMounted(async () => {
         <!-- Tabs & Tables -->
         <div class="space-y-4">
             <Tabs :items="tabs" v-model="activeTab">
-                <TabPanel class="focus:outline-none pt-4 space-y-4">
+                <TabPanel class="focus:outline-none pt-4 space-y-2">
                      <!-- Transactions Table -->
-                    <div class="bg-surface border border-white/5 rounded-2xl overflow-hidden">
+                    <div class="overflow-hidden">
                         <Table
                             :columns="[
                                 { key: 'supporter', label: 'Supporter' },
@@ -208,9 +208,9 @@ onMounted(async () => {
                     </div>
                 </TabPanel>
 
-                <TabPanel class="focus:outline-none pt-4 space-y-4">
+                <TabPanel class="focus:outline-none pt-4 space-y-2">
                      <!-- Withdrawals Table -->
-                    <div class="bg-surface border border-white/5 rounded-2xl overflow-hidden">
+                    <div class="overflow-hidden">
                          <Table
                             :columns="[
                                 { key: 'status', label: 'Status' },

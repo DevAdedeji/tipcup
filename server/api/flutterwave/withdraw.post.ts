@@ -33,9 +33,9 @@ export default defineEventHandler(async (event) => {
 
             const bankData = bankDoc.data()
             transferData = {
-                account_number: bankData?.account_number,
+                account_number: bankData?.accountNumber,
                 bank_code: bankData?.bank_code,
-                account_name: bankData?.account_name,
+                account_name: bankData?.accountName,
                 bank_name: bankData?.bankName || 'Unknown Bank'
             }
         })

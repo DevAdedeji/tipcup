@@ -140,7 +140,10 @@ export const useBankDetails = () => {
                     bank_code: bankCode
                 }
             })
-            return data
+            if (data && data.status === 'success' && data.data) {
+                return data.data
+            }
+            return null
         } catch (e) {
             console.error(e)
             throw e

@@ -18,15 +18,19 @@ interface Props {
   error?: string
   disabled?: boolean
   searchable?: boolean
+  maxVisibleOptions?: number // Limit rendered options for performance
 }
 
 const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Select an option',
   disabled: false,
-  searchable: true // Default to searchable improvement
+  searchable: true,
+  maxVisibleOptions: 100 // Default: render max 100 options at once
 })
 
 const searchQuery = ref('')
+const debouncedSearch = ref('')
+let debounceTimeout: NodeJS.Timeout | null = null
 
 const normalizedOptions = computed(() => {
   return props.options.map(opt => {
@@ -38,11 +42,16 @@ const normalizedOptions = computed(() => {
 })
 
 const filteredOptions = computed(() => {
-  if (!searchQuery.value) return normalizedOptions.value
-  const query = searchQuery.value.toLowerCase()
-  return normalizedOptions.value.filter(opt =>
+  if (!debouncedSearch.value) {
+    // Limit initial render to maxVisibleOptions for performance
+    return normalizedOptions.value.slice(0, props.maxVisibleOptions)
+  }
+  const query = debouncedSearch.value.toLowerCase()
+  const filtered = normalizedOptions.value.filter(opt =>
     opt.label.toLowerCase().includes(query)
   )
+  // Also limit filtered results
+  return filtered.slice(0, props.maxVisibleOptions)
 })
 
 const selectedLabel = computed(() => {
@@ -51,9 +60,18 @@ const selectedLabel = computed(() => {
   return selected ? selected.label : props.placeholder
 })
 
+// Debounce search input for better performance
+watch(searchQuery, (newVal) => {
+  if (debounceTimeout) clearTimeout(debounceTimeout)
+  debounceTimeout = setTimeout(() => {
+    debouncedSearch.value = newVal
+  }, 150) // 150ms debounce
+})
+
 // Reset search when closed or value changes
 watch(modelValue, () => {
-    searchQuery.value = ''
+  searchQuery.value = ''
+  debouncedSearch.value = ''
 })
 </script>
 

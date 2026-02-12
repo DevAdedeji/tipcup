@@ -8,14 +8,24 @@ export default defineEventHandler(async (event) => {
         const response = await getBanks(country)
 
         if (response.status === 'success') {
-            return response.data.map((bank: any) => ({
+            const banks = response.data.map((bank: any) => ({
                 id: bank.id,
                 code: bank.code,
                 name: bank.name
             })).sort((a: any, b: any) => a.name.localeCompare(b.name))
+
+            return {
+                status: 'success',
+                message: 'Banks fetched successfully',
+                data: banks
+            }
         }
 
-        return []
+        return {
+            status: 'error',
+            message: 'Failed to fetch banks',
+            data: []
+        }
     } catch (error: any) {
         throw createError({
             statusCode: error.statusCode || 500,
