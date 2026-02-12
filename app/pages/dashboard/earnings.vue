@@ -81,7 +81,7 @@ onMounted(async () => {
                     Export CSV
                 </Button> -->
                 <Button @click="showWithdrawalModal = true">
-                    Request Payout
+                    Withdraw Funds
                 </Button>
             </div>
         </div>

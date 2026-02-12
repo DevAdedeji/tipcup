@@ -13,3 +13,4 @@ if (!getApps().length && serviceAccount) {
 }
 
 export const adminDb = getFirestore()
+export { FieldValue, Timestamp } from 'firebase-admin/firestore'

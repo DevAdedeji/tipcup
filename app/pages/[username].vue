@@ -23,21 +23,53 @@ const getSocialIcon = (platform: string) => {
     return LinkIcon
 }
 
+// Payment Verification Logic
+const verifyingPayment = ref(false)
+const toast = useToast()
+
 onMounted(async () => {
     if (username.value) {
         profile.value = await fetchProfileByUsername(username.value)
     }
+
+    // Check for payment callback
+    const { status, transaction_id, tx_ref } = route.query
+    if (status && (status === 'successful' || status === 'completed') && transaction_id) {
+        verifyPayment(transaction_id as string)
+    } else if (status === 'cancelled') {
+        toast.add({ title: 'Payment Cancelled', description: 'You cancelled the payment.', type: 'info' })
+        // Clear query params to clean URL
+        useRouter().replace({ query: {} })
+    }
 })
 
-// Load Paystack Inline Script
-useHead({
-    script: [
-        {
-            src: 'https://js.paystack.co/v1/inline.js',
-            async: true
+const verifyPayment = async (transactionId: string) => {
+    verifyingPayment.value = true
+    try {
+        const data: any = await $fetch('/api/flutterwave/verify', {
+            method: 'POST',
+            body: { transaction_id: transactionId }
+        })
+
+        if (data.status === 'success') {
+            toast.add({ title: 'Thank You!', description: `Successfully supported ${profile.value?.displayName || 'creator'}!`, type: 'success' })
+            // Refetch profile to update goal progress
+            if (username.value) {
+                const updatedProfile = await fetchProfileByUsername(username.value)
+                if (updatedProfile) profile.value = updatedProfile
+            }
+        } else {
+            toast.add({ title: 'Verification Failed', description: 'Payment verification failed.', type: 'warning' })
         }
-    ]
-})
+    } catch (e) {
+        console.error('Verify error', e)
+        toast.add({ title: 'Error', description: 'Failed to verify payment.', type: 'error' })
+    } finally {
+        verifyingPayment.value = false
+        // Clear query params
+        useRouter().replace({ query: {} })
+    }
+}
 
 const pageTitle = computed(() => loading.value ? 'Loading...' : profile.value ? `${profile.value.displayName} (@${profile.value.username})` : 'Profile Not Found')
 
@@ -45,7 +77,6 @@ usePageMeta({
     title: pageTitle
 })
 
-const toast = useToast()
 const shareProfile = async () => {
     try {
         await navigator.clipboard.writeText(window.location.href)
@@ -81,13 +112,13 @@ const handleSupport = async () => {
 
     processingPayment.value = true
     try {
-        // Initialize on Server
-        const { data: initData } = await useFetch<any>('/api/paystack/initialize', {
+        // Initialize on Server (Flutterwave)
+        const initData: any = await $fetch('/api/flutterwave/initialize', {
             method: 'POST',
             body: {
                 email,
                 amount: selectedTier.value.price,
-                callback_url: window.location.href,
+                callback_url: window.location.href, // Redirect back to this page
                 metadata: {
                     toUserId: profile.value?.uid,
                     goalId: profile.value?.fundraisingGoal?.id,
@@ -99,54 +130,17 @@ const handleSupport = async () => {
             }
         })
 
-
-        if (initData.value && initData.value.access_code) {
-            const accessCode = initData.value.access_code
-
-            // Open Paystack Popup
-            const handler = (window as any).PaystackPop.setup({
-                key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-                email: email,
-                amount: selectedTier.value.price * 100,
-                ref: initData.value.reference,
-                onClose: function() {
-                    processingPayment.value = false
-                    toast.add({ title: 'Payment Cancelled', description: 'You cancelled the payment.', type: 'info' })
-                },
-                callback: function(response: any) {
-                    // Verify payment on server
-                    $fetch('/api/paystack/verify', {
-                        method: 'POST',
-                        body: { reference: response.reference }
-                    }).then((verifyData: any) => {
-                        if (verifyData && verifyData.status === 'success') {
-                            toast.add({ title: 'Thank You!', description: `Successfully supported ${profile.value?.displayName}!`, type: 'success' })
-                            supportMessage.value = ''
-                            tipperEmail.value = ''
-                            // Refetch profile to show updated goal
-                            if (username.value) {
-                                fetchProfileByUsername(username.value).then(updatedProfile => {
-                                    profile.value = updatedProfile
-                                })
-                            }
-                        } else {
-                            toast.add({ title: 'Verification Failed', description: 'Payment was made but verification failed.', type: 'warning' })
-                        }
-                    }).catch((e) => {
-                        toast.add({ title: 'Error', description: 'Failed to verify payment.', type: 'error' })
-                    }).finally(() => {
-                        processingPayment.value = false
-                    })
-                }
-            })
-            handler.openIframe()
+        if (initData && initData.authorization_url) {
+            // Redirect to Flutterwave
+            window.location.href = initData.authorization_url
         } else {
              throw new Error('Initialization failed')
         }
 
     } catch (e) {
         console.error(e)
-        toast.add({ title: 'Error', description: 'Could not start payment.', type: 'error' })
+        const msg = e.statusMessage || e.message || 'Could not start payment.'
+        toast.add({ title: 'Error', description: msg, type: 'error' })
         processingPayment.value = false
     }
 }
@@ -243,6 +237,13 @@ const handleSupport = async () => {
                     <div v-if="profile?.fundraisingGoal" class="w-full">
                          <GoalProgress :goal="profile.fundraisingGoal" />
                     </div>
+
+                    <!-- Verification Loader -->
+                    <div v-if="verifyingPayment" class="p-4 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center gap-3 animate-pulse mb-6">
+                        <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <span class="text-primary font-medium">Verifying your payment...</span>
+                    </div>
+
                     <div class="bg-surface border border-primary/20 rounded-2xl p-6 shadow-xl">
                          <h3 class="font-bold text-xl mb-4 text-center">Support {{ profile?.displayName?.split(' ')[0] }}</h3>
 
@@ -266,14 +267,14 @@ const handleSupport = async () => {
 
                          <div class="space-y-4">
                              <Input v-model="supportMessage" placeholder="Say something nice..." class="bg-background" />
-                             <!-- Email Input for Paystack -->
+                             <!-- Email Input -->
                              <Input v-if="!user" v-model="tipperEmail" type="email" placeholder="Your Email (for receipt)" class="bg-background" />
 
                              <Button :loading="processingPayment" @click="handleSupport" size="lg" class="w-full font-bold shadow-lg shadow-primary/20">
                                  Support {{ selectedTier ? formatCurrency(selectedTier.price) : '...' }}
                              </Button>
                              <p class="text-xs text-center text-text-secondary">
-                                 Secured by Paystack
+                                 Secured by Flutterwave
                              </p>
                          </div>
                     </div>
@@ -305,9 +306,6 @@ const handleSupport = async () => {
                         <p class="text-text-secondary">No social links added yet.</p>
                     </div>
                  </div>
-
-                <!-- Paystack Inline Script -->
-                <Script src="https://js.paystack.co/v1/inline.js" />
             </div>
         </div>
     </div>

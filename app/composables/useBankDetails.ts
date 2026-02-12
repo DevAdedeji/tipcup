@@ -119,11 +119,41 @@ export const useBankDetails = () => {
         }
     }
 
+    // Fetch list of banks from server (Flutterwave)
+    const fetchBanks = async () => {
+        try {
+            const data: any = await $fetch('/api/flutterwave/banks')
+            return data
+        } catch (e) {
+            console.error(e)
+            return []
+        }
+    }
+
+    // Resolve bank account
+    const resolveAccount = async (accountNumber: string, bankCode: string) => {
+        try {
+            const data: any = await $fetch('/api/flutterwave/resolve-account', {
+                method: 'POST',
+                body: {
+                    account_number: accountNumber,
+                    bank_code: bankCode
+                }
+            })
+            return data
+        } catch (e) {
+            console.error(e)
+            throw e
+        }
+    }
+
     return {
         accounts,
         loading,
         error,
         fetchAccounts,
+        fetchBanks,
+        resolveAccount,
         addAccount,
         setPrimaryAccount,
         deleteAccount

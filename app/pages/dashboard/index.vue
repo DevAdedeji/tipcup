@@ -143,7 +143,7 @@ const copyLink = async () => {
                 <div class="flex items-center justify-between mt-4 relative z-10">
                     <span class="text-sm text-text-secondary">Total Earned: {{ formatCurrency(userProfile?.totalEarnings || 0) }}</span>
                      <Button size="sm" @click="showWithdrawalModal = true">
-                        Request Payout
+                        Withdraw Funds
                     </Button>
                 </div>
                  <!-- Decorative -->

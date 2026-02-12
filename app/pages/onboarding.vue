@@ -41,7 +41,7 @@ const verifyingAccount = ref(false)
 onMounted(async () => {
     loadingBanks.value = true
     try {
-        const { data } = await useFetch<any>('/api/paystack/banks')
+        const { data } = await useFetch<any>('/api/flutterwave/banks')
         if (data.value && data.value.status === 'success') {
             banks.value = data.value.data
         }
@@ -59,8 +59,9 @@ const resolveAccount = async () => {
     formData.payoutDetails.accountName = ''
 
     try {
-        const { data } = await useFetch<any>('/api/paystack/resolve', {
-            params: {
+        const { data } = await useFetch<any>('/api/flutterwave/resolve-account', {
+            method: 'POST',
+            body: {
                 account_number: formData.payoutDetails.accountNumber,
                 bank_code: formData.payoutDetails.bankCode
             }
@@ -161,25 +162,12 @@ const complete = async () => {
         // 2. Add Bank Account if provided
         if (formData.payoutDetails.bankCode && formData.payoutDetails.accountNumber && formData.payoutDetails.accountName) {
             try {
-                // Create Recipient
-                const { data } = await useFetch<any>('/api/paystack/recipient', {
-                    method: 'POST',
-                    body: {
-                        name: formData.payoutDetails.accountName,
-                        account_number: formData.payoutDetails.accountNumber,
-                        bank_code: formData.payoutDetails.bankCode
-                    }
+                await addAccount({
+                    bankName: formData.payoutDetails.bankName,
+                    accountNumber: formData.payoutDetails.accountNumber,
+                    accountName: formData.payoutDetails.accountName,
+                    bank_code: formData.payoutDetails.bankCode
                 })
-
-                if (data.value && data.value.status === 'success') {
-                    await addAccount({
-                        bankName: formData.payoutDetails.bankName,
-                        accountNumber: formData.payoutDetails.accountNumber,
-                        accountName: formData.payoutDetails.accountName,
-                        bank_code: formData.payoutDetails.bankCode,
-                        recipient_code: data.value.data.recipient_code
-                    })
-                }
             } catch (e) {
                 console.error('Failed to add bank account during onboarding', e)
                 toast.add({ title: 'Bank Account Error', description: 'Profile created, but failed to add bank account. Please add it in settings.', type: 'warning' })

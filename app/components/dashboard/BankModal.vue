@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import Modal from '~/components/ui/Modal.vue'
 import { useBankDetails } from '~/composables/useBankDetails'
-import { ref, reactive, watch, onMounted, computed } from 'vue'
+import Modal from '~/components/ui/Modal.vue'
 import Button from '~/components/ui/Button.vue'
 import Input from '~/components/ui/Input.vue'
 import Select from '~/components/ui/Select.vue'
@@ -10,190 +9,145 @@ const props = defineProps<{
     isOpen: boolean
 }>()
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'success'])
 
-const { addAccount } = useBankDetails()
-const toast = useToast()
+const { addAccount, error: bankError, fetchBanks, resolveAccount } = useBankDetails()
 
-const bankForm = reactive({
-    bankName: '',
+const loading = ref(false)
+const listLoading = ref(false)
+const banks = ref<{ label: string, value: string }[]>([])
+
+const form = reactive({
     bankCode: '',
     accountNumber: '',
     accountName: ''
 })
-const bankSubmitting = ref(false)
-const verifyingAccount = ref(false)
-const banks = ref<any[]>([])
-const loadingBanks = ref(false)
 
-// Fetch Banks
+const error = ref('')
+
+// Fetch banks on mount
 onMounted(async () => {
-    loadingBanks.value = true
-    try {
-        const data = await $fetch<any>('/api/paystack/banks')
-        if (data && data.status === 'success') {
-            banks.value = data.data
-        }
-    } catch (e) {
-        console.error('Failed to fetch banks', e)
-    } finally {
-        loadingBanks.value = false
+    listLoading.value = true
+    const bankList = await fetchBanks()
+    if (bankList && Array.isArray(bankList)) {
+        banks.value = bankList.map((b: any) => ({
+            label: b.name,
+            value: b.code
+        }))
     }
+    listLoading.value = false
 })
 
-const bankOptions = computed(() => {
-    return banks.value.map(bank => ({
-        label: bank.name,
-        value: bank.code
-    }))
-})
+const resolveLoading = ref(false)
 
-watch(() => bankForm.bankCode, (newCode) => {
-    const bank = banks.value.find(b => b.code === newCode)
-    bankForm.bankName = bank ? bank.name : ''
-})
+const handleResolve = async () => {
+    if (form.accountNumber.length !== 10 || !form.bankCode) return
 
-// Resolve Account
-const resolveAccount = async () => {
-    if (bankForm.accountNumber.length < 10 || !bankForm.accountNumber) return
-    if (!bankForm.bankCode) return
-
-    verifyingAccount.value = true
-    bankForm.accountName = ''
+    resolveLoading.value = true
+    error.value = ''
+    form.accountName = ''
 
     try {
-        const { data } = await useFetch<any>('/api/paystack/resolve', {
-            params: {
-                account_number: bankForm.accountNumber,
-                bank_code: bankForm.bankCode
-            }
-        })
-
-        if (data.value && data.value.status === 'success') {
-            bankForm.accountName = data.value.data.account_name
+        const result = await resolveAccount(form.accountNumber, form.bankCode)
+        if (result && result.account_name) {
+             form.accountName = result.account_name
         } else {
-            toast.add({ title: 'Invalid Account', description: 'Could not resolve account details.', type: 'error' })
+             error.value = 'Could not resolve account name'
         }
-    } catch (e) {
-        toast.add({ title: 'Error', description: 'Failed to resolve account.', type: 'error' })
+    } catch (e: any) {
+        console.error(e)
+        error.value = e.statusMessage || 'Could not verify account name'
     } finally {
-        verifyingAccount.value = false
+        resolveLoading.value = false
     }
 }
 
-let resolveTimer: NodeJS.Timeout | null = null
-
-watch(() => [bankForm.accountNumber, bankForm.bankCode], () => {
-    if (resolveTimer) {
-        clearTimeout(resolveTimer)
-    }
-
-    bankForm.accountName = ''
-
-    if (bankForm.accountNumber.length === 10 && bankForm.bankCode) {
-        resolveTimer = setTimeout(() => {
-            resolveAccount()
-        }, 800)
+// Watch for changes to trigger resolution
+watch(() => [form.accountNumber, form.bankCode], () => {
+    if (form.accountNumber.length === 10 && form.bankCode) {
+        handleResolve()
+    } else {
+        form.accountName = ''
+        error.value = ''
     }
 })
 
-const handleAddBank = async () => {
-    if (!bankForm.bankCode || !bankForm.accountNumber || !bankForm.accountName) {
-         toast.add({ title: 'Missing Details', description: 'Please ensure all fields are filled and valid.', type: 'warning' })
-         return
-    }
 
-    bankSubmitting.value = true
+const handleSubmit = async () => {
+    if (!form.accountName) return
 
-    // Create Recipient
+    loading.value = true
+    error.value = ''
+
     try {
-        const { data } = await useFetch<any>('/api/paystack/recipient', {
-            method: 'POST',
-            body: {
-                name: bankForm.accountName,
-                account_number: bankForm.accountNumber,
-                bank_code: bankForm.bankCode
-            }
+        const bank = banks.value.find(b => b.value === form.bankCode)
+        const success = await addAccount({
+            bankName: bank?.label || 'Unknown Bank',
+            accountNumber: form.accountNumber,
+            accountName: form.accountName,
+            bank_code: form.bankCode
         })
 
-        if (data.value && data.value.status === 'success') {
-            const recipientCode = data.value.data.recipient_code
-
-            // Add to Firestore
-             const success = await addAccount({
-                bankName: bankForm.bankName,
-                accountNumber: bankForm.accountNumber,
-                accountName: bankForm.accountName,
-                bank_code: bankForm.bankCode,
-                recipient_code: recipientCode
-            })
-
-            if (success) {
-                toast.add({ title: 'Success', description: 'Bank account added successfully!' })
-                emit('close')
-                // Reset form
-                bankForm.bankName = ''
-                bankForm.bankCode = ''
-                bankForm.accountNumber = ''
-                bankForm.accountName = ''
-            } else {
-                toast.add({ title: 'Error', description: 'Failed to save bank account', type: 'error' })
-            }
+        if (success) {
+            emit('success')
+            // Reset form
+            form.bankCode = ''
+            form.accountNumber = ''
+            form.accountName = ''
+             emit('close')
         } else {
-             toast.add({ title: 'Error', description: 'Failed to create transfer recipient.', type: 'error' })
+            error.value = bankError.value || 'Failed to add account'
         }
-
     } catch (e) {
-         toast.add({ title: 'Error', description: 'Values could not be verified.', type: 'error' })
+        console.error(e)
+        error.value = 'An error occurred'
     } finally {
-        bankSubmitting.value = false
+        loading.value = false
     }
-}
-
-const handleClose = () => {
-    emit('close')
 }
 </script>
 
 <template>
-    <Modal
-        :isOpen="isOpen"
-        title="Add Payout Method"
-        @close="handleClose"
-    >
-        <div class="space-y-4">
-            <div>
-                <div v-if="loadingBanks" class="text-sm text-text-secondary h-10 flex items-center">Loading banks...</div>
-                <Select
-                    v-else
-                    v-model="bankForm.bankCode"
-                    :options="bankOptions"
-                    label="Bank Name"
-                    placeholder="Select a bank"
-                />
+    <Modal :isOpen="isOpen" title="Add Bank Account" @close="$emit('close')">
+        <form @submit.prevent="handleSubmit" class="space-y-4">
+            <Select
+                v-model="form.bankCode"
+                label="Bank Name"
+                placeholder="Select Bank"
+                :options="banks"
+                :disabled="listLoading"
+                searchable
+            />
+
+            <Input
+                v-model="form.accountNumber"
+                label="Account Number"
+                placeholder="1234567890"
+                maxlength="10"
+            />
+
+            <!-- Account Name Resolution -->
+            <div v-if="resolveLoading" class="text-sm text-text-secondary animate-pulse">
+                Verifying account...
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-text-secondary mb-1">Account Number</label>
-                <Input v-model="bankForm.accountNumber" placeholder="User Account Number" maxlength="10" />
+            <div v-if="form.accountName" class="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div class="text-xs text-green-500 font-medium">Account Name</div>
+                <div class="font-bold text-green-400">{{ form.accountName }}</div>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-text-secondary mb-1">Account Name</label>
-                <div class="relative">
-                    <Input v-model="bankForm.accountName" placeholder="Fetched automatically..." disabled class="opacity-70 cursor-not-allowed bg-black/5" />
-                    <div v-if="verifyingAccount" class="absolute right-3 top-2.5">
-                        <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                    </div>
-                </div>
+            <div v-if="error" class="text-red-500 text-sm">
+                {{ error }}
             </div>
-        </div>
 
-        <template #footer>
-            <Button variant="ghost" @click="handleClose">Cancel</Button>
-            <Button :loading="bankSubmitting" @click="handleAddBank">
-                Add Account
-            </Button>
-        </template>
+            <div class="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="ghost" @click="$emit('close')">
+                    Cancel
+                </Button>
+                <Button type="submit" :loading="loading" :disabled="!form.accountName || resolveLoading">
+                    Save Account
+                </Button>
+            </div>
+        </form>
     </Modal>
 </template>
