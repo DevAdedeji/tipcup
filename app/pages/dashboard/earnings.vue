@@ -4,6 +4,7 @@ import { formatCurrency } from '~/utils/format'
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '~/firebase'
 import { CreditCard, DollarSign, Heart } from "lucide-vue-next"
+import WithdrawalModal from '~/components/dashboard/WithdrawalModal.vue'
 
 definePageMeta({
   layout: 'dashboard',
