@@ -7,11 +7,13 @@ export const usePayments = () => {
     const loading = useState('paymentsLoading', () => false)
     const payments = useState<any[]>('payments', () => [])
 
-    // Pagination state
+    // Page-based pagination state
     const paginatedPayments = useState<any[]>('paginatedPayments', () => [])
-    const lastVisible = useState<QueryDocumentSnapshot<DocumentData> | null>('paymentsLastVisible', () => null)
-    const hasMore = useState<boolean>('paymentsHasMore', () => true)
-    const loadingMore = useState<boolean>('paymentsLoadingMore', () => false)
+    const currentPage = useState<number>('paymentsCurrentPage', () => 1)
+    const cursorStack = useState<any[]>('paymentsCursorStack', () => [null]) // Stack of startAfter cursors. index 0 is null (page 1)
+    const itemsPerPage = 5 // Configurable
+    const hasNextPage = useState<boolean>('paymentsHasNextPage', () => true)
+    const hasPrevPage = computed(() => currentPage.value > 1)
 
     const fetchRecentPayments = (limitCount = 5) => {
         if (!user.value) return
@@ -41,17 +43,10 @@ export const usePayments = () => {
         return unsubscribe
     }
 
-    // Cursor-based pagination for full list
-    const fetchPaymentsPage = async (isNext = false, pageSize = 5) => {
+    const fetchPaymentsPage = async (direction: 'next' | 'prev' | 'first' = 'first') => {
         if (!user.value) return
 
-        if (!isNext) {
-            loading.value = true
-            lastVisible.value = null
-            paginatedPayments.value = []
-        } else {
-            loadingMore.value = true
-        }
+        loading.value = true
 
         try {
             const paymentsRef = collection(db, 'payments')
@@ -59,35 +54,57 @@ export const usePayments = () => {
                 paymentsRef,
                 where('toUserId', '==', user.value.uid),
                 orderBy('createdAt', 'desc'),
-                limit(pageSize)
+                limit(itemsPerPage)
             )
 
-            if (isNext && lastVisible.value) {
-                q = query(q, startAfter(lastVisible.value))
+            // Calculate cursor based on direction
+            let cursor = null;
+
+            if (direction === 'first') {
+                currentPage.value = 1
+                cursorStack.value = [null]
+                cursor = null
+            } else if (direction === 'next') {
+                // Cursor is the last doc of current page
+                if (paginatedPayments.value.length > 0) {
+                    const lastDoc = paginatedPayments.value[paginatedPayments.value.length - 1].doc
+                    cursor = lastDoc
+                    // Ensure we don't push duplicates if we rapid fire. Check if current page index matches stack length
+                    if (cursorStack.value.length === currentPage.value) {
+                        cursorStack.value.push(cursor)
+                    }
+                    currentPage.value++
+                }
+            } else if (direction === 'prev') {
+                if (currentPage.value > 1) {
+                    currentPage.value--
+                    cursor = cursorStack.value[currentPage.value - 1]
+                }
+            }
+
+            // Apply cursor if exists
+            if (cursor) {
+                q = query(q, startAfter(cursor))
             }
 
             const snapshot = await getDocs(q)
 
-            const newPayments = snapshot.docs.map(doc => ({
+            paginatedPayments.value = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
-                date: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString() : 'Just now'
+                date: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString() : 'Just now',
+                doc: doc // Store doc for cursor
             }))
 
-            if (isNext) {
-                paginatedPayments.value = [...paginatedPayments.value, ...newPayments]
-            } else {
-                paginatedPayments.value = newPayments
-            }
-
-            lastVisible.value = snapshot.docs[snapshot.docs.length - 1] || null
-            hasMore.value = snapshot.docs.length === pageSize
+            // Update hasNextPage
+            // We can check if we got full page. If less, then no more next.
+            // Even if full, we might check one more ahead, but for simple UI, length < limit is enough.
+            hasNextPage.value = snapshot.docs.length === itemsPerPage
 
         } catch (error) {
             console.error('Error fetching paginated payments:', error)
         } finally {
             loading.value = false
-            loadingMore.value = false
         }
     }
 
@@ -95,8 +112,9 @@ export const usePayments = () => {
         payments,
         paginatedPayments,
         loading,
-        loadingMore,
-        hasMore,
+        currentPage,
+        hasNextPage,
+        hasPrevPage,
         fetchRecentPayments,
         fetchPaymentsPage
     }

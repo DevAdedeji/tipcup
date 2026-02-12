@@ -81,11 +81,22 @@ const handleWithdraw = async () => {
 </script>
 
 <template>
-    <Modal :isOpen="isOpen" @close="$emit('close')" title="Withdraw Funds">
+    <Modal :isOpen="isOpen" @close="$emit('close')" title="Request Payout">
         <div class="space-y-6">
             <div class="bg-primary/10 text-center flex flex-col items-center justify-center p-4 rounded-xl border border-border">
                 <div class="text-sm text-text-secondary mb-1">Available Balance</div>
                 <div class="text-3xl font-bold text-primary">{{ formatCurrency(currentBalance) }}</div>
+            </div>
+
+            <!-- Manual Processing Notice -->
+             <div class="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg flex items-start gap-3">
+                <div class="p-1 bg-blue-500 rounded-full mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </div>
+                <div class="text-sm text-blue-200">
+                    <span class="font-bold block text-blue-100">Manual Processing</span>
+                    Your payout request will be processed manually within 24-48 hours.
+                </div>
             </div>
 
             <div>
@@ -139,7 +150,7 @@ const handleWithdraw = async () => {
                     :disabled="!validAmount || !selectedBankId || submitting"
                     :loading="submitting"
                 >
-                    {{ submitting ? 'Processing...' : 'Withdraw Funds' }}
+                    {{ submitting ? 'Processing...' : 'Submit Request' }}
                 </Button>
             </div>
         </div>

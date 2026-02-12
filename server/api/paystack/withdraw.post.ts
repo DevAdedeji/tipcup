@@ -16,12 +16,12 @@ export default defineEventHandler(async (event) => {
 
     try {
         const userRef = adminDb.collection('users').doc(userId)
-        
+
         // 1. Check Balance & Deduct (Optimistic Update via Transaction)
         // We use a transaction to ensure we don't double-spend or withdraw more than available
         await adminDb.runTransaction(async (t) => {
             const userDoc = await t.get(userRef)
-            
+
             if (!userDoc.exists) {
                 throw new Error('User not found')
             }
@@ -39,7 +39,32 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-        // 2. Initiate Transfer with Paystack
+        // 2. Create Manual Withdrawal Request (Starter Business Support)
+        // Since Starter Businesses cannot use the Transfer API, we record the request for manual processing.
+
+        await adminDb.collection('withdrawals').add({
+            userId,
+            amount,
+            recipientCode,
+            status: 'pending_manual_review', // Indicates manual action needed
+            paystackTransferCode: null,
+            reference: `MANUAL-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        })
+
+        return {
+            status: 'success',
+            message: 'Withdrawal request submitted for processing. You will be notified once approved.',
+            data: {
+                amount,
+                recipient_code: recipientCode
+            }
+        }
+
+        /*
+        // AUTOMATED PAYOUTS (Registered Business Only)
+        // Uncomment this block if you upgrade your Paystack account to Registered Business
         try {
             const transferResponse: any = await initiateTransfer(
                 amount,
@@ -71,24 +96,25 @@ export default defineEventHandler(async (event) => {
 
         } catch (transferError: any) {
             console.error('Paystack Transfer Failed:', transferError)
-            
+
             // REFUND USER: If Paystack call fails, we must refund the deducted balance
             const { FieldValue } = await import('firebase-admin/firestore')
             await userRef.update({
                 currentBalance: FieldValue.increment(amount)
             })
 
-            throw createError({ 
-                statusCode: 500, 
-                statusMessage: transferError.message || 'Withdrawal failed. Funds have been returned to your wallet.' 
+            throw createError({
+                statusCode: 500,
+                statusMessage: transferError.message || 'Withdrawal failed. Funds have been returned to your wallet.'
             })
         }
+        */
 
     } catch (error: any) {
         console.error('Withdrawal Process Error:', error)
-        throw createError({ 
-            statusCode: 400, 
-            statusMessage: error.message || 'Withdrawal failed' 
+        throw createError({
+            statusCode: 400,
+            statusMessage: error.message || 'Withdrawal failed'
         })
     }
 })
