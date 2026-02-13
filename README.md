@@ -253,22 +253,6 @@ Balance updated
 
 ---
 
-## 🐛 Common Issues & Solutions
-
-### Issue: Payments not showing in dashboard
-**Solution:** Ensure Firestore security rules include the `payments` collection read permissions. In localhost, webhooks don't work—payments are recorded via the verify endpoint.
-
-### Issue: Withdrawals not displaying
-**Solution:** Update Firestore rules to include the `withdrawals` collection read permissions.
-
-### Issue: Bank list is slow
-**Solution:** The Select component is optimized for large datasets. It limits initial render to 100 options and includes debounced search.
-
-### Issue: "Only bank code 044 allowed" error
-**Solution:** You're using Flutterwave test keys. This is expected behavior. Use production keys or test with Access Bank (044).
-
----
-
 ## 📈 Performance Optimizations
 
 - ✅ **Debounced search** in Select component (150ms)
@@ -295,23 +279,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License.
 
----
-
-## 🙏 Acknowledgments
-
-- [Nuxt Team](https://nuxt.com) for the amazing framework
-- [Flutterwave](https://flutterwave.com) for payment infrastructure
-- [Firebase](https://firebase.google.com) for backend services
-- [Tailwind CSS](https://tailwindcss.com) for beautiful styling
-
----
-
-## 📞 Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Contact: [adedejitewogbade2@example.com]
-
----
-
-Made with ❤️ by Adedeji
