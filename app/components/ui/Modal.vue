@@ -50,7 +50,7 @@ function closeModal() {
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel
-              class="w-full transform overflow-hidden rounded-2xl bg-surface p-6 text-left align-middle shadow-xl transition-all border border-border"
+              class="w-full transform overflow-visible rounded-2xl bg-surface p-6 text-left align-middle shadow-xl transition-all border border-border"
               :class="width"
             >
               <div class="flex justify-between items-center mb-4" v-if="title">

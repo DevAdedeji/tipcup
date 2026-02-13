@@ -15,7 +15,7 @@ const { user } = useAuth()
         </div>
         <div class="flex items-center gap-4">
           <template v-if="user">
-            <Button to="/dashboard" variant="primary" class="hidden sm:inline-flex">Dashboard</Button>
+            <Button to="/dashboard" variant="primary" class="inline-flex">Dashboard</Button>
           </template>
           <template v-else>
             <Button variant="ghost" class="hidden sm:inline-flex" to="/login">Log in</Button>
