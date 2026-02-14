@@ -23,8 +23,8 @@ const formData = reactive({
   displayName: user.value?.displayName || '',
   bio: '',
   tiers: [
-      { price: 5, label: 'Coffee', description: 'Buy me a coffee' },
-      { price: 15, label: 'Pizza', description: 'Buy me a pizza' }
+      { price: 1000, label: 'Coffee', description: 'Buy me a coffee' },
+      { price: 2000, label: 'Pizza', description: 'Buy me a pizza' }
   ],
   payoutDetails: {
       bankName: '',
