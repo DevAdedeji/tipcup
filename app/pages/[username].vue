@@ -3,7 +3,7 @@ import { useProfile, type PublicProfile } from '~/composables/useProfile'
 import { usePaymentFlow } from '~/composables/usePaymentFlow'
 import { useShare } from '~/composables/useShare'
 import { useSupport } from '~/composables/useSupport'
-import { ChevronRight } from 'lucide-vue-next'
+import { ChevronRight, Share2, ChevronDown, ChevronUp } from 'lucide-vue-next'
 import Skeleton from '~/components/ui/Skeleton.vue'
 import GoalProgress from '~/components/dashboard/GoalProgress.vue'
 import { formatCurrency } from '~/utils/format'
@@ -20,6 +20,19 @@ const { selectedTier, supportMessage, tipperEmail, handleSupport, processingPaym
 
 const profile = ref<PublicProfile | null>(null)
 const toast = useToast()
+
+const isBioExpanded = ref(false)
+const BIO_LIMIT = 150
+
+const displayBio = computed(() => {
+    if (!profile.value?.bio) return ''
+    if (isBioExpanded.value || profile.value.bio.length <= BIO_LIMIT) return profile.value.bio
+    return profile.value.bio.slice(0, BIO_LIMIT) + '...'
+})
+
+const showReadMore = computed(() => {
+    return profile.value?.bio && profile.value.bio.length > BIO_LIMIT
+})
 
 onMounted(async () => {
     loading.value = true
@@ -114,24 +127,43 @@ const onSupportClick = () => {
         </div>
 
         <div v-else-if="profile" class="animate-fade-in-up">
-            <div class="h-48 md:h-64 bg-gradient-to-r from-primary/80 to-accent/80 relative">
+            <div class="h-48 md:h-64 bg-gradient-to-r from-primary/80 to-accent/80 relative group">
                 <div class="absolute inset-0 bg-black/10"></div>
+
+                 <!-- Share Button -->
+                 <div class="absolute top-4 right-4 md:bottom-6 md:top-auto md:right-8 z-10">
+                    <Button
+                        @click="shareUrl()"
+                        variant="secondary"
+                        size="md"
+                    >
+                        <Share2 class="w-4 h-4 mr-2" />
+                        Share Page
+                    </Button>
+                </div>
             </div>
 
             <div class="max-w-4xl mx-auto px-4 sm:px-6 relative">
                  <div class="-mt-20 mb-6 flex flex-col items-center sm:items-start sm:flex-row sm:gap-6">
                     <Avatar :src="profile?.avatarUrl" size="xl" class="w-32 h-32 md:w-40 md:h-40 border-4 border-background shadow-xl" />
 
-                    <div class="mt-4 sm:mt-24 text-center sm:text-left flex-1">
-                        <h1 class="text-3xl font-bold">{{ profile?.displayName }}</h1>
-                        <p class="text-text-secondary">@{{ profile?.username }}</p>
-                        <p v-if="profile?.bio" class="mt-2 max-w-lg text-text-secondary leading-relaxed">{{ profile?.bio }}</p>
-                    </div>
+                    <div class="mt-4 sm:mt-24 text-center sm:text-left flex-1 max-w-2xl">
+                        <h1 class="text-3xl font-bold tracking-tight">{{ profile?.displayName }}</h1>
+                        <p class="text-text-secondary font-medium">@{{ profile?.username }}</p>
 
-                    <div class="mt-6 sm:mt-24 flex gap-3">
-                        <Button @click="shareUrl()" variant="outline" size="sm">
-                            <span class="mr-2">🔗</span> Share
-                        </Button>
+                        <div v-if="profile?.bio" class="mt-4 text-text-secondary leading-relaxed relative">
+                             <p :class="{'line-clamp-3': !isBioExpanded && !showReadMore}">
+                                {{ displayBio }}
+                             </p>
+                             <button
+                                v-if="showReadMore"
+                                @click="isBioExpanded = !isBioExpanded"
+                                class="text-primary text-sm font-medium hover:underline mt-1 flex items-center gap-1 mx-auto sm:mx-0"
+                            >
+                                {{ isBioExpanded ? 'Read Less' : 'Read More' }}
+                                <component :is="isBioExpanded ? ChevronUp : ChevronDown" class="w-3 h-3" />
+                             </button>
+                        </div>
                     </div>
                  </div>
 
