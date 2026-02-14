@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import EarningsChart from '~/components/dashboard/EarningsChart.vue'
 import { formatCurrency } from '~/utils/format'
-import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore'
-import { db } from '~/firebase'
 import { useAuth } from '~/composables/useAuth'
 import { usePayments } from '~/composables/usePayments'
 import { useWithdrawals } from '~/composables/useWithdrawals'
 import { usePageMeta } from '~/composables/usePageMeta'
+import { useEarnings } from '~/composables/useEarnings'
 import Table from '~/components/ui/Table.vue'
 import Button from '~/components/ui/Button.vue'
 import Skeleton from '~/components/ui/Skeleton.vue'
@@ -28,54 +27,21 @@ usePageMeta({
 const { user, userProfile } = useAuth()
 const { paginatedPayments, loading: paymentsLoading, currentPage: paymentPage, hasNextPage: paymentHasNext, hasPrevPage: paymentHasPrev, fetchPaymentsPage } = usePayments()
 const { paginatedWithdrawals, loading: withdrawalsLoading, currentPage: withdrawalPage, hasNextPage: withdrawalHasNext, hasPrevPage: withdrawalHasPrev, fetchWithdrawalsPage } = useWithdrawals()
+const { chartData, chartLoading, useEarningsChart } = useEarnings()
+
 const showWithdrawalModal = ref(false)
-const chartData = ref<any[]>([])
-const chartLoading = ref(false)
 const activeTab = ref(0)
 const tabs = ['Transaction History', 'Withdrawal History']
-
-let unsubscribeChart: (() => void) | undefined
 
 // Initial fetch
 onMounted(async () => {
     fetchPaymentsPage('first')
     fetchWithdrawalsPage('first')
 
-    // Setup real-time listener for chart data (last 50 transactions)
-    if (user.value) {
-        chartLoading.value = true
-        try {
-            const paymentsRef = collection(db, 'payments')
-            const q = query(
-                paymentsRef,
-                where('toUserId', '==', user.value.uid),
-                orderBy('createdAt', 'desc'),
-                limit(50)
-            )
-
-            // Real-time listener
-            unsubscribeChart = onSnapshot(q, (snapshot) => {
-                chartData.value = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }))
-                chartLoading.value = false
-            }, (error) => {
-                console.error('Failed to fetch chart data', error)
-                chartLoading.value = false
-            })
-        } catch (e) {
-            console.error('Failed to setup chart listener', e)
-            chartLoading.value = false
-        }
-    }
+    // Setup real-time listener for chart data
+    useEarningsChart(50)
 })
 
-onUnmounted(() => {
-    if (unsubscribeChart) {
-        unsubscribeChart()
-    }
-})
 </script>
 
 <template>

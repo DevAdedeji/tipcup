@@ -12,7 +12,7 @@ usePageMeta({
 
 const { user } = useAuth()
 const { checkUsernameAvailability, completeOnboarding } = useOnboarding()
-const { addAccount } = useBankDetails()
+const { addAccount, fetchBanks, resolveAccount } = useBankDetails()
 
 const step = ref(1)
 const steps = ['Claim Link', 'Profile', 'Membership', 'Payouts']
@@ -41,9 +41,11 @@ const verifyingAccount = ref(false)
 onMounted(async () => {
     loadingBanks.value = true
     try {
-        const { data } = await useFetch<any>('/api/flutterwave/banks')
-        if (data.value && data.value.status === 'success') {
-            banks.value = data.value.data
+        const response: any = await fetchBanks()
+        if (response && response.status === 'success') {
+            banks.value = response.data
+        } else if (Array.isArray(response)) {
+             banks.value = response
         }
     } catch (e) {
         console.error('Failed to fetch banks', e)
@@ -52,23 +54,17 @@ onMounted(async () => {
     }
 })
 
-const resolveAccount = async () => {
+const handleResolveAccount = async () => {
     if (formData.payoutDetails.accountNumber.length < 10 || !formData.payoutDetails.bankCode) return
 
     verifyingAccount.value = true
     formData.payoutDetails.accountName = ''
 
     try {
-        const { data } = await useFetch<any>('/api/flutterwave/resolve-account', {
-            method: 'POST',
-            body: {
-                account_number: formData.payoutDetails.accountNumber,
-                bank_code: formData.payoutDetails.bankCode
-            }
-        })
+        const accountData = await resolveAccount(formData.payoutDetails.accountNumber, formData.payoutDetails.bankCode)
 
-        if (data.value && data.value.status === 'success' && data.value.data) {
-            formData.payoutDetails.accountName = data.value.data.account_name
+        if (accountData) {
+            formData.payoutDetails.accountName = accountData.account_name
         } else {
              const toast = useToast()
             toast.add({ title: 'Invalid Account', description: 'Could not resolve account details.', type: 'error' })
@@ -83,7 +79,7 @@ const resolveAccount = async () => {
 
 watch(() => [formData.payoutDetails.accountNumber, formData.payoutDetails.bankCode], () => {
     if (formData.payoutDetails.accountNumber.length === 10 && formData.payoutDetails.bankCode) {
-        resolveAccount()
+        handleResolveAccount()
     } else {
         formData.payoutDetails.accountName = ''
     }

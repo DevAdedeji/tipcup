@@ -1,75 +1,47 @@
 <script setup lang="ts">
 import { useProfile, type PublicProfile } from '~/composables/useProfile'
-import { ChevronRight, Twitter, Instagram, Youtube, Linkedin, Globe, Link as LinkIcon, Facebook, Github } from 'lucide-vue-next'
+import { usePaymentFlow } from '~/composables/usePaymentFlow'
+import { useShare } from '~/composables/useShare'
+import { useSupport } from '~/composables/useSupport'
+import { ChevronRight } from 'lucide-vue-next'
 import Skeleton from '~/components/ui/Skeleton.vue'
 import GoalProgress from '~/components/dashboard/GoalProgress.vue'
 import { formatCurrency } from '~/utils/format'
+import { getSocialIcon } from '~/utils/socials'
 
 const route = useRoute()
+const router = useRouter()
 const username = computed(() => route.params.username as string)
 
 const { fetchProfileByUsername, loading } = useProfile()
+const { checkPaymentCallback } = usePaymentFlow()
+const { shareUrl } = useShare()
+const { selectedTier, supportMessage, tipperEmail, handleSupport, processingPayment, verifyingPayment, tierLabel } = useSupport()
+
 const profile = ref<PublicProfile | null>(null)
-
-const getSocialIcon = (platform: string) => {
-    const p = platform.toLowerCase()
-    if (p.includes('twitter')) return Twitter
-    if (p.includes('instagram')) return Instagram
-    if (p.includes('youtube')) return Youtube
-    if (p.includes('linkedin')) return Linkedin
-    if (p.includes('website')) return Globe
-    if (p.includes('facebook')) return Facebook
-    if (p.includes('github')) return Github
-    return LinkIcon
-}
-
-// Payment Verification Logic
-const verifyingPayment = ref(false)
 const toast = useToast()
 
 onMounted(async () => {
+    loading.value = true
+
+    // Fetch profile
     if (username.value) {
         profile.value = await fetchProfileByUsername(username.value)
+    } else {
+        loading.value = false
     }
 
-    // Check for payment callback
-    const { status, transaction_id, tx_ref } = route.query
-    if (status && (status === 'successful' || status === 'completed') && transaction_id) {
-        verifyPayment(transaction_id as string)
-    } else if (status === 'cancelled') {
-        toast.add({ title: 'Payment Cancelled', description: 'You cancelled the payment.', type: 'info' })
-        // Clear query params to clean URL
-        useRouter().replace({ query: {} })
+    // Check for payment callback and handle it
+    const callbackResult = await checkPaymentCallback()
+    if (callbackResult?.status === 'success') {
+         toast.add({ title: 'Thank You!', description: `Successfully supported ${profile.value?.displayName || 'creator'}!`, type: 'success' })
+         // Refetch profile to update goal progress
+        if (username.value) {
+            const updatedProfile = await fetchProfileByUsername(username.value)
+            if (updatedProfile) profile.value = updatedProfile
+        }
     }
 })
-
-const verifyPayment = async (transactionId: string) => {
-    verifyingPayment.value = true
-    try {
-        const data: any = await $fetch('/api/flutterwave/verify', {
-            method: 'POST',
-            body: { transaction_id: transactionId }
-        })
-
-        if (data.status === 'success') {
-            toast.add({ title: 'Thank You!', description: `Successfully supported ${profile.value?.displayName || 'creator'}!`, type: 'success' })
-            // Refetch profile to update goal progress
-            if (username.value) {
-                const updatedProfile = await fetchProfileByUsername(username.value)
-                if (updatedProfile) profile.value = updatedProfile
-            }
-        } else {
-            toast.add({ title: 'Verification Failed', description: 'Payment verification failed.', type: 'warning' })
-        }
-    } catch (e) {
-        console.error('Verify error', e)
-        toast.add({ title: 'Error', description: 'Failed to verify payment.', type: 'error' })
-    } finally {
-        verifyingPayment.value = false
-        // Clear query params
-        useRouter().replace({ query: {} })
-    }
-}
 
 const pageTitle = computed(() => loading.value ? 'Loading...' : profile.value ? `${profile.value.displayName} (@${profile.value.username})` : 'Profile Not Found')
 
@@ -77,71 +49,17 @@ usePageMeta({
     title: pageTitle
 })
 
-const shareProfile = async () => {
-    try {
-        await navigator.clipboard.writeText(window.location.href)
-        toast.add({ title: 'Copied!', description: 'Profile link copied to clipboard.', type: 'success' })
-    } catch (e) {
-        toast.add({ title: 'Error', description: 'Could not copy link.', type: 'error' })
-    }
-}
-
 const activeTab = ref('home')
 const tabs = [
     { id: 'home', label: 'Home' },
     { id: 'socials', label: 'Socials' },
 ]
 
-const selectedTier = ref<any>(null)
-const supportMessage = ref('')
-const tipperEmail = ref('')
-const processingPayment = ref(false)
-const { user, userProfile } = useAuth()
+const { user } = useAuth()
 
-const handleSupport = async () => {
-    if (!selectedTier.value) {
-        toast.add({ title: 'Select a Tier', description: 'Please select an amount to support.', type: 'error' })
-        return
-    }
-
-    const email = user.value?.email || tipperEmail.value
-    if (!email) {
-        toast.add({ title: 'Email Required', description: 'Please enter your email address.', type: 'error' })
-        return
-    }
-
-    processingPayment.value = true
-    try {
-        // Initialize on Server (Flutterwave)
-        const initData: any = await $fetch('/api/flutterwave/initialize', {
-            method: 'POST',
-            body: {
-                email,
-                amount: selectedTier.value.price,
-                callback_url: window.location.href, // Redirect back to this page
-                metadata: {
-                    toUserId: profile.value?.uid,
-                    goalId: profile.value?.fundraisingGoal?.id,
-                    tier: selectedTier.value,
-                    message: supportMessage.value,
-                    fromUserId: user.value?.uid,
-                    fromName: user.value?.displayName || userProfile.value?.displayName || 'Anonymous'
-                }
-            }
-        })
-
-        if (initData && initData.authorization_url) {
-            // Redirect to Flutterwave
-            window.location.href = initData.authorization_url
-        } else {
-             throw new Error('Initialization failed')
-        }
-
-    } catch (e) {
-        console.error(e)
-        const msg = e.statusMessage || e.message || 'Could not start payment.'
-        toast.add({ title: 'Error', description: msg, type: 'error' })
-        processingPayment.value = false
+const onSupportClick = () => {
+    if (profile.value) {
+        handleSupport(profile.value)
     }
 }
 </script>
@@ -211,7 +129,7 @@ const handleSupport = async () => {
                     </div>
 
                     <div class="mt-6 sm:mt-24 flex gap-3">
-                        <Button @click="shareProfile" variant="outline" size="sm">
+                        <Button @click="shareUrl()" variant="outline" size="sm">
                             <span class="mr-2">🔗</span> Share
                         </Button>
                     </div>
@@ -270,8 +188,8 @@ const handleSupport = async () => {
                              <!-- Email Input -->
                              <Input v-if="!user" v-model="tipperEmail" type="email" placeholder="Your Email (for receipt)" class="bg-background" />
 
-                             <Button :loading="processingPayment" @click="handleSupport" size="lg" class="w-full font-bold shadow-lg shadow-primary/20">
-                                 Support {{ selectedTier ? formatCurrency(selectedTier.price) : '...' }}
+                             <Button :loading="processingPayment" :disabled="processingPayment || verifyingPayment" @click="onSupportClick" size="lg" class="w-full font-bold shadow-lg shadow-primary/20">
+                                 Support {{ tierLabel }}
                              </Button>
                              <p class="text-xs text-center text-text-secondary">
                                  Secured by Flutterwave
