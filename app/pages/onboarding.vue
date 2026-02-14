@@ -5,6 +5,7 @@ import { usePageMeta } from '~/composables/usePageMeta'
 import { useBankDetails } from '~/composables/useBankDetails'
 import { ChevronDown } from 'lucide-vue-next'
 import Select from '~/components/ui/Select.vue'
+import AmountInput from '~/components/ui/AmountInput.vue'
 
 usePageMeta({
   title: 'Onboarding'

@@ -60,16 +60,5 @@ const onInput = (e: Event) => {
                 class="w-full pl-8 pr-4 py-2 bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
             />
         </div>
-        <style scoped>
-            /* Hide number input spinners just in case type was number, though here it's text */
-            input::-webkit-outer-spin-button,
-            input::-webkit-inner-spin-button {
-                -webkit-appearance: none;
-                margin: 0;
-            }
-            input[type=number] {
-                -moz-appearance: textfield;
-            }
-        </style>
     </div>
 </template>

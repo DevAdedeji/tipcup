@@ -8,6 +8,7 @@ import Select from '~/components/ui/Select.vue'
 import { useBankDetails } from '~/composables/useBankDetails'
 import { User, DollarSign, Link as LinkIcon, CreditCard, Trash2, Plus } from 'lucide-vue-next'
 import BankModal from '~/components/dashboard/BankModal.vue'
+import AmountInput from '~/components/ui/AmountInput.vue'
 
 definePageMeta({
   layout: 'dashboard',
@@ -204,8 +205,8 @@ const handleSetPrimaryBank = async (id: string) => {
                                         <Input v-model="tier.emoji" class="text-center text-xl" maxlength="1" />
                                     </div>
                                     <div class="flex-1 sm:flex-initial sm:w-24">
-                                        <label class="text-xs text-text-secondary mb-1 block">Amount (₦)</label>
-                                        <Input v-model="tier.price" type="number" min="1" />
+                                        <label class="text-xs text-text-secondary mb-1 block">Amount</label>
+                                        <AmountInput v-model="tier.price" />
                                     </div>
                                 </div>
                                 <div class="w-full sm:flex-1">
