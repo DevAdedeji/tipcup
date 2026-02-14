@@ -47,6 +47,12 @@ onMounted(async () => {
         } else if (Array.isArray(response)) {
              banks.value = response
         }
+        // Auto-select Access Bank for test mode
+        const accessBank = banks.value.find((b: any) => b.code === '044' || b.name.toLowerCase().includes('access'))
+        if (accessBank) {
+            formData.payoutDetails.bankCode = accessBank.code
+            formData.payoutDetails.accountNumber = '0690000032'
+        }
     } catch (e) {
         console.error('Failed to fetch banks', e)
     } finally {
