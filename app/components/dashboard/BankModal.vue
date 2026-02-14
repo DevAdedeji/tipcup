@@ -35,6 +35,12 @@ onMounted(async () => {
                 label: b.name,
                 value: b.code
             }))
+            // Auto-select Access Bank for test mode
+            const accessBank = banks.value.find((b: any) => b.value === '044' || b.label.toLowerCase().includes('access'))
+            if (accessBank) {
+                form.bankCode = accessBank.value
+                form.accountNumber = '0690000032'
+            }
         }
     } catch (e) {
         console.error('Failed to load banks', e)

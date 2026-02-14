@@ -49,17 +49,14 @@ const handleSubmit = async () => {
                 description: form.description,
                 targetAmount: Number(form.targetAmount)
             })
-            // toast.add({ title: 'Success', description: 'Goal updated successfully!' })
-            // Commenting out toast here if parent handles it or let's keep it?
-            // Original code had it.
-             toast.add({ title: 'Success', description: 'Goal updated successfully!' })
+             toast.add({ title: 'Success', description: 'Goal updated successfully!', type: 'success' })
         } else {
             await createGoal({
                 title: form.title,
                 description: form.description,
                 targetAmount: Number(form.targetAmount)
             })
-             toast.add({ title: 'Success', description: 'Goal created successfully!' })
+             toast.add({ title: 'Success', description: 'Goal created successfully!', type: 'success' })
         }
         emit('saved')
         emit('close')

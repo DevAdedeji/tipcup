@@ -8,6 +8,7 @@ import Select from '~/components/ui/Select.vue'
 import { useBankDetails } from '~/composables/useBankDetails'
 import { User, DollarSign, Link as LinkIcon, CreditCard, Trash2, Plus } from 'lucide-vue-next'
 import BankModal from '~/components/dashboard/BankModal.vue'
+import AmountInput from '~/components/ui/AmountInput.vue'
 
 definePageMeta({
   layout: 'dashboard',
@@ -60,7 +61,7 @@ const saveProfile = async () => {
             tiers: form.tiers,
             socialLinks: form.socialLinks
         })
-        toast.add({ title: 'Success', description: 'Profile updated successfully!' })
+        toast.add({ title: 'Success', description: 'Profile updated successfully!', type: 'success' })
     } catch (e: any) {
         console.error(e)
         toast.add({ title: 'Error', description: 'Failed to update profile.', type: 'error' })
@@ -104,13 +105,13 @@ const showBankModal = ref(false)
 const handleDeleteBank = async (id: string) => {
     if (confirm('Are you sure you want to remove this bank account?')) {
         await deleteAccount(id)
-        toast.add({ title: 'Removed', description: 'Bank account removed.' })
+        toast.add({ title: 'Removed', description: 'Bank account removed.', type: 'success' })
     }
 }
 
 const handleSetPrimaryBank = async (id: string) => {
     await setPrimaryAccount(id)
-    toast.add({ title: 'Updated', description: 'Primary payout method updated.' })
+    toast.add({ title: 'Updated', description: 'Primary payout method updated.', type: 'success' })
 }
 </script>
 
@@ -204,8 +205,8 @@ const handleSetPrimaryBank = async (id: string) => {
                                         <Input v-model="tier.emoji" class="text-center text-xl" maxlength="1" />
                                     </div>
                                     <div class="flex-1 sm:flex-initial sm:w-24">
-                                        <label class="text-xs text-text-secondary mb-1 block">Amount (₦)</label>
-                                        <Input v-model="tier.price" type="number" min="1" />
+                                        <label class="text-xs text-text-secondary mb-1 block">Amount</label>
+                                        <AmountInput v-model="tier.price" />
                                     </div>
                                 </div>
                                 <div class="w-full sm:flex-1">
@@ -302,7 +303,7 @@ const handleSetPrimaryBank = async (id: string) => {
                                     </div>
 
                                     <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                                        <Button v-if="!account.isPrimary" @click="handleSetPrimaryBank(account.id)" variant="ghost" size="sm" class="text-xs">
+                                        <Button v-if="!account.isPrimary" @click="handleSetPrimaryBank(account.id)" variant="ghost" size="sm" class="text-xs text-primary">
                                             Make Primary
                                         </Button>
                                         <button @click="handleDeleteBank(account.id)" class="text-text-secondary hover:text-red-500 p-2 rounded-lg transition-colors">

@@ -3,6 +3,7 @@ import Modal from '~/components/ui/Modal.vue'
 import Button from '~/components/ui/Button.vue'
 import Input from '~/components/ui/Input.vue'
 import Select from '~/components/ui/Select.vue'
+import AmountInput from '~/components/ui/AmountInput.vue'
 import BankModal from '~/components/dashboard/BankModal.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuth } from '~/composables/useAuth'
@@ -19,15 +20,15 @@ const { user, userProfile } = useAuth()
 const { accounts, fetchAccounts, loading: banksLoading } = useBankDetails()
 const toast = useToast()
 
-const amount = ref<string>('')
+const amount = ref<number | string>(0)
 const selectedBankId = ref<string>('')
 const submitting = ref(false)
 const showBankModal = ref(false)
 
 const currentBalance = computed(() => userProfile.value?.currentBalance || 0)
 const validAmount = computed(() => {
-    const val = parseFloat(amount.value)
-    return !isNaN(val) && val >= 1000 && val <= currentBalance.value
+    const val = typeof amount.value === 'string' ? parseFloat(amount.value) : amount.value
+    return (val || 0) >= 1000 && (val || 0) <= currentBalance.value
 })
 
 onMounted(() => {
@@ -59,7 +60,7 @@ const handleWithdraw = async () => {
             method: 'POST',
             body: {
                 userId: user.value?.uid,
-                amount: parseFloat(amount.value),
+                amount: Number(amount.value),
                 bankAccountId: selectedBank.id
             }
         })
@@ -71,7 +72,7 @@ const handleWithdraw = async () => {
         toast.add({ title: 'Success', description: 'Withdrawal initiated successfully!', type: 'success' })
         emit('success')
         emit('close')
-        amount.value = ''
+        amount.value = 0
     } catch (e: any) {
         toast.add({ title: 'Error', description: e.message || 'Failed to process withdrawal.', type: 'error' })
     } finally {
@@ -91,20 +92,15 @@ const handleWithdraw = async () => {
             <div>
                 <label class="block text-sm font-medium mb-2">Amount to Withdraw</label>
                 <div class="relative">
-                     <span class="absolute left-3 top-2.5 text-text-secondary">₦</span>
-                    <Input
+                    <AmountInput
                         v-model="amount"
-                        type="number"
                         placeholder="0.00"
-                        class="pl-8"
-                        :min="1000"
-                        :max="currentBalance"
                     />
                 </div>
                 <div class="flex justify-between mt-1 text-xs text-text-secondary">
                     <span>Min: ₦1,000</span>
                     <button
-                        @click="amount = currentBalance.toString()"
+                        @click="amount = currentBalance"
                         class="text-primary hover:underline"
                     >
                         Max: {{ formatCurrency(currentBalance) }}

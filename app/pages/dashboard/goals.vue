@@ -39,14 +39,14 @@ const openEditModal = (goal: Goal) => {
 const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this goal?')) {
         await deleteGoal(id)
-        toast.add({ title: 'Deleted', description: 'Goal removed.' })
+        toast.add({ title: 'Deleted', description: 'Goal removed.', type: 'success' })
     }
 }
 
 const toggleStatus = async (goal: Goal) => {
     const newStatus = goal.status === 'active' ? 'paused' : 'active'
     await updateGoal(goal.id, { status: newStatus })
-    toast.add({ title: 'Updated', description: `Goal ${newStatus}.` })
+    toast.add({ title: 'Updated', description: `Goal ${newStatus}.`, type: 'success' })
 }
 </script>
 
