@@ -285,10 +285,10 @@ const complete = async () => {
                         <button @click="removeTier(index)" class="absolute top-2 right-2 p-1 text-text-secondary hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                              ✕
                         </button>
-                        <div class="grid grid-cols-3 gap-4">
+                        <div class="grid grid-cols-3 items-center gap-4">
                              <div class="col-span-1">
-                                 <label class="text-xs text-text-secondary block mb-1">Price (₦)</label>
-                                 <Input v-model="tier.price" type="number" />
+                                <label class="text-xs text-text-secondary block mb-1">Amount</label>
+                                 <AmountInput v-model="tier.price" />
                              </div>
                              <div class="col-span-2">
                                  <label class="text-xs text-text-secondary block mb-1">Label</label>
