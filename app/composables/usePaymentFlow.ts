@@ -1,8 +1,9 @@
+const processingPayment = ref(false)
+const verifyingPayment = ref(false)
+
 export const usePaymentFlow = () => {
     const { user, userProfile } = useAuth()
     const toast = useToast()
-    const processingPayment = ref(false)
-    const verifyingPayment = ref(false)
 
     const initiatePayment = async ({
         email,
