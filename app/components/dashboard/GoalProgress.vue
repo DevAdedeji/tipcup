@@ -31,12 +31,12 @@ const percentage = computed(() => {
                 </div>
 
                 <div class="space-y-3">
-                    <div class="flex justify-between items-end">
-                        <div class="text-2xl font-bold">
+                    <div class="flex flex-wrap justify-between items-end gap-2">
+                        <div class="text-2xl font-bold break-all">
                             {{ formatCurrency(goal.currentAmount) }}
-                            <span class="text-sm text-text-secondary font-normal">raised of {{ formatCurrency(goal.targetAmount) }}</span>
+                            <span class="text-sm text-text-secondary font-normal whitespace-normal">raised of {{ formatCurrency(goal.targetAmount) }}</span>
                         </div>
-                        <div class="text-primary font-bold">{{ percentage }}%</div>
+                        <div class="text-primary font-bold whitespace-nowrap">{{ percentage }}%</div>
                     </div>
 
                     <!-- Progress Bar -->

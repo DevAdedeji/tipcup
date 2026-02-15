@@ -139,7 +139,7 @@ const copyLink = async () => {
                         <CreditCard class="w-5 h-5" />
                     </div>
                 </div>
-                <div class="text-4xl font-bold relative z-10">{{ formatCurrency(userProfile?.currentBalance || 0) }}</div>
+                <div class="text-3xl md:text-4xl font-bold relative z-10 break-all" :title="formatCurrency(userProfile?.currentBalance || 0)">{{ formatCurrency(userProfile?.currentBalance || 0) }}</div>
                 <div class="flex items-center justify-between mt-4 relative z-10">
                     <span class="text-sm text-text-secondary">Total Earned: {{ formatCurrency(userProfile?.totalEarnings || 0) }}</span>
                      <Button size="sm" @click="showWithdrawalModal = true">

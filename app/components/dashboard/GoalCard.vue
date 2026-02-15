@@ -88,9 +88,9 @@ const percentage = computed(() => {
 
             <!-- Enhanced Progress Bar (from GoalProgress) -->
             <div class="space-y-2">
-                <div class="flex justify-between items-end text-sm font-medium">
-                    <span class="text-primary text-base font-bold">{{ formatCurrency(goal.currentAmount) }} <span class="text-xs text-text-secondary font-normal">of {{ formatCurrency(goal.targetAmount) }}</span></span>
-                    <span class="text-primary font-bold">{{ percentage }}%</span>
+                <div class="flex flex-wrap justify-between items-end text-sm font-medium gap-2">
+                    <span class="text-primary text-base font-bold break-all">{{ formatCurrency(goal.currentAmount) }} <span class="text-xs text-text-secondary font-normal whitespace-normal">of {{ formatCurrency(goal.targetAmount) }}</span></span>
+                    <span class="text-primary font-bold whitespace-nowrap">{{ percentage }}%</span>
                 </div>
 
                 <div class="h-3 w-full bg-black/20 rounded-full overflow-hidden border border-white/5">

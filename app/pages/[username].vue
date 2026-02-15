@@ -211,7 +211,7 @@ const onSupportClick = () => {
                                  ]"
                              >
                                  <span class="text-2xl mb-1">{{ tier.emoji || '☕' }}</span>
-                                 <span class="font-bold">{{ formatCurrency(tier.price) }}</span>
+                                 <span class="font-bold text-sm break-all px-1 text-center">{{ formatCurrency(tier.price) }}</span>
                              </button>
                          </div>
 

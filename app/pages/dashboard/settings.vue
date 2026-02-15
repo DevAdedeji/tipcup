@@ -356,7 +356,7 @@ const handleSetPrimaryBank = async (id: string) => {
                                         <div class="grid grid-cols-3 gap-2 mb-3">
                                             <div v-for="tier in form.tiers.slice(0, 3)" :key="tier.price" class="flex flex-col items-center justify-center p-2 rounded-lg border border-border bg-background hover:border-primary/50 text-center">
                                                 <span class="text-lg mb-1">{{ tier.emoji }}</span>
-                                                <span class="font-bold text-xs">{{ formatCurrency(tier.price) }}</span>
+                                                <span class="font-bold text-xs break-all px-0.5">{{ formatCurrency(tier.price) }}</span>
                                             </div>
                                         </div>
                                         <div class="h-8 bg-background rounded-lg border border-border w-full mb-2"></div>
