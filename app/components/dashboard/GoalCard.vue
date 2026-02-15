@@ -22,7 +22,6 @@ const percentage = computed(() => {
 
 <template>
     <div class="bg-surface border p-6 rounded-2xl relative group border-primary/20 transition-all shadow-sm overflow-hidden">
-        <!-- Background Glow (from GoalProgress) -->
         <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-10 -mt-10 group-hover:bg-primary/10 transition-colors"></div>
 
         <div class="relative z-10">
@@ -86,7 +85,6 @@ const percentage = computed(() => {
 
             <p class="text-text-secondary text-sm mb-6 line-clamp-2 h-10">{{ goal.description || 'No description provided.' }}</p>
 
-            <!-- Enhanced Progress Bar (from GoalProgress) -->
             <div class="space-y-2">
                 <div class="flex flex-wrap justify-between items-end text-sm font-medium gap-2">
                     <span class="text-primary text-base font-bold break-all">{{ formatCurrency(goal.currentAmount) }} <span class="text-xs text-text-secondary font-normal whitespace-normal">of {{ formatCurrency(goal.targetAmount) }}</span></span>

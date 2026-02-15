@@ -36,19 +36,21 @@ export const useAuth = () => {
                         } else {
                             userProfile.value = null
                         }
+                        loading.value = false
                     }, (error) => {
                         console.error('Error fetching user profile:', error)
                         userProfile.value = null
+                        loading.value = false
                     })
                 } catch (e) {
                     console.error('Error setting up profile listener:', e)
                     userProfile.value = null
+                    loading.value = false
                 }
             } else {
                 userProfile.value = null
+                loading.value = false
             }
-
-            loading.value = false
         })
     }
 
