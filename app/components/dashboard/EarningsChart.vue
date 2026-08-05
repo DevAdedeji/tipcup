@@ -13,7 +13,7 @@ import {
 } from 'chart.js'
 import { Line } from 'vue-chartjs'
 import { computed } from 'vue'
-import { formatCurrency } from '~/utils/format'
+import { formatCurrency, formatCompactCurrency } from '~/utils/format'
 
 ChartJS.register(
   CategoryScale,
@@ -30,23 +30,21 @@ const props = defineProps<{
   transactions?: any[]
 }>()
 
+const { theme } = useChartTheme()
+
 const chartData = computed(() => {
-  // Get last 7 days dates
   const dates = []
   const dataPoints = []
   const today = new Date()
 
-  // Prepare a map of date strings to total amounts
   const dailyTotals: Record<string, number> = {}
 
   if (props.transactions) {
       props.transactions.forEach(tx => {
-          // Assuming tx.createdAt is a Firestore timestamp or date string
           let date;
           if (tx.createdAt?.seconds) {
               date = new Date(tx.createdAt.seconds * 1000)
           } else if (tx.date) {
-               // Try to parse 'MM/DD/YYYY' or similar
               date = new Date(tx.date)
           } else {
               return
@@ -65,10 +63,11 @@ const chartData = computed(() => {
     const dateStr = d.toISOString().split('T')[0] as string
     dates.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))
 
-    // Get earnings for this date, default to 0
     const earnings = dailyTotals[dateStr] || 0
     dataPoints.push(earnings)
   }
+
+  const t = theme.value
 
   return {
     labels: dates,
@@ -76,79 +75,81 @@ const chartData = computed(() => {
       {
         label: 'Earnings',
         backgroundColor: (context: any) => {
-          const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-          gradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)');
-          gradient.addColorStop(1, 'rgba(34, 197, 94, 0)');
-          return gradient;
+          const { ctx, chartArea } = context.chart
+          if (!chartArea) return t.successFill
+
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+          gradient.addColorStop(0, t.successFill)
+          gradient.addColorStop(1, t.successFade)
+          return gradient
         },
-        borderColor: '#22c55e',
-        pointBackgroundColor: '#22c55e',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: '#22c55e',
+        borderColor: t.success,
+        borderWidth: 2,
+        pointBackgroundColor: t.success,
+        pointBorderColor: t.surface,
+        pointBorderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: t.success,
+        pointHoverBorderColor: t.surface,
         fill: true,
-        tension: 0.4, // Smooth curve
+        tension: 0.4,
         data: dataPoints
       }
     ]
   }
 })
 
-const chartOptions: ChartOptions<'line'> = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      display: false
-    },
-    tooltip: {
-      backgroundColor: '#1E1E1E',
-      titleColor: '#fff',
-      bodyColor: '#ccc',
-      borderColor: 'rgba(255,255,255,0.1)',
-      borderWidth: 1,
-      padding: 10,
-      displayColors: false,
-      callbacks: {
-        label: (context: any) => formatCurrency(context.parsed.y)
-      }
-    }
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      grid: {
-        color: 'rgba(255, 255, 255, 0.05)'
-      },
-      ticks: {
-        color: '#888',
-        maxTicksLimit: 5,
-        callback: (value) => {
-            const val = Number(value)
-            if (val >= 1000) return '₦' + (val/1000).toFixed(1) + 'k'
-            return '₦' + val
+const chartOptions = computed<ChartOptions<'line'>>(() => {
+  const t = theme.value
+
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: t.tooltipBg,
+        titleColor: t.tooltipText,
+        bodyColor: t.tooltipText,
+        borderColor: t.border,
+        borderWidth: 1,
+        padding: 10,
+        cornerRadius: 8,
+        displayColors: false,
+        callbacks: {
+          label: (context: any) => formatCurrency(context.parsed.y)
         }
       }
     },
-    x: {
-      grid: {
-        display: false
+    scales: {
+      y: {
+        beginAtZero: true,
+        border: { display: false },
+        grid: { color: t.grid },
+        ticks: {
+          color: t.tick,
+          maxTicksLimit: 5,
+          padding: 8,
+          callback: (value) => formatCompactCurrency(Number(value))
+        }
       },
-      ticks: {
-        color: '#888'
+      x: {
+        border: { display: false },
+        grid: { display: false },
+        ticks: { color: t.tick, padding: 8 }
       }
-    }
-  },
-  interaction: {
+    },
+    interaction: {
       intersect: false,
       mode: 'index'
+    }
   }
-}
+})
 </script>
 
 <template>
-  <div class="w-full h-[300px]">
+  <div class="h-[280px] w-full">
     <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>

@@ -16,7 +16,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'success'])
 
-const { user, userProfile } = useAuth()
+const { user, userProfile, getIdToken } = useAuth()
 const { accounts, fetchAccounts, loading: banksLoading } = useBankDetails()
 const toast = useToast()
 
@@ -56,10 +56,14 @@ const handleWithdraw = async () => {
 
     submitting.value = true
     try {
-        const response: any = await $fetch('/api/flutterwave/withdraw', {
+        // The server identifies the creator from this token, not from a
+        // user id in the body.
+        const token = await getIdToken()
+
+        const response: any = await $fetch('/api/bachs/withdraw', {
             method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
             body: {
-                userId: user.value?.uid,
                 amount: Number(amount.value),
                 bankAccountId: selectedBank.id
             }
@@ -74,7 +78,9 @@ const handleWithdraw = async () => {
         emit('close')
         amount.value = 0
     } catch (e: any) {
-        toast.add({ title: 'Error', description: e.message || 'Failed to process withdrawal.', type: 'error' })
+        const description =
+            e.data?.statusMessage || e.statusMessage || e.message || 'Failed to process withdrawal.'
+        toast.add({ title: 'Withdrawal failed', description, type: 'error' })
     } finally {
         submitting.value = false
     }
@@ -84,7 +90,7 @@ const handleWithdraw = async () => {
 <template>
     <Modal :isOpen="isOpen" @close="$emit('close')" title="Withdraw Funds">
         <div class="space-y-6">
-            <div class="bg-primary/10 text-center flex flex-col items-center justify-center p-4 rounded-xl border border-border">
+            <div class="bg-primary/10 text-center flex flex-col items-center justify-center p-4 border border-border">
                 <div class="text-sm text-text-secondary mb-1">Available Balance</div>
                 <div class="text-3xl font-bold text-primary">{{ formatCurrency(currentBalance) }}</div>
             </div>
@@ -120,7 +126,7 @@ const handleWithdraw = async () => {
                     placeholder="Select Bank"
                 />
                 <div v-else-if="banksLoading" class="text-sm text-text-secondary">Loading accounts...</div>
-                <div v-else class="flex items-center justify-between text-sm text-red-500 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                <div v-else class="flex items-center justify-between text-sm text-error bg-error-muted p-3 border border-error/25">
                     <span>No bank accounts found.</span>
                     <Button size="sm" variant="outline" class="text-xs h-8" @click="showBankModal = true">
                         Add Bank

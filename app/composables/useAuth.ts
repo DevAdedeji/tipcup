@@ -101,12 +101,25 @@ export const useAuth = () => {
         }
     }
 
+    /**
+     * Fresh ID token for calls to money-moving endpoints, which identify the
+     * caller from the token rather than from the request body.
+     */
+    const getIdToken = async (): Promise<string> => {
+        const current = auth.currentUser
+        if (!current) {
+            throw new Error('You need to be signed in to do that.')
+        }
+        return await current.getIdToken()
+    }
+
     return {
         user,
         userProfile,
         loading,
         initAuth,
         signInWithGoogle,
-        logout
+        logout,
+        getIdToken
     }
 }

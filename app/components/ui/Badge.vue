@@ -2,28 +2,57 @@
 import { cn } from '~/utils/cn'
 
 interface Props {
-  variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'info' | 'accent'
+  size?: 'sm' | 'md'
+  dot?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'default',
+  size: 'sm',
 })
 
 const variants = {
-  default: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
-  secondary: 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
-  destructive: 'border-transparent bg-error text-white hover:bg-error/80',
-  outline: 'text-text-primary',
-  success: 'border-transparent bg-success text-white hover:bg-success/80',
-  warning: 'border-transparent bg-warning text-text-primary hover:bg-warning/80',
+  default: 'text-text-secondary ring-border-strong',
+  secondary: 'text-secondary-foreground ring-border-strong',
+  outline: 'text-text-secondary ring-border-strong',
+  accent: 'text-accent ring-accent/50',
+  success: 'text-success ring-success/50',
+  warning: 'text-warning ring-warning/50',
+  destructive: 'text-error ring-error/50',
+  info: 'text-info ring-info/50',
+}
+
+const dotColors = {
+  default: 'bg-text-tertiary',
+  secondary: 'bg-text-tertiary',
+  outline: 'bg-text-tertiary',
+  accent: 'bg-accent',
+  success: 'bg-success',
+  warning: 'bg-warning',
+  destructive: 'bg-error',
+  info: 'bg-info',
+}
+
+const sizes = {
+  sm: 'px-1.5 py-0.5 text-2xs gap-1',
+  md: 'px-2 py-0.5 text-xs gap-1.5',
 }
 </script>
 
 <template>
-  <div :class="cn(
-    'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-    variants[variant]
-  )">
+  <span
+    :class="
+      cn(
+        'inline-flex items-center whitespace-nowrap',
+        'font-mono font-semibold uppercase tracking-label',
+        'ring-1 ring-inset',
+        variants[variant],
+        sizes[size]
+      )
+    "
+  >
+    <span v-if="dot" :class="cn('h-1.5 w-1.5 shrink-0 rounded-full', dotColors[variant])" />
     <slot />
-  </div>
+  </span>
 </template>

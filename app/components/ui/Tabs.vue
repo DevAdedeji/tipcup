@@ -29,7 +29,7 @@ const normalizedItems = computed(() => {
 <template>
   <div class="w-full">
     <TabGroup :selectedIndex="selectedIndex" @change="selectedIndex = $event">
-      <TabList class="flex space-x-1 rounded-xl bg-secondary/10 p-1">
+      <TabList class="flex gap-1 border border-border bg-surface-sunken p-1">
         <Tab
           v-for="item in normalizedItems"
           as="template"
@@ -38,10 +38,11 @@ const normalizedItems = computed(() => {
         >
           <button
             :class="cn(
-              'w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all outline-none',
+              'w-full py-2 text-sm font-medium leading-5 transition-all duration-200 outline-none',
+              'focus-visible:ring-2 focus-visible:ring-ring/40',
               selected
-                ? 'bg-surface text-primary shadow-sm font-bold'
-                : 'text-text-secondary hover:bg-white/[0.12] hover:text-primary'
+                ? 'bg-surface text-text-primary shadow-xs'
+                : 'text-text-secondary hover:text-text-primary'
             )"
           >
             {{ item.label }}
@@ -56,7 +57,7 @@ const normalizedItems = computed(() => {
             v-for="(item, idx) in normalizedItems"
             :key="idx"
             :class="cn(
-              'rounded-xl bg-surface p-3',
+              ' bg-surface p-3',
               'focus:outline-none'
             )"
             v-if="!$slots.default"

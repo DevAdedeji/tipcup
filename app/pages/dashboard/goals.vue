@@ -55,7 +55,7 @@ const toggleStatus = async (goal: Goal) => {
         <div class="mx-auto space-y-8">
 
             <!-- Header Action -->
-            <div class="flex justify-between items-center bg-surface border border-primary/20 p-6 rounded-2xl">
+            <div class="flex justify-between items-center bg-surface border border-primary/20 p-6">
                 <div>
                     <h2 class="text-xl font-bold flex items-center gap-2">
                         <Target class="w-6 h-6 text-primary" />
@@ -71,17 +71,17 @@ const toggleStatus = async (goal: Goal) => {
 
             <!-- Loading State -->
             <div v-if="loading" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
-                <div v-for="i in 3" :key="i" class="bg-surface border border-white/5 p-6 rounded-2xl h-48 flex flex-col justify-between">
+                <div v-for="i in 3" :key="i" class="bg-surface border border-border p-6 h-48 flex flex-col justify-between">
                     <div>
                          <div class="flex justify-between mb-4">
                              <Skeleton class="h-6 w-32" />
-                             <Skeleton class="h-8 w-8 rounded-full" />
+                             <Skeleton class="h-8 w-8" />
                          </div>
                          <Skeleton class="h-4 w-full mb-2" />
                          <Skeleton class="h-4 w-2/3" />
                     </div>
                     <div>
-                        <Skeleton class="h-2 w-full rounded-full mb-2" />
+                        <Skeleton class="h-2 w-full mb-2" />
                         <div class="flex justify-between">
                             <Skeleton class="h-4 w-12" />
                             <Skeleton class="h-4 w-12" />
@@ -90,8 +90,8 @@ const toggleStatus = async (goal: Goal) => {
                 </div>
             </div>
 
-            <div v-else-if="goals.length === 0" class="text-center py-24 bg-surface/30 border border-white/5 rounded-2xl border-dashed">
-                <div class="bg-surface inline-block p-4 rounded-full mb-4">
+            <div v-else-if="goals.length === 0" class="text-center py-24 bg-surface/30 border border-border border-dashed">
+                <div class="bg-surface inline-block p-4 mb-4">
                     <Target class="w-8 h-8 text-text-secondary" />
                 </div>
                 <h3 class="text-xl font-bold mb-2">No goals yet</h3>

@@ -1,281 +1,200 @@
-# 💰 TipCup
+# TipCup
 
-> A modern creator monetization platform for receiving tips, setting fundraising goals, and managing withdrawals seamlessly.
+A creator monetization platform for receiving tips, funding goals, and paying out to Nigerian bank accounts.
 
-[![Nuxt](https://img.shields.io/badge/Nuxt-4.3.1-00DC82?logo=nuxt.js)](https://nuxt.com)
-[![Vue](https://img.shields.io/badge/Vue-3.5.27-4FC08D?logo=vue.js)](https://vuejs.org)
-[![Firebase](https://img.shields.io/badge/Firebase-12.9.0-FFCA28?logo=firebase)](https://firebase.google.com)
-[![Flutterwave](https://img.shields.io/badge/Flutterwave-v3-FF6B00)](https://flutterwave.com)
-
----
-
-## 🌟 Features
-
-### For Creators
-- ✅ **Custom Profile Pages** - Personalized pages with your username (e.g., `tipcup.adedeji.xyz/yourname`)
-- ✅ **Fundraising Goals** - Set and track progress toward financial goals
-- ✅ **Multiple Support Tiers** - Create custom tip amounts with emojis and descriptions
-- ✅ **Bank Account Management** - Add multiple bank accounts, set primary accounts
-- ✅ **Automated Withdrawals** - Instant withdrawals to Nigerian bank accounts via Flutterwave
-- ✅ **Earnings Dashboard** - Track total earnings, current balance, and transaction history
-- ✅ **Withdrawal History** - Complete audit trail of all payouts
-
-### For Supporters
-- ✅ **Quick & Easy Payments** - Support creators with just a few clicks
-- ✅ **Secure Transactions** - Powered by Flutterwave's secure payment gateway
-- ✅ **Custom Messages** - Send personalized messages with your tips
-- ✅ **Goal Contributions** - Help creators reach their fundraising goals
+[![Nuxt](https://img.shields.io/badge/Nuxt-4-00DC82?logo=nuxt.js)](https://nuxt.com)
+[![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js)](https://vuejs.org)
+[![Firebase](https://img.shields.io/badge/Firebase-12-FFCA28?logo=firebase)](https://firebase.google.com)
+[![Bachs](https://img.shields.io/badge/Payments-Bachs-F2661F)](https://bachs.io)
 
 ---
 
-## 🛠️ Tech Stack
+## Features
 
-### Frontend
-- **[Nuxt 4](https://nuxt.com)** - The Intuitive Vue Framework
-- **[Vue 3](https://vuejs.org)** - Composition API with `<script setup>`
-- **[Tailwind CSS](https://tailwindcss.com)** - Utility-first CSS framework
-- **[Headless UI](https://headlessui.com)** - Unstyled, accessible UI components
-- **[Chart.js](https://www.chartjs.org)** - Beautiful charts for analytics
-- **[Lucide Icons](https://lucide.dev)** - Clean, customizable icons
+**For creators**
+- A public page at `tipcup.adedeji.xyz/yourname`, server-rendered so shared links unfurl with your name, bio and avatar
+- Custom support tiers with emojis and labels
+- Fundraising goals that advance as tips land
+- Multiple bank accounts with a designated primary
+- Withdrawals to any Nigerian bank account
+- Earnings dashboard with transaction and withdrawal history
+- Light and dark themes
 
-### Backend
-- **[Firebase Auth](https://firebase.google.com/products/auth)** - User authentication
-- **[Firestore](https://firebase.google.com/products/firestore)** - Real-time NoSQL database
-- **[Firebase Admin SDK](https://firebase.google.com/docs/admin/setup)** - Server-side operations
-
-### Payment Processing
-- **[Flutterwave](https://flutterwave.com)** - Payment gateway and transfers
-  - Payment initialization & verification
-  - Bank account resolution
-  - Automated transfers/withdrawals
-  - Webhook handling
+**For supporters**
+- Pay by bank transfer or card, no account required
+- Attach a message to a tip
+- Contribute toward a creator's active goal
 
 ---
 
-## 📋 Prerequisites
+## Tech stack
 
-Before you begin, ensure you have:
-- **Node.js** (v18 or higher)
-- **npm** or **yarn**
-- **Firebase Project** ([Create one here](https://console.firebase.google.com))
-- **Flutterwave Account** ([Sign up here](https://dashboard.flutterwave.com/signup))
+| Layer | Choice |
+| --- | --- |
+| Framework | Nuxt 4 (hybrid rendering), Vue 3 `<script setup>` |
+| Styling | Tailwind CSS on an HSL design-token layer, Headless UI, Lucide icons |
+| Auth & data | Firebase Auth, Firestore, Firebase Admin SDK |
+| Payments | [Bachs](https://bachs.io) — checkout, bank resolution, payouts, webhooks |
+| Charts | Chart.js via vue-chartjs |
 
 ---
 
-## 🚀 Getting Started
+## Payments: Bachs
 
-### 1. Clone the Repository
+TipCup previously ran on Flutterwave. Every call has a direct Bachs equivalent:
+
+| Flutterwave | Bachs |
+| --- | --- |
+| `POST /payments` | `POST /v1/checkout-sessions` |
+| `GET /transactions/{id}/verify` | `GET /v1/checkout-sessions/{id}` |
+| `GET /banks/NG` | `GET /v1/payouts/banks?country_code=NG` |
+| `POST /accounts/resolve` | `POST /v1/payouts/resolve-account` |
+| `POST /transfers` | `POST /v1/payouts/withdrawals` |
+| `verif-hash` header | `X-Bachs-Signature` (HMAC-SHA256) |
+
+Three things about the Bachs API shape the integration:
+
+1. **Tips are a raw amount, not a catalog product.** Checkouts use Bachs' "pure checkout" (`pricing: { currency, amount }`) rather than `product_cart`, so no product has to exist per tier.
+2. **Money is a decimal string** (`"1000.00"`) at the currency's precision — never minor units, never a JS number. Conversion happens only at the provider boundary in `server/utils/bachs.ts`.
+3. **Webhooks are the source of truth.** The redirect back from checkout triggers a verification call purely so the supporter sees confirmation immediately; both paths funnel into the same idempotent recorder.
+
+### Constraints worth knowing
+
+- **Your organization must hold an NGN balance.** Until it does, every NGN checkout fails with `BASE_CURRENCY_NOT_HELD_BY_ORG`. Enable NGN under balance currencies in the Bachs dashboard before testing payments — this is the first thing to check if checkouts fail.
+- **Minimum tip is ₦1,000.** Bachs rejects NGN checkouts below this. Enforced in the tier editors, in the API handler, and in `server/utils/bachs.ts`.
+- **NGN card payments are in beta at Bachs.** NGN collection is primarily bank transfer; cards are priced in USD. Confirm beta access before relying on card tips.
+- **Fees:** collection 1.5% capped at ₦2,000 for bank transfer; withdrawals a flat ₦100. NGN balances settle immediately.
+
+### Where the live API differs from its OpenAPI spec
+
+Both verified against `sandbox-api.bachs.io` and handled in `server/utils/bachs.ts`:
+
+| | Spec says | Actually returns |
+| --- | --- | --- |
+| `GET /payouts/banks` | `{ status, message, data }` | `{ banks: [...] }` |
+| Errors | `{ message }` | `{ detail, error_code, doc_url }` |
+
+The provider layer accepts both envelope shapes and reads `detail` first when building error messages, so failures surface something actionable rather than a generic "request failed".
+
+---
+
+## Getting started
+
+### 1. Install
 
 ```bash
 git clone https://github.com/devadedeji/tipcup.git
 cd tipcup
+npm install
 ```
 
-### 2. Install Dependencies
+> Do not run `npm install` with `sudo` — it creates root-owned files in `node_modules` that later installs cannot update.
+
+### 2. Configure
+
+Copy `.env.example` to `.env` and fill it in:
 
 ```bash
-npm install
-# or
-yarn install
+cp .env.example .env
 ```
 
-### 3. Environment Configuration
+Firebase client values use the plain `FIREBASE_*` names (no `VITE_` prefix) and are exposed through Nuxt runtime config.
 
-Create a `.env` file in the root directory:
+### 3. Firestore indexes
 
-```env
-# Firebase Configuration
-FIREBASE_API_KEY=your_firebase_api_key
-FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-FIREBASE_PROJECT_ID=your_project_id
-FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-FIREBASE_APP_ID=your_app_id
+Composite indexes required:
 
-# Firebase Admin SDK (Server-side)
-FIREBASE_SERVICE_ACCOUNT={"type":"service_account","project_id":"..."}
+| Collection | Fields |
+| --- | --- |
+| `payments` | `toUserId` asc, `createdAt` desc |
+| `withdrawals` | `userId` asc, `createdAt` desc |
+| `users` | `username` asc |
+| `users/{uid}/goals` | `status` asc, `createdAt` desc |
 
-# Flutterwave
-FLUTTERWAVE_SECRET_KEY=your_flutterwave_secret_key
-FLUTTERWAVE_SECRET_HASH=your_webhook_secret_hash
+### 4. Webhooks
+
+In the Bachs Developer Portal, add an endpoint pointing at:
+
+```
+https://your-domain/api/bachs/webhook
 ```
 
-> **📘 Note:** Get your Firebase Service Account JSON from Firebase Console → Project Settings → Service Accounts → Generate New Private Key
+Subscribe to `collection.succeeded`, `payout.paid`, and `payout.failed`, then copy the signing secret into `BACHS_WEBHOOK_SECRET`.
 
-### 4. Configure Firestore Security Rules
+For local development, use the portal's Local Testing feature — no tunnel required.
 
-Copy the security rules from `firestore_rules.md` artifact and apply them in Firebase Console:
-
-1. Go to **Firestore Database** → **Rules**
-2. Paste the rules
-3. **Publish**
-
-### 5. Create Firestore Indexes
-
-Create a composite index for payments:
-- Collection: `payments`
-- Fields: `toUserId` (Ascending), `createdAt` (Descending)
-
-Create a composite index for withdrawals:
-- Collection: `withdrawals`
-- Fields: `userId` (Ascending), `createdAt` (Descending)
-
-### 6. Run Development Server
+### 5. Run
 
 ```bash
 npm run dev
 ```
 
-Visit **http://localhost:4444** 🎉
+http://localhost:4444
 
 ---
 
-## 📦 Production Deployment
+## Rendering model
 
-### Build for Production
+Hybrid, configured in `nuxt.config.ts`:
 
-```bash
-npm run build
-```
+- **Server-rendered:** `/` and `/[username]` — these need to be indexable and to unfurl correctly when shared.
+- **Client-only:** `/dashboard/**`, `/login`, `/signup`, `/onboarding` — Firebase auth state lives in the browser.
 
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-### Deploy to Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Import project on [Vercel](https://vercel.com)
-3. Add environment variables in Vercel dashboard
-4. Deploy! 🚀
+Public profiles are read server-side through `server/api/profile/[username].get.ts` using the Admin SDK, so the public page needs no client read access to the `users` collection.
 
 ---
 
-## 📁 Project Structure
+## Design system
+
+Colours are HSL triplets defined once in `app/assets/css/main.css` and mapped in `tailwind.config.js` as `hsl(var(--token) / <alpha-value>)`. Dark mode is a single `.dark` class on `<html>`; no component knows which theme is active.
+
+The palette is a cool neutral base with a single warm accent. `primary` is ink — the default action colour. `accent` is the TipCup orange, reserved for money moments: tip CTAs, goal progress, selected tiers.
+
+Use tokens (`bg-surface`, `text-text-secondary`, `border-border`, `bg-accent-muted`), never raw Tailwind colours — a `bg-white/5` is invisible on a light background and a `text-green-500` ignores the theme.
+
+---
+
+## Project structure
 
 ```
-tipcup/
-├── app/
-│   ├── components/
-│   │   ├── dashboard/         # Dashboard-specific components
-│   │   │   ├── BankModal.vue
-│   │   │   ├── GoalModal.vue
-│   │   │   ├── WithdrawalModal.vue
-│   │   │   └── ...
-│   │   └── ui/               # Reusable UI components
-│   │       ├── Button.vue
-│   │       ├── Input.vue
-│   │       ├── Select.vue
-│   │       ├── Table.vue
-│   │       └── ...
-│   ├── composables/          # Vue composables
-│   │   ├── useAuth.ts
-│   │   ├── useBankDetails.ts
-│   │   ├── usePayments.ts
-│   │   └── useWithdrawals.ts
-│   ├── layouts/              # App layouts
-│   │   ├── default.vue
-│   │   └── dashboard.vue
-│   ├── pages/                # File-based routing
-│   │   ├── [username].vue    # Creator profile page
-│   │   ├── dashboard/
-│   │   │   ├── index.vue
-│   │   │   └── earnings.vue
-│   │   ├── login.vue
-│   │   ├── signup.vue
-│   │   └── onboarding.vue
-│   └── utils/                # Utility functions
-│       ├── format.ts
-│       └── cn.ts
-├── server/
-│   ├── api/
-│   │   └── flutterwave/      # Flutterwave API endpoints
-│   │       ├── banks.get.ts
-│   │       ├── initialize.post.ts
-│   │       ├── verify.post.ts
-│   │       ├── resolve-account.post.ts
-│   │       ├── withdraw.post.ts
-│   │       └── webhook.post.ts
-│   └── utils/
-│       ├── admin.ts          # Firebase Admin SDK
-│       └── flutterwave.ts    # Flutterwave utilities
-├── public/                   # Static assets
-├── firebase.ts               # Firebase client config
-└── nuxt.config.ts           # Nuxt configuration
+app/
+├─ assets/css/main.css      # Design tokens, light + dark
+├─ components/
+│  ├─ ui/                   # Button, Card, Input, Table, Modal, StatCard, ...
+│  └─ dashboard/            # Sidebar, Topbar, charts, modals
+├─ composables/             # useAuth, usePaymentFlow, useTheme, useChartTheme, ...
+├─ firebase/                # Lazy, SSR-safe client SDK
+├─ pages/
+│  ├─ index.vue             # Landing (SSR)
+│  ├─ [username].vue        # Creator profile (SSR)
+│  └─ dashboard/            # Overview, earnings, goals, settings (SPA)
+└─ utils/format.ts          # Currency formatting + amount limits
+
+server/
+├─ api/
+│  ├─ bachs/                # initialize, verify, banks, resolve-account,
+│  │                        # withdraw, webhook
+│  └─ profile/              # SSR profile read + view counter
+└─ utils/
+   ├─ admin.ts              # Firebase Admin
+   ├─ auth.ts               # ID-token verification for money endpoints
+   ├─ bachs.ts              # Bachs provider layer
+   └─ payments.ts           # Atomic, idempotent money recording
 ```
 
 ---
 
-## 🔑 Key Features Explained
+## Money handling
 
-### 1. **Payment Flow**
-```
-User clicks "Support" → Flutterwave Checkout → Payment Success →
-Webhook updates Firestore → Dashboard shows transaction
-```
+All balance changes run inside Firestore transactions in `server/utils/payments.ts`.
 
-### 2. **Withdrawal Flow**
-```
-Creator requests withdrawal → Backend validates balance →
-Flutterwave transfers to bank → Withdrawal record created →
-Balance updated
-```
-
-### 3. **Bank Account Resolution**
-- Uses Flutterwave's account resolution API
-- Verifies account number and bank code
-- Returns account holder name for confirmation
-- **Test Mode:** Only Access Bank (044) supported with test keys
+- Payment documents are keyed by the checkout reference, so a redirect and a webhook arriving together cannot double-credit.
+- Webhook event IDs are claimed in a `webhook_events` collection, making redeliveries free.
+- Withdrawals debit the balance and write a `pending` record in one transaction, before any money moves. A rejected payout restores the balance and closes the record.
+- `/api/bachs/withdraw` identifies the caller from their Firebase ID token, never from a user id in the request body.
 
 ---
 
-## 🧪 Testing
+## License
 
-### Test Bank Account (Flutterwave Test Mode)
-- **Bank:** Access Bank
-- **Bank Code:** 044
-- **Account Number:** 0690000031
-- **Account Name:** Pastor Bright
-
-> **⚠️ Important:** Flutterwave test environment only allows bank code `044` for account resolution. Use production keys to test with all banks.
-
----
-
-## 🔒 Security Considerations
-
-- ✅ Webhook signature verification implemented
-- ✅ Firestore security rules enforce user permissions
-- ✅ Server-side validation for all transactions
-- ✅ Firebase Admin SDK used for privileged operations
-- ✅ Environment variables for sensitive credentials
-
----
-
-## 📈 Performance Optimizations
-
-- ✅ **Debounced search** in Select component (150ms)
-- ✅ **Limited render** for large option lists (max 100 items)
-- ✅ **Real-time listeners** for payments and withdrawals
-- ✅ **Paginated tables** for transaction history
-- ✅ **Lazy-loaded components** where applicable
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
+MIT

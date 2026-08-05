@@ -117,7 +117,7 @@ export const useBankDetails = () => {
 
     const fetchBanks = async () => {
         try {
-            const data: any = await $fetch('/api/flutterwave/banks')
+            const data: any = await $fetch('/api/bachs/banks')
             return data
         } catch (e) {
             console.error(e)
@@ -127,7 +127,7 @@ export const useBankDetails = () => {
 
     const resolveAccount = async (accountNumber: string, bankCode: string) => {
         try {
-            const data: any = await $fetch('/api/flutterwave/resolve-account', {
+            const data: any = await $fetch('/api/bachs/resolve-account', {
                 method: 'POST',
                 body: {
                     account_number: accountNumber,

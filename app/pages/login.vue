@@ -11,9 +11,8 @@ const isLoading = ref(false)
 const showAuthCheckModal = ref(false)
 
 useHead({
-  title: computed(() => isSignup.value ? 'Sign Up - TipCup' : 'Log In - TipCup')
+  title: computed(() => (isSignup.value ? 'Sign up' : 'Log in')),
 })
-
 
 const handleLogin = async () => {
   isLoading.value = true
@@ -22,76 +21,84 @@ const handleLogin = async () => {
 
     showAuthCheckModal.value = true
 
-    if (userProfile.value) {
-      navigateTo('/dashboard')
-    } else {
-      navigateTo('/onboarding')
-    }
+    navigateTo(userProfile.value ? '/dashboard' : '/onboarding')
   } catch (error: any) {
-    const toast = useToast()
-    toast.add({
-        title: 'Error',
-        description: `Login failed: ${error.message}`,
-        type: 'error'
+    useToast().add({
+      title: 'Sign-in failed',
+      description: error?.message || 'Could not sign you in. Please try again.',
+      type: 'error',
     })
   } finally {
     isLoading.value = false
-    if (!user.value) {
-        showAuthCheckModal.value = false
-    }
+    if (!user.value) showAuthCheckModal.value = false
   }
 }
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center px-4 bg-background">
-      <div class="w-full max-w-md space-y-8 mx-auto bg-surface border border-white/5 p-8 rounded-3xl shadow-2xl">
+  <div class="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-background px-4 py-12">
+    <div
+      class="pointer-events-none absolute left-1/2 top-0 h-72 w-[600px] max-w-[140%] -translate-x-1/2 bg-accent/10 blur-[100px]"
+      aria-hidden="true"
+    />
+
+    <div class="absolute right-4 top-4">
+      <ThemeToggle />
+    </div>
+
+    <div class="relative w-full max-w-sm">
+      <div class=" border border-border bg-surface p-8 shadow-lg">
         <div class="text-center">
-            <img src="/logo.png" alt="TipCup" class="w-12 h-12 mx-auto mb-4" />
-            <h2 class="text-3xl font-bold tracking-tight">
-              {{ isSignup ? 'Create your account' : 'Welcome back' }}
-            </h2>
-            <p class="mt-2 text-text-secondary">
-              {{ isSignup ? 'Start accepting support in minutes' : 'Sign in to manage your page' }}
-            </p>
+          <img src="/logo.png" alt="" class="mx-auto mb-5 h-11 w-11 object-contain" />
+          <h1 class="font-display text-2xl font-bold tracking-tight">
+            {{ isSignup ? 'Create your account' : 'Welcome back' }}
+          </h1>
+          <p class="mt-2 text-md text-text-secondary">
+            {{ isSignup ? 'Your page takes a minute to set up.' : 'Sign in to manage your page.' }}
+          </p>
         </div>
 
-        <div class="mt-8 space-y-6 flex items-center justify-center">
-            <Button @click="handleLogin" :loading="isLoading" size="lg" variant="outline">
-              <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              <span class="text-sm sm:text-base">Continue with Google</span>
-            </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="xl"
+          block
+          class="mt-7"
+          :loading="isLoading"
+          @click="handleLogin"
+        >
+          <template #prefix>
+            <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+          </template>
+          Continue with Google
+        </Button>
 
-        <p class="text-center text-sm text-text-secondary">
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+        <p class="mt-5 text-center text-xs leading-relaxed text-text-tertiary">
+          By continuing you agree to our Terms of Service and Privacy Policy.
         </p>
-
-        <div class="mt-6 text-center text-sm">
-            <span class="text-text-secondary">
-                {{ isSignup ? 'Already have an account?' : "Don't have an account?" }}
-            </span>
-            <NuxtLink :to="isSignup ? '/login' : '/signup'" class="ml-1 text-primary hover:underline font-medium">
-                {{ isSignup ? 'Log in' : 'Sign up' }}
-            </NuxtLink>
-        </div>
       </div>
 
-       <Modal :isOpen="showAuthCheckModal" :width="'max-w-sm'">
-          <div class="flex flex-col items-center justify-center py-8 space-y-4">
-             <Loader2 class="w-10 h-10 animate-spin text-primary" />
-             <h3 class="text-lg font-medium leading-6 text-white">
-                Loading your account
-             </h3>
-             <p class="text-sm text-text-secondary">
-                Please wait while we set things up...
-             </p>
-          </div>
-       </Modal>
+      <p class="mt-5 text-center text-sm text-text-secondary">
+        {{ isSignup ? 'Already have an account?' : "Don't have an account?" }}
+        <NuxtLink
+          :to="isSignup ? '/login' : '/signup'"
+          class="ml-1 font-medium text-accent hover:underline"
+        >
+          {{ isSignup ? 'Log in' : 'Sign up' }}
+        </NuxtLink>
+      </p>
+    </div>
+
+    <Modal :isOpen="showAuthCheckModal" width="max-w-xs">
+      <div class="flex flex-col items-center justify-center gap-3 py-6 text-center">
+        <Loader2 class="h-8 w-8 animate-spin text-accent" />
+        <h2 class="font-display text-md font-semibold text-text-primary">Loading your account</h2>
+        <p class="text-sm text-text-secondary">Setting things up…</p>
+      </div>
+    </Modal>
   </div>
 </template>

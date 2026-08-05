@@ -56,24 +56,24 @@ onMounted(async () => {
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
              <!-- Available Balance -->
-             <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm relative overflow-hidden">
+             <div class="bg-surface border border-primary/20 p-6 shadow-sm relative overflow-hidden">
                 <div class="flex items-center justify-between mb-4 relative z-10">
                     <span class="text-text-secondary font-medium">Available Balance</span>
-                    <div class="p-2 bg-green-500/10 rounded-lg text-green-500">
+                    <div class="p-2 bg-muted text-text-secondary">
                         <CreditCard class="w-5 h-5" />
                     </div>
                 </div>
                 <div class="text-4xl font-bold relative z-10">{{ formatCurrency(userProfile?.currentBalance || 0) }}</div>
                 <div class="text-sm text-text-secondary mt-1 relative z-10">Ready to withdraw</div>
                  <!-- Decorative -->
-                 <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-green-500/10 rounded-full blur-2xl"></div>
+                 
             </div>
 
             <!-- Total Earnings -->
-            <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm">
+            <div class="bg-surface border border-primary/20 p-6 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                     <span class="text-text-secondary font-medium">Total Earnings</span>
-                    <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                    <div class="p-2 bg-muted text-text-secondary">
                         <DollarSign class="w-5 h-5" />
                     </div>
                 </div>
@@ -82,10 +82,10 @@ onMounted(async () => {
             </div>
 
             <!-- Total Supporters -->
-            <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm">
+            <div class="bg-surface border border-primary/20 p-6 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                     <span class="text-text-secondary font-medium">Total Supporters</span>
-                    <div class="p-2 bg-red-500/10 rounded-lg text-red-500">
+                    <div class="p-2 bg-muted text-text-secondary">
                         <Heart class="w-5 h-5" />
                     </div>
                 </div>
@@ -95,10 +95,10 @@ onMounted(async () => {
         </div>
 
         <!-- Earnings Chart -->
-        <div class="bg-surface border border-primary/20 p-6 rounded-2xl shadow-sm">
+        <div class="bg-surface border border-primary/20 p-6 shadow-sm">
             <h2 class="text-xl font-bold mb-6">Earnings Overview</h2>
             <div v-if="chartLoading" class="h-[300px] flex items-center justify-center">
-                <Skeleton class="h-full w-full rounded-lg" />
+                <Skeleton class="h-full w-full" />
             </div>
             <div v-else-if="chartData.length > 0">
                 <EarningsChart :transactions="chartData" />
@@ -128,7 +128,7 @@ onMounted(async () => {
                         >
                             <template #supporter="{ row }">
                                 <div class="flex items-center gap-3 font-medium">
-                                    <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                                    <div class="w-8 h-8 bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
                                         {{ (row.name || row.fromName || 'A').charAt(0) }}
                                     </div>
                                     <div class="flex flex-col">
@@ -138,13 +138,13 @@ onMounted(async () => {
                                 </div>
                             </template>
                             <template #amount="{ row }">
-                                <span class="font-bold text-green-500">+{{ formatCurrency(row.amount) }}</span>
+                                <span class="font-bold text-success">+{{ formatCurrency(row.amount) }}</span>
                             </template>
                              <template #message="{ row }">
                                 <span class="text-text-secondary max-w-xs truncate block" :title="row.message">{{ row.message || '-' }}</span>
                             </template>
                             <template #status="{ row }">
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
+                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-success-muted text-success">
                                     {{ row.status || 'Success' }}
                                 </span>
                             </template>
@@ -154,7 +154,7 @@ onMounted(async () => {
                         </Table>
 
                         <!-- Pagination Controls -->
-                        <div v-if="paginatedPayments.length > 0 || paymentPage > 1" class="p-4 border-t border-white/5 flex items-center justify-between">
+                        <div v-if="paginatedPayments.length > 0 || paymentPage > 1" class="p-4 border-t border-border flex items-center justify-between">
                             <span class="text-sm text-text-secondary">Page {{ paymentPage }}</span>
                             <div class="flex gap-2">
                                 <Button
@@ -195,11 +195,11 @@ onMounted(async () => {
                         >
                             <template #status="{ row }">
                                  <span
-                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium capitalize"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium capitalize"
                                     :class="{
-                                        'bg-yellow-500/10 text-yellow-500': row.status === 'pending' || row.status === 'pending_manual_review',
-                                        'bg-green-500/10 text-green-500': row.status === 'success' || row.status === 'completed',
-                                        'bg-red-500/10 text-red-500': row.status === 'failed' || row.status === 'reversed'
+                                        'bg-warning-muted text-warning': row.status === 'pending' || row.status === 'pending_manual_review',
+                                        'bg-success-muted text-success': row.status === 'success' || row.status === 'completed',
+                                        'bg-error-muted text-error': row.status === 'failed' || row.status === 'reversed'
                                     }"
                                 >
                                     <Clock v-if="row.status === 'pending' || row.status === 'pending_manual_review'" class="w-3.5 h-3.5" />
@@ -230,7 +230,7 @@ onMounted(async () => {
                         </Table>
 
                         <!-- Withdrawals Pagination Controls -->
-                        <div v-if="paginatedWithdrawals.length > 0" class="p-4 border-t border-white/5 flex items-center justify-between">
+                        <div v-if="paginatedWithdrawals.length > 0" class="p-4 border-t border-border flex items-center justify-between">
                             <span class="text-sm text-text-secondary">Page {{ withdrawalPage }}</span>
                             <div class="flex gap-2">
                                 <Button

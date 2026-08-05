@@ -142,12 +142,12 @@ const handleSubmit = async () => {
                 Verifying account...
             </div>
 
-            <div v-if="form.accountName" class="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                <div class="text-xs text-green-500 font-medium">Account Name</div>
-                <div class="font-bold text-green-400">{{ form.accountName }}</div>
+            <div v-if="form.accountName" class="p-3 bg-success-muted border border-success/25">
+                <div class="text-xs text-success font-medium">Account Name</div>
+                <div class="font-bold text-success">{{ form.accountName }}</div>
             </div>
 
-            <div v-if="error" class="text-red-500 text-sm">
+            <div v-if="error" class="text-error text-sm">
                 {{ error }}
             </div>
 

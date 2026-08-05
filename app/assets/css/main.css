@@ -1,0 +1,243 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 96 9% 93%;
+    --surface: 100 25% 98%;
+    --surface-hover: 96 12% 90%;
+    --surface-sunken: 96 10% 91%;
+
+    --border: 96 9% 77%;
+    --border-strong: 96 8% 62%;
+    --input: 96 9% 77%;
+    --ring: 16 71% 41%;
+
+    --text-primary: 96 12% 7%;
+    --text-secondary: 96 6% 38%;
+    --text-tertiary: 96 6% 52%;
+
+    --primary: 96 12% 7%;
+    --primary-foreground: 100 25% 98%;
+
+    --secondary: 96 12% 90%;
+    --secondary-foreground: 96 12% 7%;
+
+    --accent: 16 71% 41%;
+    --accent-foreground: 100 25% 98%;
+    --accent-muted: 16 60% 93%;
+
+    --muted: 96 10% 91%;
+    --muted-foreground: 96 6% 38%;
+
+    --success: 145 66% 27%;
+    --success-foreground: 100 25% 98%;
+    --success-muted: 145 40% 92%;
+    --warning: 35 84% 34%;
+    --warning-foreground: 100 25% 98%;
+    --warning-muted: 38 70% 92%;
+    --error: 6 68% 42%;
+    --error-foreground: 100 25% 98%;
+    --error-muted: 6 60% 94%;
+    --info: 212 60% 36%;
+    --info-foreground: 100 25% 98%;
+    --info-muted: 212 50% 93%;
+
+    --shadow-xs: 0 1px 0 0 hsl(96 9% 77% / 0.6);
+    --shadow-sm: 0 1px 0 0 hsl(96 9% 70% / 0.7);
+    --shadow-md: 2px 2px 0 0 hsl(96 9% 77% / 0.8);
+    --shadow-lg: 4px 4px 0 0 hsl(96 9% 74% / 0.9);
+    --shadow-xl: 6px 6px 0 0 hsl(96 10% 70% / 0.9);
+  }
+
+  .dark {
+    --background: 100 12% 5%;
+    --surface: 100 11% 8%;
+    --surface-hover: 100 9% 13%;
+    --surface-sunken: 100 12% 6%;
+
+    --border: 100 8% 18%;
+    --border-strong: 100 7% 30%;
+    --input: 100 8% 18%;
+    --ring: 18 78% 55%;
+
+    --text-primary: 90 15% 91%;
+    --text-secondary: 96 7% 62%;
+    --text-tertiary: 96 6% 46%;
+
+    --primary: 90 15% 91%;
+    --primary-foreground: 100 12% 5%;
+
+    --secondary: 100 9% 14%;
+    --secondary-foreground: 90 15% 91%;
+
+    --accent: 18 78% 55%;
+    --accent-foreground: 100 12% 5%;
+    --accent-muted: 18 45% 14%;
+
+    --muted: 100 9% 14%;
+    --muted-foreground: 96 7% 62%;
+
+    --success: 145 52% 45%;
+    --success-foreground: 100 12% 5%;
+    --success-muted: 145 40% 12%;
+    --warning: 38 80% 52%;
+    --warning-foreground: 100 12% 5%;
+    --warning-muted: 38 50% 13%;
+    --error: 6 70% 58%;
+    --error-foreground: 100 12% 5%;
+    --error-muted: 6 45% 14%;
+    --info: 212 70% 58%;
+    --info-foreground: 100 12% 5%;
+    --info-muted: 212 45% 14%;
+
+    --shadow-xs: 0 1px 0 0 hsl(100 8% 18% / 0.9);
+    --shadow-sm: 0 1px 0 0 hsl(100 8% 20% / 1);
+    --shadow-md: 2px 2px 0 0 hsl(100 8% 16% / 1);
+    --shadow-lg: 4px 4px 0 0 hsl(100 8% 14% / 1);
+    --shadow-xl: 6px 6px 0 0 hsl(100 8% 12% / 1);
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--text-primary));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .tabular {
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  ::selection {
+    background-color: hsl(var(--accent) / 0.2);
+    color: hsl(var(--text-primary));
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border-strong));
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--text-tertiary));
+  }
+}
+
+@layer components {
+  .slip {
+    position: relative;
+    background-color: hsl(var(--surface));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .slip-torn::after {
+    content: '';
+    position: absolute;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    height: 5px;
+    background: repeating-linear-gradient(
+      90deg,
+      hsl(var(--border)) 0 5px,
+      transparent 5px 10px
+    );
+  }
+
+  .rule-tear {
+    border-top: 1px dashed hsl(var(--border));
+  }
+
+  .tear-rule {
+    height: 1px;
+    background-image: radial-gradient(
+      circle at center,
+      hsl(var(--border)) 0 1.4px,
+      transparent 1.6px
+    );
+    background-size: 9px 100%;
+    background-repeat: repeat-x;
+  }
+
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.4rem;
+    border: 1.5px solid currentColor;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transform: rotate(-6deg);
+  }
+
+  .field-label {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: hsl(var(--text-tertiary));
+  }
+}
+
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in-up,
+    .animate-fade-in,
+    .animate-scale-in,
+    .animate-print-in,
+    .animate-shimmer {
+      animation: none !important;
+    }
+
+    .stamp {
+      transform: none;
+    }
+  }
+
+  .stagger > * {
+    animation: print-in 0.32s steps(6, end) backwards;
+  }
+
+  .stagger > *:nth-child(1) { animation-delay: 0.03s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.06s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.09s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.12s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.15s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.18s; }
+  .stagger > *:nth-child(7) { animation-delay: 0.21s; }
+  .stagger > *:nth-child(8) { animation-delay: 0.24s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stagger > * {
+      animation: none;
+    }
+  }
+}

@@ -3,7 +3,6 @@ import { useAuth } from '~/composables/useAuth'
 import {
     LayoutDashboard,
     Settings,
-    User,
     LogOut,
     Menu,
     X,
@@ -16,7 +15,7 @@ const { userProfile, logout } = useAuth()
 const route = useRoute()
 
 const links = [
-    { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
+    { label: 'Overview', to: '/dashboard', icon: LayoutDashboard },
     { label: 'Earnings', to: '/dashboard/earnings', icon: Wallet },
     { label: 'Goals', to: '/dashboard/goals', icon: Target },
     { label: 'Settings', to: '/dashboard/settings', icon: Settings },
@@ -28,72 +27,108 @@ const profileUrl = computed(() => {
 })
 
 const isOpen = ref(false)
+
+watch(() => route.path, () => { isOpen.value = false })
 </script>
 
 <template>
     <div>
-        <!-- Mobile Toggle -->
-        <button @click="isOpen = !isOpen" class="md:hidden fixed top-4 left-4 p-2 bg-surface border border-white/10 rounded-lg shadow-lg" :class="isOpen ? '' : 'z-50 pr-1'">
-            <Menu v-if="!isOpen" class="w-6 h-6" />
-            <!-- <X v-else class="w-6 h-6" /> -->
+        <button
+            class="fixed left-4 top-3.5 z-50 flex h-9 w-9 items-center justify-center border border-border bg-surface text-text-secondary shadow-sm transition-colors hover:text-text-primary md:hidden"
+            :aria-label="isOpen ? 'Close menu' : 'Open menu'"
+            :aria-expanded="isOpen"
+            @click="isOpen = !isOpen"
+        >
+            <X v-if="isOpen" class="h-5 w-5" />
+            <Menu v-else class="h-5 w-5" />
         </button>
 
-        <!-- Sidebar Backdrop (Mobile) -->
-        <div v-if="isOpen" @click="isOpen = false" class="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"></div>
+        <Transition
+            enter-active-class="transition-opacity duration-200"
+            enter-from-class="opacity-0"
+            leave-active-class="transition-opacity duration-150"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="isOpen"
+                class="fixed inset-0 z-40 bg-background/70 backdrop-blur-sm md:hidden"
+                @click="isOpen = false"
+            />
+        </Transition>
 
-        <!-- Sidebar -->
         <aside
-            class="fixed top-0 left-0 h-[100dvh] w-64 bg-surface border-r border-white/5 z-40 transform transition-transform duration-300 md:translate-x-0 flex flex-col"
+            class="fixed left-0 top-0 z-40 flex h-[100dvh] w-64 transform flex-col border-r border-border bg-surface transition-transform duration-300 ease-out md:translate-x-0"
             :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
         >
-            <!-- Logo -->
-            <div class="h-16 flex items-center px-6 border-b border-white/5">
-                <div class="flex items-center gap-3">
-                    <img src="/logo.png" alt="TipCup" class="w-8 h-8" />
-                    <span class="font-bold text-xl tracking-tight">TipCup</span>
-                </div>
+            <div class="flex h-16 shrink-0 items-center border-b border-border px-5">
+                <NuxtLink to="/dashboard" class="flex items-center gap-2.5">
+                    <img src="/logo.png" alt="" class="h-7 w-7" />
+                    <span class="font-display text-lg font-bold tracking-tight text-text-primary">TipCup</span>
+                </NuxtLink>
             </div>
 
-            <!-- Navigation -->
-            <nav class="flex-1 overflow-y-auto min-h-0 py-6 px-3 space-y-2">
+            <nav class="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-3">
                 <NuxtLink
                     v-for="link in links"
                     :key="link.to"
                     :to="link.to"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative"
-                    :class="route.path === link.to ? 'bg-primary/10 text-primary border-l-4 border-primary' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'"
-                    @click="isOpen = false"
+                    class="group relative flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-200"
+                    :class="
+                        route.path === link.to
+                            ? 'bg-surface-hover text-text-primary'
+                            : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+                    "
                 >
-                    <component :is="link.icon" class="w-5 h-5" />
-                    <span class="font-medium">{{ link.label }}</span>
+                    <span
+                        v-if="route.path === link.to"
+                        class="absolute inset-y-1.5 left-0 w-0.5-full bg-accent"
+                        aria-hidden="true"
+                    />
+                    <component :is="link.icon" class="h-[18px] w-[18px] shrink-0" />
+                    <span>{{ link.label }}</span>
                 </NuxtLink>
 
-                <div class="pt-4 mt-4 border-t border-white/5 px-3">
-                   <p class="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 px-1">External</p>
-                   <NuxtLink
-                        v-if="profileUrl"
-                        :to="profileUrl"
+                <div v-if="profileUrl" class="mt-4 border-t border-border pt-4">
+                    <p class="mb-1.5 px-3 text-2xs font-semibold uppercase tracking-wider text-text-tertiary">
+                        Your page
+                    </p>
+                    <a
+                        :href="profileUrl"
                         target="_blank"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:text-primary hover:bg-white/5 transition-all group"
+                        rel="noopener"
+                        class="group flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-text-secondary transition-all duration-200 hover:bg-surface-hover hover:text-text-primary"
                     >
-                        <ExternalLink class="w-5 h-5" />
-                        <span class="font-medium">My Page</span>
-                    </NuxtLink>
+                        <ExternalLink class="h-[18px] w-[18px] shrink-0" />
+                        <span class="truncate">@{{ userProfile?.username }}</span>
+                    </a>
                 </div>
             </nav>
 
-            <!-- User Footer -->
-            <div class="p-4 border-t border-white/5 flex items-center justify-between gap-2">
-                <div class="flex items-center gap-3 overflow-hidden">
-                    <Avatar :src="userProfile?.avatarUrl" class="w-9 h-9 border border-white/10 shrink-0" />
-                    <div class="flex-1 min-w-0">
-                        <p class="font-bold truncate text-sm leading-tight">{{ userProfile?.displayName }}</p>
-                        <p class="text-xs text-text-secondary truncate leading-tight">@{{ userProfile?.username }}</p>
+            <div class="shrink-0 border-t border-border p-3">
+                <div class="flex items-center gap-2.5 p-2">
+                    <Avatar
+                        :src="userProfile?.avatarUrl"
+                        :alt="userProfile?.displayName || 'You'"
+                        size="sm"
+                        class="shrink-0"
+                    />
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-semibold leading-tight text-text-primary">
+                            {{ userProfile?.displayName }}
+                        </p>
+                        <p class="truncate text-xs leading-tight text-text-tertiary">
+                            @{{ userProfile?.username }}
+                        </p>
                     </div>
+                    <button
+                        class="flex h-8 w-8 shrink-0 items-center justify-center text-text-tertiary transition-colors hover:bg-error-muted hover:text-error"
+                        title="Sign out"
+                        @click="logout"
+                    >
+                        <span class="sr-only">Sign out</span>
+                        <LogOut class="h-4 w-4" />
+                    </button>
                 </div>
-                <button @click="logout" class="p-2 text-text-secondary hover:text-red-400 hover:bg-white/5 rounded-lg transition-colors" title="Sign Out">
-                    <LogOut class="w-5 h-5" />
-                </button>
             </div>
         </aside>
     </div>

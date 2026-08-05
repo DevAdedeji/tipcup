@@ -1,5 +1,6 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-    if (process.server) return
+    // Auth state is client-only; never redirect a server-rendered public page.
+    if (import.meta.server) return
 
     const { user, userProfile, loading } = useAuth()
 

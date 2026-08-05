@@ -1,46 +1,49 @@
 import type { Ref, ComputedRef } from 'vue'
 
+type MaybeRef<T> = T | Ref<T> | ComputedRef<T>
+
 export interface PageMeta {
-    title: string | Ref<string> | ComputedRef<string>
-    description?: string
-    image?: string
-    url?: string
+    title: MaybeRef<string>
+    description?: MaybeRef<string | undefined>
+    image?: MaybeRef<string | undefined>
+    url?: MaybeRef<string | undefined>
     type?: 'website' | 'article' | 'profile'
     twitterCard?: 'summary' | 'summary_large_image'
 }
 
+const DEFAULT_DESCRIPTION = 'TipCup - accept support from your community.'
+
 export const usePageMeta = (meta: PageMeta) => {
     const route = useRoute()
+    const config = useRuntimeConfig()
 
-    const title = meta.title
-    const description = meta.description || 'TipCup - Accept support from your community.'
-    const appUrl = import.meta.env.VITE_APP_URL
-    const url = meta.url || `${appUrl}${route.path}`
-    const image = meta.image || `${appUrl}/og-image.png`
-    const type = meta.type || 'website'
-    const twitterCard = meta.twitterCard || 'summary_large_image'
+    const siteUrl = (config.public.siteUrl as string) || 'https://tipcup.adedeji.xyz'
+
+    const absolute = (value?: string) => {
+        if (!value) return undefined
+        return value.startsWith('http') ? value : `${siteUrl}${value.startsWith('/') ? '' : '/'}${value}`
+    }
 
     useSeoMeta({
-        title,
-        ogTitle: title,
-        twitterTitle: title,
+        title: () => toValue(meta.title),
+        ogTitle: () => toValue(meta.title),
+        twitterTitle: () => toValue(meta.title),
 
-        description,
-        ogDescription: description,
-        twitterDescription: description,
+        description: () => toValue(meta.description) || DEFAULT_DESCRIPTION,
+        ogDescription: () => toValue(meta.description) || DEFAULT_DESCRIPTION,
+        twitterDescription: () => toValue(meta.description) || DEFAULT_DESCRIPTION,
 
-        ogImage: image,
-        twitterImage: image,
+        ogImage: () => absolute(toValue(meta.image)) || `${siteUrl}/og-image.png`,
+        twitterImage: () => absolute(toValue(meta.image)) || `${siteUrl}/og-image.png`,
 
-        ogUrl: url,
-        ogType: type,
+        ogUrl: () => absolute(toValue(meta.url)) || `${siteUrl}${route.path}`,
+        ogType: meta.type || 'website',
 
-        twitterCard: twitterCard,
+        twitterCard: meta.twitterCard || 'summary_large_image',
     })
 
     useHead({
-        titleTemplate: (titleChunk) => {
-            return titleChunk ? `${titleChunk} | TipCup` : 'TipCup'
-        }
+        titleTemplate: (titleChunk) => (titleChunk ? `${titleChunk} | TipCup` : 'TipCup'),
+        link: [{ rel: 'canonical', href: () => `${siteUrl}${route.path}` }],
     })
 }

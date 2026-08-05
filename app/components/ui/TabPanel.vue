@@ -10,7 +10,7 @@ defineOptions({
 <template>
   <HeadlessTabPanel
     :class="cn(
-      'rounded-xl bg-surface p-3',
+      ' bg-surface p-3',
       $attrs.class as string
     )"
     v-bind="$attrs"

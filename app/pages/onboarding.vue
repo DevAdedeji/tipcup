@@ -6,6 +6,7 @@ import { useBankDetails } from '~/composables/useBankDetails'
 import { ChevronDown } from 'lucide-vue-next'
 import Select from '~/components/ui/Select.vue'
 import AmountInput from '~/components/ui/AmountInput.vue'
+import { DEFAULT_TIER_AMOUNT, MIN_TIP_AMOUNT, validateAmount, formatCurrency } from '~/utils/format'
 
 usePageMeta({
   title: 'Onboarding'
@@ -16,7 +17,7 @@ const { checkUsernameAvailability, completeOnboarding } = useOnboarding()
 const { addAccount, fetchBanks, resolveAccount } = useBankDetails()
 
 const step = ref(1)
-const steps = ['Claim Link', 'Profile', 'Membership', 'Payouts']
+const steps = ['Claim link', 'Profile', 'Tiers', 'Payouts']
 const isLoading = ref(false)
 
 const formData = reactive({
@@ -47,12 +48,6 @@ onMounted(async () => {
             banks.value = response.data
         } else if (Array.isArray(response)) {
              banks.value = response
-        }
-        // Auto-select Access Bank for test mode
-        const accessBank = banks.value.find((b: any) => b.code === '044' || b.name.toLowerCase().includes('access'))
-        if (accessBank) {
-            formData.payoutDetails.bankCode = accessBank.code
-            formData.payoutDetails.accountNumber = '0690000032'
         }
     } catch (e) {
         console.error('Failed to fetch banks', e)
@@ -136,15 +131,31 @@ watch(() => formData.username, (newVal) => {
 })
 
 const addTier = () => {
-    formData.tiers.push({ price: 10, label: 'New Tier', description: '' })
+    formData.tiers.push({ price: DEFAULT_TIER_AMOUNT, label: 'New Tier', description: '' })
 }
 
 const removeTier = (index: number) => {
     formData.tiers.splice(index, 1)
 }
 
+// Bachs rejects any checkout under NGN 1,000, so block it here rather than
+// letting a supporter hit the failure at payment time.
+const invalidTier = computed(() =>
+    formData.tiers.find((tier: any) => validateAmount(tier.price, MIN_TIP_AMOUNT) !== null)
+)
+
 const nextStep = () => {
     if (step.value === 1 && !usernameAvailable.value) return
+
+    if (step.value === 3 && invalidTier.value) {
+        useToast().add({
+            title: 'Check your tiers',
+            description: `Every tier must be at least ${formatCurrency(MIN_TIP_AMOUNT)}.`,
+            type: 'error'
+        })
+        return
+    }
+
     if (step.value < 4) step.value++
 }
 
@@ -191,14 +202,14 @@ const complete = async () => {
   <div class="min-h-screen bg-background text-text-primary px-4 py-12 font-sans">
       <div class="max-w-2xl mx-auto">
           <div class="flex items-start justify-between mb-12 relative px-4">
-              <div class="absolute top-5 left-16 right-16 h-[2px] bg-gray-200"></div>
+              <div class="absolute top-5 left-16 right-16 h-[2px] bg-border"></div>
 
               <div v-for="(s, i) in steps" :key="s" class="flex flex-col items-center relative z-10 w-24">
-                  <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border transition-all duration-300 transform bg-background"
+                  <div class="w-10 h-10 flex items-center justify-center text-sm font-bold border transition-all duration-300 transform bg-background"
                     :class="[
                         step > i + 1 ? 'bg-primary border-primary text-white scale-100' :
-                        step === i + 1 ? 'border-primary text-primary bg-background scale-110 shadow-[0_0_15px_rgba(255,107,53,0.3)]' :
-                        'border-gray-200 text-text-secondary bg-background'
+                        step === i + 1 ? 'border-primary text-primary bg-background scale-110 shadow-accent' :
+                        'border-border text-text-secondary bg-background'
                     ]">
                       <span v-if="step > i + 1">✓</span>
                       <span v-else>{{ i + 1 }}</span>
@@ -217,25 +228,25 @@ const complete = async () => {
                   <p class="text-text-secondary">Choose a unique username for your page.</p>
               </div>
 
-              <div class="bg-surface shadow-xl shadow-gray-200/50 border border-primary/20 rounded-2xl p-8 max-w-lg mx-auto">
+              <div class="bg-surface shadow-lg border border-primary/20 p-8 max-w-lg mx-auto">
                   <div class="space-y-6">
                       <div>
                           <label class="block text-sm font-medium mb-4 ml-1">Username</label>
-                          <div class="flex rounded-md shadow-sm border border-gray-200 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
-                              <span class="inline-flex items-center px-2 sm:px-4 rounded-l-md bg-gray-50 text-text-secondary text-sm border-r border-gray-200">
+                          <div class="flex shadow-sm border border-border focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+                              <span class="inline-flex items-center px-2 sm:px-4 bg-surface-sunken text-text-secondary text-sm border-r border-border">
                                   tipcup.adedeji.xyz/
                               </span>
                               <input
                                 v-model="formData.username"
                                 type="text"
-                                class="rounded-r-md flex-1 py-2 sm:py-4 px-2 sm:px-4 text-base sm:text-lg focus:outline-none bg-transparent"
+                                class=" flex-1 py-2 sm:py-4 px-2 sm:px-4 text-base sm:text-lg focus:outline-none bg-transparent"
                                 placeholder="yourname"
                               />
                           </div>
                            <div class="mt-2 h-6 flex items-center justify-between px-1">
                                 <span v-if="isCheckingUsername" class="text-sm text-text-secondary animate-pulse">Checking...</span>
-                                <span v-else-if="usernameAvailable && formData.username" class="text-green-500 text-sm font-medium">✓ Available</span>
-                                <span v-else class="text-sm text-red-500 font-medium">{{ usernameError }}</span>
+                                <span v-else-if="usernameAvailable && formData.username" class="text-success text-sm font-medium">✓ Available</span>
+                                <span v-else class="text-sm text-error font-medium">{{ usernameError }}</span>
                           </div>
                       </div>
 
@@ -253,7 +264,7 @@ const complete = async () => {
                   <p class="text-text-secondary">Tell your supporters who you are.</p>
               </div>
 
-              <div class="bg-surface shadow-xl shadow-gray-200/50 border border-primary/20 rounded-2xl p-8 max-w-lg mx-auto space-y-6">
+              <div class="bg-surface shadow-lg border border-primary/20 p-8 max-w-lg mx-auto space-y-6">
                    <div class="flex justify-center">
                         <Avatar :src="user?.photoURL || undefined" size="lg" class="w-24 h-24 ring-4 ring-gray-50" />
                    </div>
@@ -280,9 +291,9 @@ const complete = async () => {
                   <p class="text-text-secondary">Give your fans ways to support you.</p>
               </div>
 
-              <div class="bg-surface shadow-xl shadow-gray-200/50 border border-primary/20 rounded-2xl p-8 max-w-lg mx-auto space-y-4">
-                  <div v-for="(tier, index) in formData.tiers" :key="index" class="bg-gray-50 border border-gray-200 p-4 rounded-xl relative group hover:border-primary/50 transition-colors">
-                        <button @click="removeTier(index)" class="absolute top-2 right-2 p-1 text-text-secondary hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div class="bg-surface shadow-lg border border-primary/20 p-8 max-w-lg mx-auto space-y-4">
+                  <div v-for="(tier, index) in formData.tiers" :key="index" class="bg-surface-sunken border border-border p-4 relative group hover:border-primary/50 transition-colors">
+                        <button @click="removeTier(index)" class="absolute top-2 right-2 p-1 text-text-secondary hover:text-error opacity-0 group-hover:opacity-100 transition-opacity">
                              ✕
                         </button>
                         <div class="grid grid-cols-3 items-center gap-4">
@@ -315,7 +326,7 @@ const complete = async () => {
                   <p class="text-text-secondary">Where should we send your earnings?</p>
               </div>
 
-               <div class="bg-surface shadow-xl shadow-gray-200/50 border border-white/50 rounded-2xl p-8 max-w-lg mx-auto space-y-6">
+               <div class="bg-surface shadow-lg border border-border p-8 max-w-lg mx-auto space-y-6">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Bank Name</label>
@@ -334,7 +345,7 @@ const complete = async () => {
                         <div>
                             <label class="block text-sm font-medium mb-2">Account Name</label>
                              <div class="relative">
-                                <Input v-model="formData.payoutDetails.accountName" placeholder="Fetched automatically..." disabled class="opacity-70 cursor-not-allowed bg-gray-50" />
+                                <Input v-model="formData.payoutDetails.accountName" placeholder="Fetched automatically..." disabled class="opacity-70 cursor-not-allowed bg-surface-sunken" />
                                 <div v-if="verifyingAccount" class="absolute right-3 top-2.5">
                                     <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                                 </div>

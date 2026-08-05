@@ -47,7 +47,7 @@ const removeOption = (val: string | number | object) => {
 
 <template>
   <div class="w-full">
-    <label v-if="label" class="block text-sm font-medium text-text-primary mb-1">
+    <label v-if="label" class="mb-1.5 block text-sm font-medium text-text-primary">
       {{ label }}
     </label>
     <Listbox
@@ -59,22 +59,23 @@ const removeOption = (val: string | number | object) => {
     >
       <ListboxButton
         :class="cn(
-          'relative w-full cursor-default rounded-md bg-surface py-2 pl-3 pr-10 text-left border border-border focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm min-h-[40px] transition-colors',
-          error ? 'border-error ring-error' : '',
-          disabled ? 'opacity-50 cursor-not-allowed' : ''
+          'relative min-h-[44px] w-full cursor-pointer bg-surface py-2 pl-3 pr-10 text-left text-md border shadow-xs transition-all duration-200',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:border-ring',
+          error ? 'border-error' : 'border-input',
+          disabled ? 'cursor-not-allowed opacity-50' : 'hover:border-border-strong'
         )"
       >
         <div v-if="modelValue.length > 0" class="flex flex-wrap gap-1">
-            <span v-for="(val, idx) in modelValue" :key="idx" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary/10 text-secondary">
+            <span v-for="(val, idx) in modelValue" :key="idx" class="inline-flex items-center gap-1 bg-accent-muted px-2 py-0.5 text-xs font-medium text-accent">
                 {{ selectedLabels[idx] }}
-                <X class="w-3 h-3 ml-1 cursor-pointer hover:text-secondary/80" @click.stop.prevent="removeOption(val)" />
+                <X class="h-3 w-3 cursor-pointer transition-opacity hover:opacity-70" @click.stop.prevent="removeOption(val)" />
             </span>
         </div>
-        <span v-else class="block truncate text-text-secondary">
+        <span v-else class="block truncate text-text-tertiary">
           {{ placeholder }}
         </span>
-        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-          <ChevronDown class="h-4 w-4 text-gray-400" aria-hidden="true" />
+        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+          <ChevronDown class="h-4 w-4 text-text-tertiary" aria-hidden="true" />
         </span>
       </ListboxButton>
 
@@ -84,7 +85,7 @@ const removeOption = (val: string | number | object) => {
         leave-to-class="opacity-0"
       >
         <ListboxOptions
-          class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-50"
+          class="absolute z-50 mt-1.5 max-h-60 w-full overflow-auto border border-border bg-surface p-1 text-md shadow-lg focus:outline-none"
         >
           <ListboxOption
             v-for="option in normalizedOptions"
@@ -95,13 +96,13 @@ const removeOption = (val: string | number | object) => {
           >
             <li
                :class="[
-                active ? 'bg-secondary/10 text-secondary' : 'text-text-primary',
-                'relative cursor-default select-none py-2 pl-10 pr-4',
+                active ? 'bg-surface-hover text-text-primary' : 'text-text-secondary',
+                'relative cursor-pointer select-none py-2 pl-9 pr-3 transition-colors',
               ]"
             >
               <span
                 :class="[
-                  selected ? 'font-medium' : 'font-normal',
+                  selected ? 'font-medium text-text-primary' : 'font-normal',
                   'block truncate',
                 ]"
               >
@@ -109,7 +110,7 @@ const removeOption = (val: string | number | object) => {
               </span>
               <span
                 v-if="selected"
-                class="absolute inset-y-0 left-0 flex items-center pl-3 text-secondary"
+                class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-accent"
               >
                 <Check class="h-4 w-4" aria-hidden="true" />
               </span>

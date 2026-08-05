@@ -9,58 +9,61 @@ const props = defineProps<{
 
 const percentage = computed(() => {
     if (!props.goal.targetAmount) return 0
-    return Math.min(Math.round((props.goal.currentAmount / props.goal.targetAmount) * 100), 100)
+    return Math.min(Math.round(((props.goal.currentAmount || 0) / props.goal.targetAmount) * 100), 100)
 })
+
+const isComplete = computed(() => percentage.value >= 100)
 </script>
 
 <template>
-    <div class="w-full max-w-lg mx-auto mb-8 animate-fade-in-up">
-        <div class="bg-surface border border-primary/20 rounded-2xl p-6 relative overflow-hidden shadow-lg transition-colors group">
-            <!-- Background Glow -->
-            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-10 -mt-10 group-hover:bg-primary/10 transition-colors"></div>
+    <div class="w-full">
+        <div class=" border border-border bg-surface p-5 shadow-xs">
+            <div class="mb-4 flex items-start gap-3">
+                <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center bg-accent-muted text-accent"
+                >
+                    <Target class="h-4 w-4" />
+                </div>
+                <div class="min-w-0 flex-1">
+                    <h3 class="truncate font-display text-md font-semibold leading-tight text-text-primary">
+                        {{ goal.title }}
+                    </h3>
+                    <p v-if="goal.description" class="mt-0.5 line-clamp-1 text-xs text-text-secondary">
+                        {{ goal.description }}
+                    </p>
+                </div>
+                <Badge v-if="isComplete" variant="success" dot>Funded</Badge>
+            </div>
 
-            <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="p-2 bg-primary/10 rounded-lg text-primary">
-                        <Target class="w-5 h-5" />
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-lg leading-tight">{{ goal.title }}</h3>
-                         <p v-if="goal.description" class="text-xs text-text-secondary line-clamp-1">{{ goal.description }}</p>
-                    </div>
+            <div class="space-y-2.5">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                    <p class="tabular text-xl font-semibold tracking-tight text-text-primary">
+                        {{ formatCurrency(goal.currentAmount || 0) }}
+                        <span class="text-sm font-normal text-text-tertiary">
+                            of {{ formatCurrency(goal.targetAmount) }}
+                        </span>
+                    </p>
+                    <span
+                        class="tabular text-sm font-semibold text-accent"
+                    >
+                        {{ percentage }}%
+                    </span>
                 </div>
 
-                <div class="space-y-3">
-                    <div class="flex flex-wrap justify-between items-end gap-2">
-                        <div class="text-2xl font-bold break-all">
-                            {{ formatCurrency(goal.currentAmount) }}
-                            <span class="text-sm text-text-secondary font-normal whitespace-normal">raised of {{ formatCurrency(goal.targetAmount) }}</span>
-                        </div>
-                        <div class="text-primary font-bold whitespace-nowrap">{{ percentage }}%</div>
-                    </div>
-
-                    <!-- Progress Bar -->
-                    <div class="h-3 w-full bg-black/20 rounded-full overflow-hidden border border-white/5">
-                        <div
-                            class="h-full bg-gradient-to-r from-primary to-accent relative transition-all duration-1000 ease-out rounded-full"
-                            :style="{ width: `${percentage}%` }"
-                        >
-                            <!-- Shimmer Effect -->
-                            <div class="absolute inset-0 bg-white/20 skew-x-12 animate-shimmer"></div>
-                        </div>
-                    </div>
+                <div
+                    class="h-2 w-full overflow-hidden bg-muted"
+                    role="progressbar"
+                    :aria-valuenow="percentage"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    :aria-label="`${goal.title} progress`"
+                >
+                    <div
+                        class="h-full bg-accent transition-all duration-1000 ease-out"
+                        :style="{ width: `${percentage}%` }"
+                    />
                 </div>
             </div>
         </div>
     </div>
 </template>
-
-<style scoped>
-@keyframes shimmer {
-    from { transform: translateX(-100%) skewX(-12deg); }
-    to { transform: translateX(200%) skewX(-12deg); }
-}
-.animate-shimmer {
-    animation: shimmer 2s infinite;
-}
-</style>

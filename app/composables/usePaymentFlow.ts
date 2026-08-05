@@ -21,60 +21,70 @@ export const usePaymentFlow = () => {
         message: string
     }) => {
         if (!email) {
-            toast.add({ title: 'Email Required', description: 'Please enter your email address.', type: 'error' })
+            toast.add({ title: 'Email required', description: 'Please enter your email address.', type: 'error' })
             return
         }
 
         processingPayment.value = true
         try {
-            const initData: any = await $fetch('/api/flutterwave/initialize', {
+            const supporterName =
+                user.value?.displayName || userProfile.value?.displayName || 'Anonymous'
+
+            const returnUrl = new URL(window.location.href)
+            returnUrl.searchParams.delete('checkout_id')
+
+            const session: any = await $fetch('/api/bachs/initialize', {
                 method: 'POST',
                 body: {
                     email,
+                    name: supporterName,
                     amount,
-                    callback_url: window.location.href,
+                    successUrl: returnUrl.toString(),
+                    cancelUrl: returnUrl.toString(),
                     metadata: {
                         toUserId,
                         goalId,
                         tier,
                         message,
                         fromUserId: user.value?.uid,
-                        fromName: user.value?.displayName || userProfile.value?.displayName || 'Anonymous'
+                        fromName: supporterName
                     }
                 }
             })
 
-            if (initData && initData.authorization_url) {
-                window.location.href = initData.authorization_url
+            if (session?.checkout_url) {
+                window.location.href = session.checkout_url
             } else {
-                throw new Error('Initialization failed')
+                throw new Error('Could not start checkout')
             }
         } catch (e: any) {
             console.error(e)
-            const msg = e.statusMessage || e.message || 'Could not start payment.'
-            toast.add({ title: 'Error', description: msg, type: 'error' })
+            const msg = e.statusMessage || e.data?.statusMessage || e.message || 'Could not start payment.'
+            toast.add({ title: 'Payment error', description: msg, type: 'error' })
         } finally {
             processingPayment.value = false
         }
     }
 
-    const verifyPayment = async (transactionId: string) => {
+    const verifyPayment = async (checkoutId: string) => {
         verifyingPayment.value = true
         try {
-            const data: any = await $fetch('/api/flutterwave/verify', {
+            const data: any = await $fetch('/api/bachs/verify', {
                 method: 'POST',
-                body: { transaction_id: transactionId }
+                body: { checkout_id: checkoutId }
             })
 
-            if (data.status === 'success') {
-                return true
-            } else {
-                toast.add({ title: 'Verification Failed', description: 'Payment verification failed.', type: 'warning' })
-                return false
-            }
+            if (data.status === 'success') return true
+
+            toast.add({
+                title: 'Payment processing',
+                description: 'We are still confirming this payment. It will appear shortly.',
+                type: 'info'
+            })
+            return false
         } catch (e) {
             console.error('Verify error', e)
-            toast.add({ title: 'Error', description: 'Failed to verify payment.', type: 'error' })
+            toast.add({ title: 'Error', description: 'Failed to confirm payment.', type: 'error' })
             return false
         } finally {
             verifyingPayment.value = false
@@ -84,21 +94,16 @@ export const usePaymentFlow = () => {
     const checkPaymentCallback = async () => {
         const route = useRoute()
         const router = useRouter()
-        const { status, transaction_id } = route.query
+        const checkoutId = route.query.checkout_id as string | undefined
 
-        if (status && (status === 'successful' || status === 'completed') && transaction_id) {
-            const success = await verifyPayment(transaction_id as string)
-            if (success) {
-                // Clear query params
-                router.replace({ query: {} })
-                return { status: 'success', transactionId: transaction_id }
-            }
-        } else if (status === 'cancelled') {
-            toast.add({ title: 'Payment Cancelled', description: 'You cancelled the payment.', type: 'info' })
-            router.replace({ query: {} })
-            return { status: 'cancelled' }
-        }
-        return null
+        if (!checkoutId) return null
+
+        const success = await verifyPayment(checkoutId)
+        router.replace({ query: {} })
+
+        return success
+            ? { status: 'success', checkoutId }
+            : { status: 'pending', checkoutId }
     }
 
     return {

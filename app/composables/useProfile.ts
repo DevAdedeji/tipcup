@@ -73,7 +73,7 @@ export const useProfile = () => {
             }
 
             // Increment view count (fire and forget)
-            if (process.client) {
+            if (import.meta.client) {
                 const userRef = doc(db, 'users', userDoc.id)
                 // Use increment from firestore
                 import('firebase/firestore').then(({ increment, updateDoc }) => {

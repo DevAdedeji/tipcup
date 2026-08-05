@@ -5,40 +5,32 @@ import Topbar from '~/components/dashboard/Topbar.vue'
 
 const { loading, userProfile, user } = useAuth()
 
-const isLoading = computed(() => {
-  return loading.value || (user.value && !userProfile.value)
-})
+const isLoading = computed(() => loading.value || (user.value && !userProfile.value))
 </script>
 
 <template>
-  <div class="min-h-screen bg-background text-text-primary flex">
-    <!-- Dashboard Loader -->
-    <div v-if="isLoading" class="fixed inset-0 z-[9999] w-screen h-screen flex flex-col items-center justify-center bg-background">
-      <div class="relative flex flex-col items-center gap-6">
-          <!-- Logo or Icon -->
-          <div class="relative">
-              <div class="animate-spin rounded-full min-h-16 min-w-16 border-4 border-primary/20 border-t-primary"></div>
-              <div class="absolute inset-0 flex items-center justify-center p-2">
-                  <img src="/logo.png" alt="TipCup Logo" class="w-10 h-10 object-contain" />
-              </div>
-          </div>
-          <p class="text-xl font-medium text-text-secondary animate-pulse tracking-wide">Loading Dashboard...</p>
+  <div class="flex min-h-[100dvh] bg-background text-text-primary">
+    <div
+      v-if="isLoading"
+      class="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-5 bg-background"
+    >
+      <div class="relative flex h-16 w-16 items-center justify-center">
+        <div class="absolute inset-0 animate-spin rounded-full border-2 border-border border-t-accent" />
+        <img src="/logo.png" alt="" class="h-8 w-8 object-contain" />
       </div>
+      <p class="text-sm font-medium tracking-wide text-text-secondary">Loading your dashboard</p>
     </div>
 
-    <!-- Layout Structure -->
     <template v-else>
-        <!-- Sidebar -->
-        <Sidebar />
+      <Sidebar />
 
-        <!-- Main Area -->
-        <div class="flex-1 flex flex-col min-w-0 md:pl-64 transition-all duration-300">
-            <Topbar />
+      <div class="flex min-w-0 flex-1 flex-col md:pl-64">
+        <Topbar />
 
-            <main class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full animate-fade-in-up">
-                <slot />
-            </main>
-        </div>
+        <main class="mx-auto w-full max-w-content flex-1 animate-fade-in-up p-4 md:p-8">
+          <slot />
+        </main>
+      </div>
     </template>
   </div>
 </template>

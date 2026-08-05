@@ -9,6 +9,7 @@ import { useBankDetails } from '~/composables/useBankDetails'
 import { User, DollarSign, Link as LinkIcon, CreditCard, Trash2, Plus } from 'lucide-vue-next'
 import BankModal from '~/components/dashboard/BankModal.vue'
 import AmountInput from '~/components/ui/AmountInput.vue'
+import { DEFAULT_TIER_AMOUNT, MIN_TIP_AMOUNT, validateAmount, formatCurrency } from '~/utils/format'
 
 definePageMeta({
   layout: 'dashboard',
@@ -49,8 +50,24 @@ watch(() => userProfile.value, (newProfile) => {
 
 const saving = ref(false)
 
+// Bachs rejects any checkout under NGN 1,000, so a tier below that would fail
+// at payment time rather than at save time.
+const invalidTier = computed(() =>
+    form.tiers.find((tier: any) => validateAmount(tier.price, MIN_TIP_AMOUNT) !== null)
+)
+
 const saveProfile = async () => {
     if (!user.value) return
+
+    if (invalidTier.value) {
+        toast.add({
+            title: 'Check your tiers',
+            description: `Every tier must be at least ${formatCurrency(MIN_TIP_AMOUNT)}.`,
+            type: 'error'
+        })
+        return
+    }
+
     saving.value = true
 
     try {
@@ -72,7 +89,7 @@ const saveProfile = async () => {
 
 
 const addTier = () => {
-    form.tiers.push({ price: 5, emoji: getRandomEmoji(), label: 'Support' })
+    form.tiers.push({ price: DEFAULT_TIER_AMOUNT, emoji: getRandomEmoji(), label: 'Support' })
 }
 const removeTier = (index: number) => {
     form.tiers.splice(index, 1)
@@ -123,7 +140,7 @@ const handleSetPrimaryBank = async (id: string) => {
             <!-- Loading Skeleton -->
             <div v-if="loading" class="grid lg:grid-cols-3 gap-8 animate-fade-in-up">
                  <div class="lg:col-span-2 space-y-8">
-                     <div class="bg-surface border border-white/5 rounded-2xl p-6">
+                     <div class="bg-surface border border-border p-6">
                          <Skeleton class="h-6 w-32 mb-6" />
                          <div class="space-y-4">
                              <div>
@@ -136,21 +153,21 @@ const handleSetPrimaryBank = async (id: string) => {
                              </div>
                          </div>
                      </div>
-                     <div class="bg-surface border border-white/5 rounded-2xl p-6">
+                     <div class="bg-surface border border-border p-6">
                          <div class="flex justify-between mb-6">
                              <Skeleton class="h-6 w-32" />
                              <Skeleton class="h-8 w-24" />
                          </div>
                          <div class="space-y-4">
-                             <Skeleton class="h-20 w-full rounded-xl" />
-                             <Skeleton class="h-20 w-full rounded-xl" />
+                             <Skeleton class="h-20 w-full" />
+                             <Skeleton class="h-20 w-full" />
                          </div>
                      </div>
                  </div>
                  <div class="lg:col-span-1">
-                      <div class="bg-surface border border-white/5 rounded-2xl p-6">
+                      <div class="bg-surface border border-border p-6">
                           <Skeleton class="h-4 w-24 mb-4" />
-                          <Skeleton class="h-64 w-full rounded-xl" />
+                          <Skeleton class="h-64 w-full" />
                       </div>
                  </div>
             </div>
@@ -158,9 +175,9 @@ const handleSetPrimaryBank = async (id: string) => {
             <div v-else class="grid lg:grid-cols-3 gap-8 animate-fade-in-up">
                 <div class="lg:col-span-2 space-y-8">
 
-                    <div class="bg-surface border border-primary/20 rounded-2xl p-3 lg:p-6 shadow-sm">
+                    <div class="bg-surface border border-primary/20 p-3 lg:p-6 shadow-sm">
                         <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-                            <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                            <div class="p-2 bg-muted text-text-secondary">
                                 <User class="w-5 h-5" />
                             </div>
                             <span>Profile Details</span>
@@ -180,10 +197,10 @@ const handleSetPrimaryBank = async (id: string) => {
                         </div>
                     </div>
 
-                    <div class="bg-surface border border-primary/20 rounded-2xl p-3 lg:p-6 shadow-sm">
+                    <div class="bg-surface border border-primary/20 p-3 lg:p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-xl font-bold flex items-center gap-2">
-                                <div class="p-2 bg-green-500/10 rounded-lg text-green-500">
+                                <div class="p-2 bg-muted text-text-secondary">
                                     <DollarSign class="w-5 h-5" />
                                 </div>
                                 <span>Support Tiers</span>
@@ -195,8 +212,8 @@ const handleSetPrimaryBank = async (id: string) => {
                         </div>
 
                         <div class="space-y-4">
-                            <div v-for="(tier, index) in form.tiers" :key="index" class="flex flex-col sm:flex-row gap-3 items-start p-4 bg-background rounded-xl border border-border">
-                                <button @click="removeTier(index)" class="lg:hidden block self-end sm:mt-6 text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+                            <div v-for="(tier, index) in form.tiers" :key="index" class="flex flex-col sm:flex-row gap-3 items-start p-4 bg-background border border-border">
+                                <button @click="removeTier(index)" class="lg:hidden block self-end sm:mt-6 text-error hover:bg-error-muted p-2 transition-colors">
                                     ✕
                                 </button>
                                 <div class="flex gap-3 w-full sm:contents">
@@ -213,7 +230,7 @@ const handleSetPrimaryBank = async (id: string) => {
                                     <label class="text-xs text-text-secondary mb-1 block">Label</label>
                                     <Input v-model="tier.label" placeholder="e.g. Coffee" />
                                 </div>
-                                <button @click="removeTier(index)" class="lg:block hidden self-end sm:mt-6 text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+                                <button @click="removeTier(index)" class="lg:block hidden self-end sm:mt-6 text-error hover:bg-error-muted p-2 transition-colors">
                                     ✕
                                 </button>
                             </div>
@@ -224,10 +241,10 @@ const handleSetPrimaryBank = async (id: string) => {
                         </div>
                     </div>
 
-                    <div class="bg-surface border border-primary/20 rounded-2xl p-3 lg:p-6 shadow-sm">
+                    <div class="bg-surface border border-primary/20 p-3 lg:p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-xl font-bold flex items-center gap-2">
-                                <div class="p-2 bg-purple-500/10 rounded-lg text-purple-500">
+                                <div class="p-2 bg-muted text-text-secondary">
                                     <LinkIcon class="w-5 h-5" />
                                 </div>
                                 <span>Social Links</span>
@@ -239,8 +256,8 @@ const handleSetPrimaryBank = async (id: string) => {
                         </div>
 
                         <div class="space-y-4">
-                            <div v-for="(link, index) in form.socialLinks" :key="index" class="flex flex-col sm:flex-row gap-3 items-start p-4 bg-background rounded-xl border border-border">
-                                <button @click="removeSocial(index)" class="lg:hidden block self-end sm:self-center text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+                            <div v-for="(link, index) in form.socialLinks" :key="index" class="flex flex-col sm:flex-row gap-3 items-start p-4 bg-background border border-border">
+                                <button @click="removeSocial(index)" class="lg:hidden block self-end sm:self-center text-error hover:bg-error-muted p-2 transition-colors">
                                     ✕
                                 </button>
                                 <div class="w-full sm:w-48">
@@ -249,7 +266,7 @@ const handleSetPrimaryBank = async (id: string) => {
                                 <div class="flex-1 w-full">
                                     <Input v-model="link.url" placeholder="https://..." />
                                 </div>
-                                <button @click="removeSocial(index)" class="lg:block hidden self-end sm:self-center text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+                                <button @click="removeSocial(index)" class="lg:block hidden self-end sm:self-center text-error hover:bg-error-muted p-2 transition-colors">
                                     ✕
                                 </button>
                             </div>
@@ -261,10 +278,10 @@ const handleSetPrimaryBank = async (id: string) => {
                     </div>
 
                     <!-- Bank Details -->
-                    <div class="bg-surface border border-primary/20 rounded-2xl p-3 lg:p-6 shadow-sm">
+                    <div class="bg-surface border border-primary/20 p-3 lg:p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-xl font-bold flex items-center gap-2">
-                                <div class="p-2 bg-pink-500/10 rounded-lg text-pink-500">
+                                <div class="p-2 bg-muted text-text-secondary">
                                     <CreditCard class="w-5 h-5" />
                                 </div>
                                 <span>Payout Methods</span>
@@ -277,23 +294,23 @@ const handleSetPrimaryBank = async (id: string) => {
 
                         <div class="space-y-4">
                             <div v-if="bankLoading" class="space-y-3">
-                                <Skeleton class="h-16 w-full rounded-xl" />
-                                <Skeleton class="h-16 w-full rounded-xl" />
+                                <Skeleton class="h-16 w-full" />
+                                <Skeleton class="h-16 w-full" />
                             </div>
 
                             <template v-else>
                                 <div v-for="account in bankAccounts" :key="account.id"
-                                    class="flex flex-col sm:flex-row gap-4 items-center justify-between p-3 md:p-4 bg-background rounded-xl border transition-all"
+                                    class="flex flex-col sm:flex-row gap-4 items-center justify-between p-3 md:p-4 bg-background border transition-all"
                                     :class="account.isPrimary ? 'border-primary/50 bg-primary/5' : 'border-border'"
                                 >
                                     <div class="flex items-start md:items-center gap-4 w-full sm:w-auto">
-                                        <div class="p-2 md:p-3 bg-surface rounded-lg border border-white/5">
+                                        <div class="p-2 md:p-3 bg-surface border border-border">
                                             <CreditCard class="size-4 md:size-6 text-text-secondary" />
                                         </div>
                                         <div>
                                             <div class="font-bold flex items-center gap-2">
                                                 <p class="text-sm md:text-base">{{ account.bankName }}</p>
-                                                <span v-if="account.isPrimary" class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+                                                <span v-if="account.isPrimary" class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
                                                     Primary
                                                 </span>
                                             </div>
@@ -306,7 +323,7 @@ const handleSetPrimaryBank = async (id: string) => {
                                         <Button v-if="!account.isPrimary" @click="handleSetPrimaryBank(account.id)" variant="ghost" size="sm" class="text-xs text-primary">
                                             Make Primary
                                         </Button>
-                                        <button @click="handleDeleteBank(account.id)" class="text-text-secondary hover:text-red-500 p-2 rounded-lg transition-colors">
+                                        <button @click="handleDeleteBank(account.id)" class="text-text-secondary hover:text-error p-2 transition-colors">
                                             <Trash2 class="w-4 h-4" />
                                         </button>
                                     </div>
@@ -329,13 +346,13 @@ const handleSetPrimaryBank = async (id: string) => {
 
                 <div class="lg:col-span-1">
                     <div class="sticky top-24 space-y-6">
-                        <div class="bg-surface border border-white/5 rounded-2xl p-6 shadow-lg">
+                        <div class="bg-surface border border-border p-6 shadow-lg">
                             <h3 class="font-bold mb-4 text-text-secondary uppercase text-xs tracking-wider">Live Preview</h3>
 
-                            <div class="bg-background rounded-xl overflow-hidden border border-border pb-4">
+                            <div class="bg-background overflow-hidden border border-border pb-4">
                                 <!-- Banner -->
                                 <div class="h-28 bg-gradient-to-r from-primary/80 to-accent/80 relative">
-                                    <div class="absolute inset-0 bg-black/10"></div>
+                                    <div class="absolute inset-0 bg-background/10"></div>
                                 </div>
                                 <div class="px-5 relative">
                                     <!-- Avatar -->
@@ -351,16 +368,16 @@ const handleSetPrimaryBank = async (id: string) => {
                                     </div>
 
                                     <!-- Support Section Preview -->
-                                    <div class="bg-surface border border-primary/20 rounded-xl p-4 shadow-sm">
+                                    <div class="bg-surface border border-primary/20 p-4 shadow-sm">
                                         <h5 class="font-bold text-sm mb-3 text-center">Support {{ form.displayName?.split(' ')[0] || 'User' }}</h5>
                                         <div class="grid grid-cols-3 gap-2 mb-3">
-                                            <div v-for="tier in form.tiers.slice(0, 3)" :key="tier.price" class="flex flex-col items-center justify-center p-2 rounded-lg border border-border bg-background hover:border-primary/50 text-center">
+                                            <div v-for="tier in form.tiers.slice(0, 3)" :key="tier.price" class="flex flex-col items-center justify-center p-2 border border-border bg-background hover:border-primary/50 text-center">
                                                 <span class="text-lg mb-1">{{ tier.emoji }}</span>
                                                 <span class="font-bold text-xs break-all px-0.5">{{ formatCurrency(tier.price) }}</span>
                                             </div>
                                         </div>
-                                        <div class="h-8 bg-background rounded-lg border border-border w-full mb-2"></div>
-                                        <div class="h-8 bg-primary rounded-lg w-full text-white flex items-center justify-center text-center">Support</div>
+                                        <div class="h-8 bg-background border border-border w-full mb-2"></div>
+                                        <div class="h-8 bg-primary w-full text-white flex items-center justify-center text-center">Support</div>
                                     </div>
                                 </div>
                             </div>

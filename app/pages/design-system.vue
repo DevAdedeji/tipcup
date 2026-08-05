@@ -156,9 +156,9 @@ const showToast = (type: 'success' | 'error' | 'warning' | 'info') => {
       <section class="space-y-4">
           <h2 class="text-2xl font-semibold border-b border-border pb-2">Tabs</h2>
           <Tabs v-model="activeTab" :items="['Account', 'Password', 'Settings']">
-              <TabPanel class="p-4 bg-surface rounded-lg border border-border mt-2">Account Content</TabPanel>
-              <TabPanel class="p-4 bg-surface rounded-lg border border-border mt-2">Password Content</TabPanel>
-              <TabPanel class="p-4 bg-surface rounded-lg border border-border mt-2">Settings Content</TabPanel>
+              <TabPanel class="p-4 bg-surface border border-border mt-2">Account Content</TabPanel>
+              <TabPanel class="p-4 bg-surface border border-border mt-2">Password Content</TabPanel>
+              <TabPanel class="p-4 bg-surface border border-border mt-2">Settings Content</TabPanel>
           </Tabs>
       </section>
 

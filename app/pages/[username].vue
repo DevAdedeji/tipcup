@@ -1,261 +1,363 @@
 <script setup lang="ts">
-import { useProfile, type PublicProfile } from '~/composables/useProfile'
 import { usePaymentFlow } from '~/composables/usePaymentFlow'
 import { useShare } from '~/composables/useShare'
 import { useSupport } from '~/composables/useSupport'
-import { ChevronRight, Share2, ChevronDown, ChevronUp } from 'lucide-vue-next'
+import { ChevronRight, Share2, ChevronDown, ChevronUp, ShieldCheck, Loader2 } from 'lucide-vue-next'
 import Skeleton from '~/components/ui/Skeleton.vue'
 import GoalProgress from '~/components/dashboard/GoalProgress.vue'
 import { formatCurrency } from '~/utils/format'
 import { getSocialIcon } from '~/utils/socials'
 
 const route = useRoute()
-const router = useRouter()
 const username = computed(() => route.params.username as string)
 
-const { fetchProfileByUsername, loading } = useProfile()
 const { checkPaymentCallback } = usePaymentFlow()
 const { shareUrl } = useShare()
-const { selectedTier, supportMessage, tipperEmail, handleSupport, processingPayment, verifyingPayment, tierLabel } = useSupport()
+const {
+    selectedTier,
+    supportMessage,
+    tipperEmail,
+    handleSupport,
+    processingPayment,
+    verifyingPayment,
+    tierLabel,
+} = useSupport()
 
-const profile = ref<PublicProfile | null>(null)
+const {
+    data: profile,
+    pending: loading,
+    refresh: refreshProfile,
+} = await useAsyncData(
+    `profile-${username.value}`,
+    () =>
+        $fetch<any>(`/api/profile/${encodeURIComponent(username.value)}`).catch(() => null),
+    { watch: [username], default: () => null }
+)
+
 const toast = useToast()
+const { user } = useAuth()
 
 const isBioExpanded = ref(false)
-const BIO_LIMIT = 150
+const BIO_LIMIT = 180
 
 const displayBio = computed(() => {
     if (!profile.value?.bio) return ''
     if (isBioExpanded.value || profile.value.bio.length <= BIO_LIMIT) return profile.value.bio
-    return profile.value.bio.slice(0, BIO_LIMIT) + '...'
+    return profile.value.bio.slice(0, BIO_LIMIT).trimEnd() + '…'
 })
 
-const showReadMore = computed(() => {
-    return profile.value?.bio && profile.value.bio.length > BIO_LIMIT
-})
+const showReadMore = computed(() => (profile.value?.bio?.length || 0) > BIO_LIMIT)
+
+const firstName = computed(() => profile.value?.displayName?.split(' ')[0] || 'this creator')
 
 onMounted(async () => {
-    loading.value = true
-
-    // Fetch profile
-    if (username.value) {
-        profile.value = await fetchProfileByUsername(username.value)
-    } else {
-        loading.value = false
+    if (profile.value) {
+        $fetch('/api/profile/view', {
+            method: 'POST',
+            body: { username: username.value },
+        }).catch(() => {})
     }
 
-    // Check for payment callback and handle it
     const callbackResult = await checkPaymentCallback()
+
     if (callbackResult?.status === 'success') {
-         toast.add({ title: 'Thank You!', description: `Successfully supported ${profile.value?.displayName || 'creator'}!`, type: 'success' })
-         // Refetch profile to update goal progress
-        if (username.value) {
-            const updatedProfile = await fetchProfileByUsername(username.value)
-            if (updatedProfile) profile.value = updatedProfile
-        }
+        toast.add({
+            title: 'Thank you!',
+            description: `Your support for ${profile.value?.displayName || 'this creator'} is on its way.`,
+            type: 'success',
+        })
+
+        await refreshProfile()
     }
 })
 
-const pageTitle = computed(() => loading.value ? 'Loading...' : profile.value ? `${profile.value.displayName} (@${profile.value.username})` : 'Profile Not Found')
+const pageTitle = computed(() =>
+    profile.value
+        ? `${profile.value.displayName} (@${profile.value.username})`
+        : loading.value
+          ? 'Loading…'
+          : 'Profile not found'
+)
+
+const pageDescription = computed(() => {
+    if (!profile.value) return 'Support creators on TipCup.'
+    const name = profile.value.displayName
+    return profile.value.bio?.trim()
+        ? `${profile.value.bio.trim().slice(0, 155)}`
+        : `Support ${name} on TipCup.`
+})
 
 usePageMeta({
-    title: pageTitle
+    title: pageTitle,
+    description: pageDescription,
+    image: computed(() => profile.value?.avatarUrl || undefined),
+    type: 'profile',
 })
 
-const activeTab = ref('home')
+const activeTab = ref<'home' | 'socials'>('home')
 const tabs = [
-    { id: 'home', label: 'Home' },
-    { id: 'socials', label: 'Socials' },
+    { id: 'home' as const, label: 'Support' },
+    { id: 'socials' as const, label: 'Links' },
 ]
 
-const { user } = useAuth()
-
 const onSupportClick = () => {
-    if (profile.value) {
-        handleSupport(profile.value)
-    }
+    if (profile.value) handleSupport(profile.value)
 }
+
+const tierColumns = computed(() => Math.min(profile.value?.tiers?.length || 1, 3))
+
+const hasRightDivider = (index: number) => (index + 1) % tierColumns.value !== 0
 </script>
 
 <template>
-    <div class="min-h-screen bg-background text-text-primary pb-20">
-        <div v-if="loading" class="animate-fade-in-up">
-             <div class="h-48 md:h-64 bg-white/5 animate-pulse relative"></div>
+    <div class="min-h-[100dvh] bg-background pb-24 text-text-primary">
+        <div v-if="loading">
+            <div class="h-40 bg-muted md:h-52" />
 
-             <div class="max-w-4xl mx-auto px-4 sm:px-6 relative">
-                 <div class="-mt-20 mb-6 flex flex-col items-center sm:items-start sm:flex-row sm:gap-6">
-                    <Skeleton class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-background" />
-
-                    <div class="mt-4 sm:mt-24 text-center sm:text-left flex-1 w-full flex flex-col items-center sm:items-start">
-                        <Skeleton class="h-8 w-48 mb-2" />
-                        <Skeleton class="h-4 w-32 mb-4" />
-                        <div class="space-y-2 w-full max-w-lg">
-                            <Skeleton class="h-3 w-full" />
-                            <Skeleton class="h-3 w-2/3" />
-                        </div>
+            <div class="mx-auto max-w-3xl px-4 sm:px-6">
+                <div class="-mt-14 flex flex-col items-center sm:flex-row sm:items-end sm:gap-5">
+                    <Skeleton class="h-28 w-28 ring-4 ring-background" />
+                    <div class="mt-4 flex w-full flex-1 flex-col items-center gap-2 sm:mt-0 sm:items-start sm:pb-2">
+                        <Skeleton class="h-7 w-44" />
+                        <Skeleton class="h-4 w-28" />
                     </div>
+                </div>
 
-                    <!-- Actions Skeleton -->
-                    <div class="mt-6 sm:mt-24 flex gap-3">
-                        <Skeleton class="h-9 w-24" />
-                    </div>
-                 </div>
+                <div class="mt-6 space-y-2">
+                    <Skeleton class="h-3.5 w-full" />
+                    <Skeleton class="h-3.5 w-2/3" />
+                </div>
 
-                 <div class="flex border-b border-border mb-8 gap-6">
-                     <Skeleton class="h-10 w-20" />
-                     <Skeleton class="h-10 w-20" />
-                 </div>
-
-                 <div class="grid md:grid-cols-3 gap-8">
-                     <div class="md:col-span-2 space-y-6">
-                        <Skeleton class="h-32 w-full rounded-2xl" />
-                     </div>
-                     <div class="md:col-span-1">
-                        <Skeleton class="h-64 w-full rounded-2xl" />
-                     </div>
-                 </div>
-             </div>
+                <Skeleton class="mt-8 h-11 w-full" />
+                <Skeleton class="mt-6 h-72 w-full" />
+            </div>
         </div>
 
-        <div v-else-if="!profile && !loading" class="flex flex-col items-center justify-center min-h-screen text-center px-4">
-             <div class="h-[50vh] flex flex-col items-center justify-center">
-                <div class="text-6xl mb-4">😕</div>
-                <h1 class="text-3xl font-bold mb-2">Profile not found</h1>
-                <p class="text-text-secondary mb-6">The user @{{ username }} does not exist.</p>
-                <Button to="/" variant="outline">Go Home</Button>
-             </div>
+        <div v-else-if="!profile" class="flex min-h-[100dvh] flex-col items-center justify-center px-4 text-center">
+            <div class="mb-5 flex h-14 w-14 items-center justify-center bg-muted text-2xl">
+                🔍
+            </div>
+            <h1 class="font-display text-2xl font-semibold tracking-tight">Nothing here</h1>
+            <p class="mt-2 max-w-sm text-md text-text-secondary">
+                We couldn't find a creator at <span class="font-medium text-text-primary">@{{ username }}</span>.
+            </p>
+            <Button to="/" variant="outline" class="mt-6">Go to TipCup</Button>
         </div>
 
-        <div v-else-if="profile" class="animate-fade-in-up">
-            <div class="h-48 md:h-64 bg-gradient-to-r from-primary/80 to-accent/80 relative group">
-                <div class="absolute inset-0 bg-black/10"></div>
-
-                 <!-- Share Button -->
-                 <div class="absolute top-4 right-4 md:bottom-6 md:top-auto md:right-8 z-10">
-                    <Button
-                        @click="shareUrl()"
-                        variant="secondary"
-                        size="md"
-                    >
-                        <Share2 class="w-4 h-4 mr-2" />
-                        Share Page
-                    </Button>
+        <div v-else class="animate-fade-in">
+            <div class="border-b border-border bg-surface-sunken">
+                <div class="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+                    <NuxtLink to="/" class="font-mono text-2xs font-semibold uppercase tracking-label text-text-secondary">
+                        TipCup
+                    </NuxtLink>
+                    <div class="flex items-center gap-2">
+                        <ThemeToggle />
+                        <Button variant="outline" size="sm" @click="shareUrl()">
+                            <template #prefix><Share2 class="h-3 w-3" /></template>
+                            Share
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 relative">
-                 <div class="-mt-20 mb-6 flex flex-col items-center sm:items-start sm:flex-row sm:gap-6">
-                    <Avatar :src="profile?.avatarUrl" size="xl" class="w-32 h-32 md:w-40 md:h-40 border-4 border-background shadow-xl" />
+            <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+                <header class="flex items-start gap-4">
+                    <Avatar
+                        :src="profile.avatarUrl"
+                        :alt="profile.displayName"
+                        size="2xl"
+                        class="h-20 w-20 shrink-0 sm:h-24 sm:w-24"
+                    />
 
-                    <div class="mt-4 sm:mt-24 text-center sm:text-left flex-1 max-w-2xl">
-                        <h1 class="text-3xl font-bold tracking-tight">{{ profile?.displayName }}</h1>
-                        <p class="text-text-secondary font-medium">@{{ profile?.username }}</p>
-
-                        <div v-if="profile?.bio" class="mt-4 text-text-secondary leading-relaxed relative">
-                             <p :class="{'line-clamp-3': !isBioExpanded && !showReadMore}">
-                                {{ displayBio }}
-                             </p>
-                             <button
-                                v-if="showReadMore"
-                                @click="isBioExpanded = !isBioExpanded"
-                                class="text-primary text-sm font-medium hover:underline mt-1 flex items-center gap-1 mx-auto sm:mx-0"
-                            >
-                                {{ isBioExpanded ? 'Read Less' : 'Read More' }}
-                                <component :is="isBioExpanded ? ChevronUp : ChevronDown" class="w-3 h-3" />
-                             </button>
-                        </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="field-label">Creator</p>
+                        <h1 class="mt-1 font-display text-3xl font-bold leading-none tracking-tight text-text-primary">
+                            {{ profile.displayName }}
+                        </h1>
+                        <p class="tabular mt-1.5 text-sm text-text-tertiary">@{{ profile.username }}</p>
                     </div>
-                 </div>
+                </header>
 
-                 <div class="flex border-b border-border mb-8 overflow-x-auto">
+                <p
+                    v-if="profile.bio"
+                    class="mt-5 max-w-xl text-md leading-relaxed text-text-secondary"
+                >
+                    {{ displayBio }}
+                    <button
+                        v-if="showReadMore"
+                        class="ml-1 inline-flex items-center gap-0.5 font-medium text-accent hover:underline"
+                        @click="isBioExpanded = !isBioExpanded"
+                    >
+                        {{ isBioExpanded ? 'less' : 'more' }}
+                        <component :is="isBioExpanded ? ChevronUp : ChevronDown" class="h-3 w-3" />
+                    </button>
+                </p>
+
+                <nav class="mt-7 flex border-b border-border">
                     <button
                         v-for="tab in tabs"
                         :key="tab.id"
-                        @click="activeTab = tab.id"
-                        class="px-6 py-4 font-medium text-sm transition-colors border-b-2 whitespace-nowrap"
-                        :class="[
+                        class="-mb-px border-b-2 px-4 py-2.5 font-mono text-2xs font-semibold uppercase tracking-label transition-colors duration-150"
+                        :class="
                             activeTab === tab.id
-                            ? 'border-primary text-primary'
-                            : 'border-transparent text-text-secondary hover:text-text-primary'
-                        ]"
+                                ? 'border-accent text-text-primary'
+                                : 'border-transparent text-text-tertiary hover:text-text-primary'
+                        "
+                        @click="activeTab = tab.id"
                     >
                         {{ tab.label }}
                     </button>
-                 </div>
+                </nav>
 
-                 <div v-if="activeTab === 'home'" class="max-w-lg mx-auto space-y-2">
-                    <div v-if="profile?.fundraisingGoal" class="w-full">
-                         <GoalProgress :goal="profile.fundraisingGoal" />
+                <div v-if="activeTab === 'home'" class="mt-6 space-y-4">
+                    <GoalProgress v-if="profile.fundraisingGoal" :goal="profile.fundraisingGoal" />
+
+                    <div
+                        v-if="verifyingPayment"
+                        class="flex items-center justify-center gap-2.5 border border-accent/25 bg-accent-muted p-3.5"
+                    >
+                        <Loader2 class="h-4 w-4 animate-spin text-accent" />
+                        <span class="text-sm font-medium text-accent">Confirming your payment…</span>
                     </div>
 
-                    <!-- Verification Loader -->
-                    <div v-if="verifyingPayment" class="p-4 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center gap-3 animate-pulse mb-6">
-                        <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        <span class="text-primary font-medium">Verifying your payment...</span>
+                    <div class="slip slip-torn">
+                        <div class="flex items-start justify-between gap-3 border-b border-border px-5 py-3.5">
+                            <div>
+                                <p class="field-label">Pay to</p>
+                                <p class="mt-1 font-semibold tracking-tight text-text-primary">
+                                    {{ profile.displayName }}
+                                </p>
+                            </div>
+                            <span class="stamp shrink-0 text-accent">TipCup</span>
+                        </div>
+
+                        <div class="space-y-5 px-5 py-5">
+                            <div>
+                                <p class="field-label mb-2">Select amount</p>
+
+                                <div
+                                    v-if="profile.tiers?.length"
+                                    class="grid border border-border"
+                                    :style="{ gridTemplateColumns: `repeat(${tierColumns}, minmax(0, 1fr))` }"
+                                >
+                                    <button
+                                        v-for="(tier, i) in profile.tiers"
+                                        :key="tier.price"
+                                        class="flex flex-col items-center gap-1 px-2 py-3 transition-colors duration-150"
+                                        :class="[
+                                            hasRightDivider(i) ? 'border-r border-border' : '',
+                                            i >= tierColumns ? 'border-t border-border' : '',
+                                            selectedTier === tier
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-surface text-text-primary hover:bg-surface-hover',
+                                        ]"
+                                        :aria-pressed="selectedTier === tier"
+                                        @click="selectedTier = tier"
+                                    >
+                                        <span class="text-base leading-none">{{ tier.emoji || '☕' }}</span>
+                                        <span class="tabular text-sm font-semibold">
+                                            {{ formatCurrency(tier.price) }}
+                                        </span>
+                                        <span
+                                            v-if="tier.label"
+                                            class="line-clamp-1 font-mono text-2xs uppercase tracking-label"
+                                            :class="selectedTier === tier ? 'opacity-70' : 'text-text-tertiary'"
+                                        >
+                                            {{ tier.label }}
+                                        </span>
+                                    </button>
+                                </div>
+
+                                <p v-else class="border border-dashed border-border p-4 text-center text-sm text-text-secondary">
+                                    {{ firstName }} hasn't set up support tiers yet.
+                                </p>
+                            </div>
+
+                            <Textarea
+                                v-model="supportMessage"
+                                label="Message"
+                                :rows="2"
+                                :maxlength="200"
+                                placeholder="Say something nice (optional)"
+                            />
+
+                            <Input
+                                v-if="!user"
+                                v-model="tipperEmail"
+                                label="Email"
+                                type="email"
+                                autocomplete="email"
+                                placeholder="you@example.com"
+                                hint="For your receipt only."
+                            />
+
+                            <div class="rule-tear flex items-baseline justify-between pt-4">
+                                <span class="field-label">Total</span>
+                                <span class="tabular text-2xl font-semibold tracking-tight text-text-primary">
+                                    {{ selectedTier ? formatCurrency(selectedTier.price) : '—' }}
+                                </span>
+                            </div>
+
+                            <Button
+                                variant="primary"
+                                size="xl"
+                                block
+                                :loading="processingPayment"
+                                :disabled="processingPayment || verifyingPayment || !profile.tiers?.length"
+                                @click="onSupportClick"
+                            >
+                                {{ selectedTier ? `Send ${tierLabel}` : 'Choose an amount' }}
+                            </Button>
+
+                            <p class="flex items-center justify-center gap-1.5 font-mono text-2xs uppercase tracking-label text-text-tertiary">
+                                <ShieldCheck class="h-3 w-3" />
+                                Secured by Bachs
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else class="slip slip-torn mt-6">
+                    <div class="border-b border-border px-5 py-3.5">
+                        <p class="field-label">Find {{ firstName }} elsewhere</p>
                     </div>
 
-                    <div class="bg-surface border border-primary/20 rounded-2xl p-6 shadow-xl">
-                         <h3 class="font-bold text-xl mb-4 text-center">Support {{ profile?.displayName?.split(' ')[0] }}</h3>
-
-                         <!-- Tiers Grid -->
-                         <div class="grid grid-cols-3 gap-3 mb-6">
-                             <button
-                                 v-for="tier in profile?.tiers"
-                                 :key="tier.price"
-                                 @click="selectedTier = tier"
-                                 class="flex flex-col items-center justify-center p-3 rounded-xl border transition-all"
-                                 :class="[
-                                     selectedTier === tier
-                                     ? 'border-primary bg-primary/10 text-primary scale-105 shadow-[0_0_15px_rgba(255,107,53,0.2)]'
-                                     : 'border-border bg-background hover:border-primary/50'
-                                 ]"
-                             >
-                                 <span class="text-2xl mb-1">{{ tier.emoji || '☕' }}</span>
-                                 <span class="font-bold text-sm break-all px-1 text-center">{{ formatCurrency(tier.price) }}</span>
-                             </button>
-                         </div>
-
-                         <div class="space-y-4">
-                             <Input v-model="supportMessage" placeholder="Say something nice..." class="bg-background" />
-                             <!-- Email Input -->
-                             <Input v-if="!user" v-model="tipperEmail" type="email" placeholder="Your Email (for receipt)" class="bg-background" />
-
-                             <Button :loading="processingPayment" :disabled="processingPayment || verifyingPayment" @click="onSupportClick" size="lg" class="w-full font-bold shadow-lg shadow-primary/20">
-                                 Support {{ tierLabel }}
-                             </Button>
-                             <p class="text-xs text-center text-text-secondary">
-                                 Secured by Flutterwave
-                             </p>
-                         </div>
-                    </div>
-                 </div>
-
-                 <div v-else-if="activeTab === 'socials'" class="max-w-md mx-auto space-y-4">
-                     <!-- Socials Content -->
-                    <div v-if="profile?.socialLinks && profile.socialLinks.length > 0" class="space-y-3">
+                    <div v-if="profile.socialLinks?.length" class="px-5 py-2">
                         <a
                             v-for="link in profile.socialLinks"
                             :key="link.url"
                             :href="link.url"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="bg-surface hover:bg-surface-hover border border-primary/20 rounded-xl py-4 px-6 font-medium transition-all hover:-translate-y-1 flex items-center justify-between group shadow-sm"
+                            class="group flex items-baseline gap-2 border-b border-border py-3 last:border-b-0"
                         >
-                            <span class="flex items-center gap-4">
-                                <div class="p-2 bg-primary/10 rounded-full text-primary group-hover:scale-110 transition-transform">
-                                    <component :is="getSocialIcon(link.platform)" class="w-5 h-5" />
-                                </div>
-                                <span class="text-lg">{{ link.platform }}</span>
+                            <component
+                                :is="getSocialIcon(link.platform)"
+                                class="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-text-tertiary group-hover:text-accent"
+                            />
+                            <span class="font-mono text-xs uppercase tracking-label group-hover:text-accent">
+                                {{ link.platform }}
                             </span>
-                            <ChevronRight class="w-5 h-5 text-text-secondary" />
+                            <span class="min-w-4 flex-1 -translate-y-1 border-b border-dotted border-border" />
+                            <ChevronRight
+                                class="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-text-tertiary transition-transform group-hover:translate-x-0.5 group-hover:text-accent"
+                            />
                         </a>
                     </div>
-                    <!-- Empty State for Socials -->
-                    <div v-else class="text-center py-12 bg-surface/50 rounded-2xl border border-dashed border-border">
-                        <div class="text-4xl mb-3 opacity-50">📭</div>
-                        <p class="text-text-secondary">No social links added yet.</p>
-                    </div>
-                 </div>
+
+                    <p v-else class="px-5 py-10 text-center font-mono text-xs uppercase tracking-label text-text-tertiary">
+                        No links on file
+                    </p>
+                </div>
+
+                <footer class="mt-10 text-center">
+                    <NuxtLink
+                        to="/"
+                        class="text-2xs text-text-tertiary transition-colors hover:text-text-secondary"
+                    >
+                        Powered by TipCup
+                    </NuxtLink>
+                </footer>
             </div>
         </div>
     </div>
