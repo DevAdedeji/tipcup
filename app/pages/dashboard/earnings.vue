@@ -138,7 +138,15 @@ onMounted(() => {
                     </template>
 
                     <template #amount="{ row }">
-                        <span class="amount font-bold text-success">+{{ formatCurrency(row.amount) }}</span>
+                        <div class="min-w-0">
+                            <span class="amount font-bold text-success">
+                                +{{ formatCurrency(row.amount) }}
+                            </span>
+                            <p v-if="row.processingFee > 0" class="amount text-2xs text-text-tertiary">
+                                {{ formatCurrency(row.grossAmount || row.amount) }} less
+                                {{ formatCurrency(row.processingFee) }} fee
+                            </p>
+                        </div>
                     </template>
 
                     <template #message="{ row }">

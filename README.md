@@ -63,7 +63,8 @@ Three things about the Bachs API shape the integration:
 - **Your organization must hold an NGN balance.** Until it does, every NGN checkout fails with `BASE_CURRENCY_NOT_HELD_BY_ORG`. Enable NGN under balance currencies in the Bachs dashboard before testing payments — this is the first thing to check if checkouts fail.
 - **Minimum tip is ₦1,000.** Bachs rejects NGN checkouts below this. Enforced in the tier editors, in the API handler, and in `server/utils/bachs.ts`.
 - **NGN card payments are in beta at Bachs.** NGN collection is primarily bank transfer; cards are priced in USD. Confirm beta access before relying on card tips.
-- **Fees:** collection 1.5% capped at ₦2,000 for bank transfer; withdrawals a flat ₦100. NGN balances settle immediately.
+- **Fees:** collection 1.5% capped at ₦2,000 for bank transfer (2% for local cards); withdrawals a flat ₦100. NGN balances settle immediately.
+- **Who pays the fee** is a Bachs org setting, not a code setting. This project runs `fee_preference: org_pays`, so a supporter is charged exactly the tier amount and the creator is credited the settlement amount. Change it with `PUT /v1/organizations/checkout/settings`. It is set per environment — sandbox and live are configured separately.
 
 ### Where the live API differs from its OpenAPI spec
 
@@ -146,9 +147,15 @@ Public profiles are read server-side through `server/api/profile/[username].get.
 
 ## Design system
 
-Colours are HSL triplets defined once in `app/assets/css/main.css` and mapped in `tailwind.config.js` as `hsl(var(--token) / <alpha-value>)`. Dark mode is a single `.dark` class on `<html>`; no component knows which theme is active.
+**Adire** — Yoruba indigo resist-dye cloth. Deep indigo on undyed cotton, with the resist geometry drawn in CSS and used structurally: header bands, goal-bar fills, section markers.
 
-The palette is a cool neutral base with a single warm accent. `primary` is ink — the default action colour. `accent` is the TipCup orange, reserved for money moments: tip CTAs, goal progress, selected tiers.
+Colours are HSL triplets defined once in `app/assets/css/main.css` and mapped in `tailwind.config.js` as `hsl(var(--token) / <alpha-value>)`. Dark mode is a single `.dark` class on `<html>`; no component knows which theme is active. Type is Fraunces (display) over Karla (body); money uses the `.amount` class, which pins the sans face because the display serif has no naira glyph.
+
+### The cloth
+
+Every creator's page pattern is generated from their username — six resist motifs combined with a weave scale, chosen by hashing the name in `useAdire`. Deterministic, so the same name always produces the same cloth and SSR never disagrees with the client.
+
+Render it through `<AdireCloth :seed="username" />` rather than calling `useAdire` in a template. The motif classes live **outside** `@layer` in `main.css` on purpose: Tailwind only keeps layered rules whose class names appear literally in source, and these are composed by interpolation (`cloth-${n}`), so inside a layer they get purged and every cloth renders as a flat block.
 
 Use tokens (`bg-surface`, `text-text-secondary`, `border-border`, `bg-accent-muted`), never raw Tailwind colours — a `bg-white/5` is invisible on a light background and a `text-green-500` ignores the theme.
 

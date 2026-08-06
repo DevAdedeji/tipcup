@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { ofetch } from 'ofetch'
 
 const SANDBOX_API_URL = 'https://sandbox-api.bachs.io/v1'
 const LIVE_API_URL = 'https://api.bachs.io/v1'
@@ -9,7 +10,7 @@ export const DEFAULT_CURRENCY = 'NGN'
 
 // 'gross' credits the full amount paid and TipCup absorbs the Bachs fee;
 // 'net' credits the settlement amount so the creator bears it.
-const creditBasis = () => (process.env.BACHS_CREDIT_BASIS === 'net' ? 'net' : 'gross')
+const creditBasis = () => (process.env.BACHS_CREDIT_BASIS === 'gross' ? 'gross' : 'net')
 
 const secretKey = () => {
     const key = process.env.BACHS_SECRET_KEY
@@ -35,14 +36,18 @@ export const fromDecimalString = (amount: string | number | null | undefined): n
     return Math.round(parsed * 100) / 100
 }
 
+// settlement_amount is what actually lands in the TipCup balance. Crediting
+// `amount` under customer_pays_fee credits the fee too, which TipCup never
+// received, so creator balances drift above the money backing them.
 export const creditableAmount = (data: {
     amount?: string | number
     settlement_amount?: string | number | null
 }): number => {
-    if (creditBasis() === 'net' && data.settlement_amount != null) {
-        return fromDecimalString(data.settlement_amount)
-    }
-    return fromDecimalString(data.amount)
+    if (creditBasis() === 'gross') return fromDecimalString(data.amount)
+
+    return data.settlement_amount != null
+        ? fromDecimalString(data.settlement_amount)
+        : fromDecimalString(data.amount)
 }
 
 interface BachsRequest {
@@ -63,7 +68,7 @@ const bachsFetch = async <T = any>(path: string, options: BachsRequest = {}): Pr
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey
 
     try {
-        return await $fetch<T>(`${apiUrl()}${path}`, { method, headers, body, query })
+        return await ofetch<T>(`${apiUrl()}${path}`, { method, headers, body, query })
     } catch (error: any) {
         const payload = error?.data ?? error?.response?._data
 
