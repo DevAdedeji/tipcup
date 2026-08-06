@@ -29,22 +29,25 @@ onMounted(async () => {
     listLoading.value = true
     try {
         const response: any = await fetchBanks()
-        if (response && response.status === 'success' && Array.isArray(response.data)) {
-            banks.value = response.data.map((b: any) => ({
-                label: b.name,
-                value: b.code
-            }))
-            const accessBank = banks.value.find((b: any) => b.value === '044' || b.label.toLowerCase().includes('access'))
-            if (accessBank) {
-                form.bankCode = accessBank.value
-                form.accountNumber = '0690000032'
-            }
+        if (response?.status === 'success' && Array.isArray(response.data)) {
+            banks.value = response.data.map((b: any) => ({ label: b.name, value: b.code }))
         }
     } catch (e) {
         console.error('Failed to load banks', e)
     } finally {
         listLoading.value = false
     }
+})
+
+const resetForm = () => {
+    form.bankCode = ''
+    form.accountNumber = ''
+    form.accountName = ''
+    error.value = ''
+}
+
+watch(() => props.isOpen, (open) => {
+    if (open) resetForm()
 })
 
 const resolveLoading = ref(false)
@@ -65,7 +68,10 @@ const handleResolve = async () => {
         }
     } catch (e: any) {
         console.error(e)
-        error.value = e.statusMessage || 'Could not verify account name'
+        error.value =
+            e.data?.statusMessage ||
+            e.statusMessage ||
+            'We could not verify that account. Check the number and bank.'
     } finally {
         resolveLoading.value = false
     }
@@ -97,16 +103,14 @@ const handleSubmit = async () => {
 
         if (success) {
             emit('success')
-            form.bankCode = ''
-            form.accountNumber = ''
-            form.accountName = ''
-             emit('close')
+            resetForm()
+            emit('close')
         } else {
             error.value = bankError.value || 'Failed to add account'
         }
-    } catch (e) {
+    } catch (e: any) {
         console.error(e)
-        error.value = 'An error occurred'
+        error.value = e.data?.statusMessage || e.statusMessage || 'Could not save that account.'
     } finally {
         loading.value = false
     }
