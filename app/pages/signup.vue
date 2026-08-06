@@ -87,11 +87,12 @@ const handleGoogle = async () => {
   googleLoading.value = true
   formError.value = ''
   try {
-    await signInWithGoogle()
     if (username.value.trim() && usernameAvailable.value) {
       claimUsername(username.value.trim().toLowerCase())
     }
-    navigateTo(userProfile.value ? '/dashboard' : '/onboarding')
+
+    const signedIn = await signInWithGoogle()
+    if (signedIn) navigateTo(userProfile.value ? '/dashboard' : '/onboarding')
   } catch (error: any) {
     formError.value = authErrorMessage(error)
   } finally {

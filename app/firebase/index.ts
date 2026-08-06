@@ -7,11 +7,8 @@ let app: FirebaseApp | undefined
 export let auth: Auth = undefined as unknown as Auth
 export let db: Firestore = undefined as unknown as Firestore
 
-/**
- * Called once from the client plugin. Config is passed in rather than read here
- * because useRuntimeConfig() needs a Nuxt context, and the first Firestore call
- * often happens inside a timer or async callback where there isn't one.
- */
+// Config is a parameter, not read here: useRuntimeConfig() needs a Nuxt
+// context, and the first Firestore call often comes from a timer.
 export const initFirebase = (config: FirebaseOptions): FirebaseApp => {
     if (app) return app
 

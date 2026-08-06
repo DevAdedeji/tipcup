@@ -1,10 +1,7 @@
 rules_version = '2';
 
-// Public reads (creator profiles, goals) go through the Admin SDK in
-// server/api/profile/*, which bypasses these rules. Nothing on the client
-// needs to read another user's document, so nothing is allowed to.
-//
-// Deploy: Firebase Console -> Firestore Database -> Rules -> paste -> Publish
+// Public profile reads go through the Admin SDK in server/api/profile/*,
+// which bypasses these rules. Deploy: Console -> Firestore -> Rules -> Publish.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -16,25 +13,19 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Money and analytics move only via the Admin SDK on verified webhooks.
+    // Server-only: moved by the Admin SDK on verified webhooks.
     function moneyFields() {
       return ['currentBalance', 'totalEarnings', 'supporterCount', 'views', 'analytics'];
     }
 
-    // Set once at signup, then frozen: the username is the public link and
-    // the seed for the page's cloth.
+    // Set at signup, then frozen.
     function immutableFields() {
       return moneyFields().concat(['uid', 'username']);
     }
 
     match /users/{userId} {
-      // Only the owner reads their own document. This previously allowed
-      // anyone to enumerate every creator and their currentBalance.
       allow read: if isOwner(userId);
 
-      // A creator edits their own profile, but money and identity fields are
-      // server-only: they move via the Admin SDK on verified Bachs webhooks.
-      // diff() is used so the rule holds even before a field exists.
       allow create: if isOwner(userId)
                     && !request.resource.data.keys().hasAny(moneyFields());
 
@@ -53,7 +44,6 @@ service cloud.firestore {
       }
     }
 
-    // Written only by the server after a verified Bachs webhook.
     match /payments/{paymentId} {
       allow read: if isSignedIn() && resource.data.toUserId == request.auth.uid;
       allow write: if false;
@@ -64,7 +54,6 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Webhook deduplication records. Server-only.
     match /webhook_events/{eventId} {
       allow read, write: if false;
     }

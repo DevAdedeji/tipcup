@@ -6,7 +6,6 @@ export const usePendingUsername = () => {
     const claimUsername = (username: string) => {
         pending.value = username
         if (import.meta.client) {
-            // Private browsing can refuse storage; the in-memory value still works.
             try {
                 sessionStorage.setItem(STORAGE_KEY, username)
             } catch {}

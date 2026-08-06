@@ -10,10 +10,6 @@ const RESERVED = [
     'tipcup', 'tip', 'cup', 'blog', 'news', 'status', 'bot',
 ]
 
-/**
- * Checks a username server-side so clients never need read access to the
- * users collection — that access previously exposed every creator's balance.
- */
 export default defineEventHandler(async (event) => {
     const username = String(getQuery(event).username || '').trim().toLowerCase()
 

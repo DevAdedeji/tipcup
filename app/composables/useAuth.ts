@@ -1,6 +1,8 @@
 import {
     GoogleAuthProvider,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     updateProfile,
@@ -9,7 +11,7 @@ import {
     type User
 } from 'firebase/auth'
 import { doc, getDoc, onSnapshot, type DocumentData } from 'firebase/firestore'
-import { auth, db } from '~/firebase'
+import { auth, db, isFirebaseReady } from '~/firebase'
 
 const AUTH_ERRORS: Record<string, string> = {
     'auth/invalid-email': 'That email address is not valid.',
@@ -25,7 +27,6 @@ const AUTH_ERRORS: Record<string, string> = {
     'auth/popup-blocked': 'Your browser blocked the sign-in popup.',
     'auth/missing-password': 'Enter your password.',
     'auth/invalid-login-credentials': 'Email or password is incorrect.',
-    // Enable the provider under Firebase Console -> Authentication -> Sign-in method.
     'auth/operation-not-allowed': 'This sign-in method is not enabled for this project.',
     'auth/unauthorized-domain': 'This domain is not authorised in your Firebase project.',
     'auth/invalid-api-key': 'Firebase is misconfigured — check your FIREBASE_* environment variables.',
@@ -37,8 +38,25 @@ const AUTH_ERRORS: Record<string, string> = {
 export const authErrorMessage = (error: any): string =>
     AUTH_ERRORS[error?.code] || error?.message || 'Something went wrong. Please try again.'
 
-export const useAuth = () => {
+// Popup failures the user can neither see nor fix: blockers, COOP headers,
+// in-app browsers, Safari storage rules. These fall back to redirect.
+const POPUP_UNAVAILABLE = new Set([
+    'auth/popup-blocked',
+    'auth/cancelled-popup-request',
+    'auth/operation-not-supported-in-this-environment',
+    'auth/web-storage-unsupported',
+    'auth/internal-error',
+])
 
+const assertReady = () => {
+    if (!isFirebaseReady()) {
+        throw new Error(
+            'Firebase has not initialised. Restart the dev server so Nuxt reloads your .env.'
+        )
+    }
+}
+
+export const useAuth = () => {
     const user = useState<User | null>('user', () => null)
     const userProfile = useState<DocumentData | null>('userProfile', () => null)
     const loading = useState<boolean>('authLoading', () => true)
@@ -47,6 +65,11 @@ export const useAuth = () => {
 
     const initAuth = () => {
         loading.value = true
+
+        getRedirectResult(auth).catch((error) => {
+            console.error('Redirect sign-in did not complete:', error?.code || error)
+        })
+
         onAuthStateChanged(auth, async (currentUser) => {
             user.value = currentUser
 
@@ -84,14 +107,24 @@ export const useAuth = () => {
     }
 
     const signInWithGoogle = async () => {
+        assertReady()
+
         const provider = new GoogleAuthProvider()
         provider.setCustomParameters({ prompt: 'select_account' })
 
-        const result = await signInWithPopup(auth, provider)
+        let result
+        try {
+            result = await signInWithPopup(auth, provider)
+        } catch (error: any) {
+            if (!POPUP_UNAVAILABLE.has(error?.code)) throw error
+
+            console.warn('Popup sign-in unavailable, falling back to redirect:', error?.code)
+            await signInWithRedirect(auth, provider)
+            return null
+        }
+
         user.value = result.user
 
-        // Sign-in already succeeded; a failed profile read must not undo it.
-        // The auth listener will populate the profile shortly either way.
         try {
             const docSnap = await getDoc(doc(db, 'users', result.user.uid))
             userProfile.value = docSnap.exists() ? docSnap.data() : null
@@ -103,6 +136,7 @@ export const useAuth = () => {
     }
 
     const signUpWithEmail = async (email: string, password: string, displayName?: string) => {
+        assertReady()
         const result = await createUserWithEmailAndPassword(auth, email.trim(), password)
 
         if (displayName?.trim()) {
@@ -115,6 +149,7 @@ export const useAuth = () => {
     }
 
     const signInWithEmail = async (email: string, password: string) => {
+        assertReady()
         const result = await signInWithEmailAndPassword(auth, email.trim(), password)
         user.value = result.user
         return result.user
@@ -122,31 +157,35 @@ export const useAuth = () => {
 
     const logout = async () => {
         try {
+            // Drop the profile listener first: once auth is gone the snapshot
+            // fails the security rules and throws a permission error.
+            unsubscribeProfile?.()
+            unsubscribeProfile = undefined
+
             await signOut(auth)
+
             user.value = null
             userProfile.value = null
-            navigateTo('/')
-            const toast = useToast()
-            toast.add({
+            loading.value = false
+
+            useToast().add({
                 title: 'Signed out',
-                description: 'You have been successfully signed out.',
+                description: 'See you soon.',
                 type: 'success'
             })
         } catch (error: any) {
             console.error('Error signing out:', error)
-            const toast = useToast()
-            toast.add({
+            useToast().add({
                 title: 'Sign out failed',
-                description: error.message || 'Could not sign out.',
+                description: authErrorMessage(error),
                 type: 'error'
             })
+            return
         }
+
+        await navigateTo('/', { replace: true })
     }
 
-    /**
-     * Fresh ID token for calls to money-moving endpoints, which identify the
-     * caller from the token rather than from the request body.
-     */
     const getIdToken = async (): Promise<string> => {
         const current = auth.currentUser
         if (!current) {

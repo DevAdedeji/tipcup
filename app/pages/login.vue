@@ -34,8 +34,8 @@ const handleGoogle = async () => {
   googleLoading.value = true
   formError.value = ''
   try {
-    await signInWithGoogle()
-    routeAfterAuth()
+    const signedIn = await signInWithGoogle()
+    if (signedIn) routeAfterAuth()
   } catch (error: any) {
     formError.value = authErrorMessage(error)
   } finally {

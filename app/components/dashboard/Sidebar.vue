@@ -34,13 +34,13 @@ watch(() => route.path, () => { isOpen.value = false })
 <template>
     <div>
         <button
+            v-if="!isOpen"
             class="fixed left-4 top-3.5 z-50 flex h-9 w-9 items-center justify-center border border-border bg-surface text-text-secondary shadow-sm transition-colors hover:text-text-primary md:hidden"
-            :aria-label="isOpen ? 'Close menu' : 'Open menu'"
+            aria-label="Open menu"
             :aria-expanded="isOpen"
-            @click="isOpen = !isOpen"
+            @click="isOpen = true"
         >
-            <X v-if="isOpen" class="h-5 w-5" />
-            <Menu v-else class="h-5 w-5" />
+            <Menu class="h-5 w-5" />
         </button>
 
         <Transition
@@ -62,10 +62,18 @@ watch(() => route.path, () => { isOpen.value = false })
         >
             <AdireCloth :seed="userProfile?.username" class="h-1.5 w-full shrink-0" />
 
-            <div class="flex h-16 shrink-0 items-center border-b border-border px-5">
+            <div class="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border px-5">
                 <NuxtLink to="/dashboard" class="font-display text-xl font-semibold tracking-tight text-text-primary">
                     TipCup
                 </NuxtLink>
+
+                <button
+                    class="-mr-2 flex h-9 w-9 items-center justify-center text-text-tertiary transition-colors hover:text-text-primary md:hidden"
+                    aria-label="Close menu"
+                    @click="isOpen = false"
+                >
+                    <X class="h-5 w-5" />
+                </button>
             </div>
 
             <nav class="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-3">
