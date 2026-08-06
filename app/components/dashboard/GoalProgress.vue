@@ -7,6 +7,8 @@ const props = defineProps<{
     goal: Goal
 }>()
 
+const { userProfile } = useAuth()
+
 const percentage = computed(() => {
     if (!props.goal.targetAmount) return 0
     return Math.min(Math.round(((props.goal.currentAmount || 0) / props.goal.targetAmount) * 100), 100)
@@ -37,30 +39,29 @@ const isComplete = computed(() => percentage.value >= 100)
 
             <div class="space-y-2.5">
                 <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-                    <p class="tabular text-xl font-semibold tracking-tight text-text-primary">
+                    <p class="amount text-xl font-bold tracking-tight text-text-primary">
                         {{ formatCurrency(goal.currentAmount || 0) }}
                         <span class="text-sm font-normal text-text-tertiary">
                             of {{ formatCurrency(goal.targetAmount) }}
                         </span>
                     </p>
-                    <span
-                        class="tabular text-sm font-semibold text-accent"
-                    >
+                    <span class="amount text-sm font-bold text-accent">
                         {{ percentage }}%
                     </span>
                 </div>
 
                 <div
-                    class="h-2 w-full overflow-hidden bg-muted"
+                    class="h-3.5 w-full border border-border-strong bg-surface p-[2px]"
                     role="progressbar"
                     :aria-valuenow="percentage"
                     aria-valuemin="0"
                     aria-valuemax="100"
                     :aria-label="`${goal.title} progress`"
                 >
-                    <div
-                        class="h-full bg-accent transition-all duration-1000 ease-out"
+                    <AdireCloth
+                        :seed="userProfile?.username"
                         :style="{ width: `${percentage}%` }"
+                        class="h-full transition-all duration-700 ease-out"
                     />
                 </div>
             </div>

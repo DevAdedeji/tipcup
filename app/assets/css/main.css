@@ -2,101 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * TipCup — Adire
+ *
+ * Yoruba indigo resist-dye cloth. Deep indigo against undyed cotton, with the
+ * resist geometry drawn in CSS and used structurally rather than decoratively.
+ *
+ * Each creator's motif is derived from their username (see useAdire), so no
+ * two pages are woven the same way.
+ */
+
 @layer base {
   :root {
-    --background: 96 9% 93%;
-    --surface: 100 25% 98%;
-    --surface-hover: 96 12% 90%;
-    --surface-sunken: 96 10% 91%;
+    --background: 42 39% 88%;
+    --surface: 42 52% 94%;
+    --surface-hover: 41 36% 84%;
+    --surface-sunken: 41 34% 85%;
 
-    --border: 96 9% 77%;
-    --border-strong: 96 8% 62%;
-    --input: 96 9% 77%;
-    --ring: 16 71% 41%;
+    --border: 41 30% 78%;
+    --border-strong: 40 24% 66%;
+    --input: 41 30% 78%;
+    --ring: 35 61% 48%;
 
-    --text-primary: 96 12% 7%;
-    --text-secondary: 96 6% 38%;
-    --text-tertiary: 96 6% 52%;
+    --text-primary: 213 40% 13%;
+    --text-secondary: 213 18% 36%;
+    --text-tertiary: 210 14% 50%;
 
-    --primary: 96 12% 7%;
-    --primary-foreground: 100 25% 98%;
+    --primary: 213 60% 26%;
+    --primary-foreground: 42 52% 94%;
 
-    --secondary: 96 12% 90%;
-    --secondary-foreground: 96 12% 7%;
+    --secondary: 41 36% 84%;
+    --secondary-foreground: 213 40% 13%;
 
-    --accent: 16 71% 41%;
-    --accent-foreground: 100 25% 98%;
-    --accent-muted: 16 60% 93%;
+    --accent: 35 61% 48%;
+    --accent-foreground: 42 52% 94%;
+    --accent-muted: 38 55% 87%;
 
-    --muted: 96 10% 91%;
-    --muted-foreground: 96 6% 38%;
+    --muted: 41 34% 85%;
+    --muted-foreground: 213 18% 36%;
 
-    --success: 145 66% 27%;
-    --success-foreground: 100 25% 98%;
-    --success-muted: 145 40% 92%;
-    --warning: 35 84% 34%;
-    --warning-foreground: 100 25% 98%;
-    --warning-muted: 38 70% 92%;
-    --error: 6 68% 42%;
-    --error-foreground: 100 25% 98%;
-    --error-muted: 6 60% 94%;
-    --info: 212 60% 36%;
-    --info-foreground: 100 25% 98%;
-    --info-muted: 212 50% 93%;
+    --success: 158 52% 27%;
+    --success-foreground: 42 52% 94%;
+    --success-muted: 150 30% 85%;
+    --warning: 35 70% 38%;
+    --warning-foreground: 42 52% 94%;
+    --warning-muted: 38 55% 86%;
+    --error: 6 58% 42%;
+    --error-foreground: 42 52% 94%;
+    --error-muted: 8 45% 88%;
+    --info: 213 60% 32%;
+    --info-foreground: 42 52% 94%;
+    --info-muted: 210 40% 87%;
 
-    --shadow-xs: 0 1px 0 0 hsl(96 9% 77% / 0.6);
-    --shadow-sm: 0 1px 0 0 hsl(96 9% 70% / 0.7);
-    --shadow-md: 2px 2px 0 0 hsl(96 9% 77% / 0.8);
-    --shadow-lg: 4px 4px 0 0 hsl(96 9% 74% / 0.9);
-    --shadow-xl: 6px 6px 0 0 hsl(96 10% 70% / 0.9);
+    /* Cloth is soft. Shadows are diffuse and warm, never crisp. */
+    --shadow-xs: 0 1px 2px 0 hsl(213 30% 20% / 0.06);
+    --shadow-sm: 0 1px 3px 0 hsl(213 30% 20% / 0.08), 0 1px 2px -1px hsl(213 30% 20% / 0.05);
+    --shadow-md: 0 6px 16px -6px hsl(213 30% 20% / 0.14);
+    --shadow-lg: 0 16px 34px -12px hsl(213 32% 18% / 0.22);
+    --shadow-xl: 0 28px 56px -20px hsl(213 34% 16% / 0.3);
+
+    /* The two dye tones every motif is drawn with. */
+    --cloth-ink: 213 60% 26%;
+    --cloth-resist: 42 52% 94%;
   }
 
   .dark {
-    --background: 100 12% 5%;
-    --surface: 100 11% 8%;
-    --surface-hover: 100 9% 13%;
-    --surface-sunken: 100 12% 6%;
+    --background: 214 51% 10%;
+    --surface: 215 48% 13%;
+    --surface-hover: 214 40% 18%;
+    --surface-sunken: 214 50% 11%;
 
-    --border: 100 8% 18%;
-    --border-strong: 100 7% 30%;
-    --input: 100 8% 18%;
-    --ring: 18 78% 55%;
+    --border: 214 33% 22%;
+    --border-strong: 213 26% 34%;
+    --input: 214 33% 22%;
+    --ring: 35 71% 58%;
 
-    --text-primary: 90 15% 91%;
-    --text-secondary: 96 7% 62%;
-    --text-tertiary: 96 6% 46%;
+    --text-primary: 42 39% 88%;
+    --text-secondary: 40 16% 68%;
+    --text-tertiary: 40 12% 52%;
 
-    --primary: 90 15% 91%;
-    --primary-foreground: 100 12% 5%;
+    --primary: 42 39% 88%;
+    --primary-foreground: 214 51% 10%;
 
-    --secondary: 100 9% 14%;
-    --secondary-foreground: 90 15% 91%;
+    --secondary: 214 40% 18%;
+    --secondary-foreground: 42 39% 88%;
 
-    --accent: 18 78% 55%;
-    --accent-foreground: 100 12% 5%;
-    --accent-muted: 18 45% 14%;
+    --accent: 35 71% 58%;
+    --accent-foreground: 214 51% 10%;
+    --accent-muted: 35 40% 18%;
 
-    --muted: 100 9% 14%;
-    --muted-foreground: 96 7% 62%;
+    --muted: 214 40% 18%;
+    --muted-foreground: 40 16% 68%;
 
-    --success: 145 52% 45%;
-    --success-foreground: 100 12% 5%;
-    --success-muted: 145 40% 12%;
-    --warning: 38 80% 52%;
-    --warning-foreground: 100 12% 5%;
-    --warning-muted: 38 50% 13%;
-    --error: 6 70% 58%;
-    --error-foreground: 100 12% 5%;
-    --error-muted: 6 45% 14%;
-    --info: 212 70% 58%;
-    --info-foreground: 100 12% 5%;
-    --info-muted: 212 45% 14%;
+    --success: 158 45% 48%;
+    --success-foreground: 214 51% 10%;
+    --success-muted: 158 35% 16%;
+    --warning: 35 70% 56%;
+    --warning-foreground: 214 51% 10%;
+    --warning-muted: 35 40% 17%;
+    --error: 6 62% 60%;
+    --error-foreground: 214 51% 10%;
+    --error-muted: 6 40% 18%;
+    --info: 210 65% 62%;
+    --info-foreground: 214 51% 10%;
+    --info-muted: 210 40% 18%;
 
-    --shadow-xs: 0 1px 0 0 hsl(100 8% 18% / 0.9);
-    --shadow-sm: 0 1px 0 0 hsl(100 8% 20% / 1);
-    --shadow-md: 2px 2px 0 0 hsl(100 8% 16% / 1);
-    --shadow-lg: 4px 4px 0 0 hsl(100 8% 14% / 1);
-    --shadow-xl: 6px 6px 0 0 hsl(100 8% 12% / 1);
+    --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.4);
+    --shadow-md: 0 6px 16px -6px hsl(0 0% 0% / 0.5);
+    --shadow-lg: 0 16px 34px -12px hsl(0 0% 0% / 0.6);
+    --shadow-xl: 0 28px 56px -20px hsl(0 0% 0% / 0.7);
+
+    --cloth-ink: 213 55% 34%;
+    --cloth-resist: 42 39% 88%;
   }
 }
 
@@ -117,13 +135,23 @@
   }
 
   .tabular {
-    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum';
   }
 
+  /*
+   * Money. Pinned to the body sans because the display serif has no naira
+   * glyph — inheriting it made ₦ fall back to a different face mid-number.
+   */
+  .amount {
+    font-family: Karla, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+    letter-spacing: -0.01em;
+  }
+
   ::selection {
-    background-color: hsl(var(--accent) / 0.2);
+    background-color: hsl(var(--accent) / 0.28);
     color: hsl(var(--text-primary));
   }
 
@@ -138,106 +166,139 @@
 
   ::-webkit-scrollbar-thumb {
     background-color: hsl(var(--border-strong));
+    border-radius: 999px;
     border: 3px solid transparent;
     background-clip: content-box;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--text-tertiary));
   }
 }
 
 @layer components {
-  .slip {
-    position: relative;
-    background-color: hsl(var(--surface));
-    border: 1px solid hsl(var(--border));
-  }
-
-  .slip-torn::after {
-    content: '';
-    position: absolute;
-    left: -1px;
-    right: -1px;
-    bottom: -1px;
-    height: 5px;
-    background: repeating-linear-gradient(
+  /* A woven selvedge edge, used to close a panel. */
+  .selvedge {
+    background-image: repeating-linear-gradient(
       90deg,
-      hsl(var(--border)) 0 5px,
-      transparent 5px 10px
+      hsl(var(--border-strong)) 0 3px,
+      transparent 3px 8px
     );
-  }
-
-  .rule-tear {
-    border-top: 1px dashed hsl(var(--border));
-  }
-
-  .tear-rule {
-    height: 1px;
-    background-image: radial-gradient(
-      circle at center,
-      hsl(var(--border)) 0 1.4px,
-      transparent 1.6px
-    );
-    background-size: 9px 100%;
-    background-repeat: repeat-x;
-  }
-
-  .stamp {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.15rem 0.4rem;
-    border: 1.5px solid currentColor;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.625rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    transform: rotate(-6deg);
   }
 
   .field-label {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.625rem;
-    font-weight: 500;
-    letter-spacing: 0.16em;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
     color: hsl(var(--text-tertiary));
   }
 }
 
 @layer utilities {
-  @media (prefers-reduced-motion: reduce) {
-    .animate-fade-in-up,
-    .animate-fade-in,
-    .animate-scale-in,
-    .animate-print-in,
-    .animate-shimmer {
-      animation: none !important;
-    }
+  .animate-dye {
+    animation: dye 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
 
-    .stamp {
-      transform: none;
-    }
+  @keyframes dye {
+    from { transform: scaleX(0); transform-origin: left; }
+    to { transform: scaleX(1); transform-origin: left; }
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .stagger > * {
-    animation: print-in 0.32s steps(6, end) backwards;
+    animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
   }
 
-  .stagger > *:nth-child(1) { animation-delay: 0.03s; }
-  .stagger > *:nth-child(2) { animation-delay: 0.06s; }
-  .stagger > *:nth-child(3) { animation-delay: 0.09s; }
-  .stagger > *:nth-child(4) { animation-delay: 0.12s; }
-  .stagger > *:nth-child(5) { animation-delay: 0.15s; }
-  .stagger > *:nth-child(6) { animation-delay: 0.18s; }
-  .stagger > *:nth-child(7) { animation-delay: 0.21s; }
-  .stagger > *:nth-child(8) { animation-delay: 0.24s; }
+  .stagger > *:nth-child(1) { animation-delay: 0.04s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.09s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.14s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.19s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.24s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.29s; }
 
   @media (prefers-reduced-motion: reduce) {
-    .stagger > * {
-      animation: none;
+    .stagger > *,
+    .animate-dye,
+    .animate-fade-in,
+    .animate-rise {
+      animation: none !important;
     }
   }
 }
+
+/*
+ * The motifs live outside @layer because useAdire composes their class names by
+ * interpolation (`cloth-${n}`). Tailwind only keeps layered rules whose
+ * selectors appear literally in the source, so inside a layer these were
+ * purged and every cloth rendered as a flat indigo block.
+ */
+/*
+ * Six resist motifs. Each is pure CSS so it renders during SSR, costs no
+ * requests, and recolours with the theme. useAdire picks one per creator.
+ */
+.cloth {
+  --s: var(--cloth-scale, 34px);
+  background-color: hsl(var(--cloth-ink));
+  background-repeat: repeat;
+}
+
+/* Ẹ̀gún — dots on a grid, the most common resist stitch */
+.cloth-1 {
+  background-image:
+    radial-gradient(circle at 50% 50%, hsl(var(--cloth-resist)) 0 14%, transparent 15%),
+    radial-gradient(circle at 0 0, hsl(var(--cloth-resist)) 0 8%, transparent 9%),
+    radial-gradient(circle at 100% 100%, hsl(var(--cloth-resist)) 0 8%, transparent 9%);
+  background-size: var(--s) var(--s);
+}
+
+/* Òsùbà — concentric rings, tied around a stone */
+.cloth-2 {
+  background-image:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      hsl(var(--cloth-resist)) 0 8%,
+      transparent 9% 20%
+    );
+  background-size: var(--s) var(--s);
+}
+
+/* Lattice — crossed resist folds */
+.cloth-3 {
+  background-image:
+    repeating-linear-gradient(45deg, hsl(var(--cloth-resist)) 0 2px, transparent 2px 12px),
+    repeating-linear-gradient(-45deg, hsl(var(--cloth-resist)) 0 2px, transparent 2px 12px);
+  background-size: var(--s) var(--s);
+}
+
+/* Combs — the varied stripe of a folded and bound cloth */
+.cloth-4 {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      hsl(var(--cloth-resist)) 0 2px,
+      transparent 2px 7px,
+      hsl(var(--cloth-resist)) 7px 8px,
+      transparent 8px 18px
+    );
+  background-size: var(--s) 100%;
+}
+
+/* Diamonds */
+.cloth-5 {
+  background-image:
+    linear-gradient(45deg, hsl(var(--cloth-resist)) 25%, transparent 25% 75%, hsl(var(--cloth-resist)) 75%),
+    linear-gradient(45deg, hsl(var(--cloth-resist)) 25%, transparent 25% 75%, hsl(var(--cloth-resist)) 75%);
+  background-size: var(--s) var(--s);
+  background-position: 0 0, calc(var(--s) / 2) calc(var(--s) / 2);
+}
+
+/* Crosses */
+.cloth-6 {
+  background-image:
+    linear-gradient(hsl(var(--cloth-resist)) 0 2px, transparent 2px),
+    linear-gradient(90deg, hsl(var(--cloth-resist)) 0 2px, transparent 2px),
+    radial-gradient(circle at 50% 50%, hsl(var(--cloth-resist)) 0 10%, transparent 11%);
+  background-size: var(--s) var(--s);
+}
+

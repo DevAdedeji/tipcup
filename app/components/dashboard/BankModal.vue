@@ -119,12 +119,17 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-    <Modal :isOpen="isOpen" title="Add Bank Account" @close="$emit('close')">
-        <form @submit.prevent="handleSubmit" class="space-y-4">
+    <Modal
+        :isOpen="isOpen"
+        title="Add payout account"
+        description="Where your withdrawals will land."
+        @close="$emit('close')"
+    >
+        <form class="space-y-4" @submit.prevent="handleSubmit">
             <Select
                 v-model="form.bankCode"
-                label="Bank Name"
-                placeholder="Select Bank"
+                label="Bank"
+                placeholder="Select a bank"
                 :options="banks"
                 :disabled="listLoading"
                 searchable
@@ -132,33 +137,36 @@ const handleSubmit = async () => {
 
             <Input
                 v-model="form.accountNumber"
-                label="Account Number"
-                placeholder="1234567890"
+                label="Account number"
+                inputmode="numeric"
                 maxlength="10"
+                placeholder="0123456789"
             />
 
-            <!-- Account Name Resolution -->
-            <div v-if="resolveLoading" class="text-sm text-text-secondary animate-pulse">
-                Verifying account...
+            <p v-if="resolveLoading" class="flex items-center gap-2 text-sm text-text-secondary">
+                <span class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+                Verifying account…
+            </p>
+
+            <div v-else-if="form.accountName" class="border border-success/30 bg-success-muted px-4 py-3">
+                <p class="field-label text-success">Account name</p>
+                <p class="mt-0.5 font-semibold text-success">{{ form.accountName }}</p>
             </div>
 
-            <div v-if="form.accountName" class="p-3 bg-success-muted border border-success/25">
-                <div class="text-xs text-success font-medium">Account Name</div>
-                <div class="font-bold text-success">{{ form.accountName }}</div>
-            </div>
-
-            <div v-if="error" class="text-error text-sm">
+            <p v-if="error" role="alert" class="border border-error/30 bg-error-muted px-3 py-2 text-sm text-error">
                 {{ error }}
-            </div>
-
-            <div class="flex justify-end gap-3 pt-4">
-                <Button type="button" variant="ghost" @click="$emit('close')">
-                    Cancel
-                </Button>
-                <Button type="submit" :loading="loading" :disabled="!form.accountName || resolveLoading">
-                    Save Account
-                </Button>
-            </div>
+            </p>
         </form>
+
+        <template #footer>
+            <Button variant="ghost" @click="$emit('close')">Cancel</Button>
+            <Button
+                :loading="loading"
+                :disabled="!form.accountName || resolveLoading"
+                @click="handleSubmit"
+            >
+                Save account
+            </Button>
+        </template>
     </Modal>
 </template>

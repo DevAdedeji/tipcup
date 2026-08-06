@@ -8,7 +8,7 @@ import BankModal from '~/components/dashboard/BankModal.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { useBankDetails } from '~/composables/useBankDetails'
-import { formatCurrency } from '~/utils/format'
+import { formatCurrency, MIN_WITHDRAWAL_AMOUNT } from '~/utils/format'
 
 const props = defineProps<{
     isOpen: boolean
@@ -28,7 +28,7 @@ const showBankModal = ref(false)
 const currentBalance = computed(() => userProfile.value?.currentBalance || 0)
 const validAmount = computed(() => {
     const val = typeof amount.value === 'string' ? parseFloat(amount.value) : amount.value
-    return (val || 0) >= 1000 && (val || 0) <= currentBalance.value
+    return (val || 0) >= MIN_WITHDRAWAL_AMOUNT && (val || 0) <= currentBalance.value
 })
 
 onMounted(() => {
@@ -88,68 +88,76 @@ const handleWithdraw = async () => {
 </script>
 
 <template>
-    <Modal :isOpen="isOpen" @close="$emit('close')" title="Withdraw Funds">
-        <div class="space-y-6">
-            <div class="bg-primary/10 text-center flex flex-col items-center justify-center p-4 border border-border">
-                <div class="text-sm text-text-secondary mb-1">Available Balance</div>
-                <div class="text-3xl font-bold text-primary">{{ formatCurrency(currentBalance) }}</div>
+    <Modal
+        :isOpen="isOpen"
+        title="Withdraw"
+        description="Money moves to your bank account."
+        @close="$emit('close')"
+    >
+        <div class="space-y-5">
+            <div class="border border-border bg-surface-sunken px-4 py-5 text-center">
+                <p class="field-label">Available balance</p>
+                <p class="amount mt-1 text-3xl font-bold tracking-tight">
+                    {{ formatCurrency(currentBalance) }}
+                </p>
             </div>
 
             <div>
-                <label class="block text-sm font-medium mb-2">Amount to Withdraw</label>
-                <div class="relative">
-                    <AmountInput
-                        v-model="amount"
-                        placeholder="0.00"
-                    />
-                </div>
-                <div class="flex justify-between mt-1 text-xs text-text-secondary">
-                    <span>Min: ₦1,000</span>
+                <AmountInput v-model="amount" label="Amount" :min="MIN_WITHDRAWAL_AMOUNT" />
+                <div class="mt-1.5 flex items-center justify-between text-xs">
+                    <span class="text-text-tertiary">
+                        Minimum {{ formatCurrency(MIN_WITHDRAWAL_AMOUNT) }}
+                    </span>
                     <button
+                        type="button"
+                        class="font-medium text-accent hover:underline"
                         @click="amount = currentBalance"
-                        class="text-primary hover:underline"
                     >
-                        Max: {{ formatCurrency(currentBalance) }}
+                        Use full balance
                     </button>
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-medium mb-2">Select Bank Account</label>
+                <label class="mb-1.5 block text-sm font-medium">Destination</label>
+
                 <Select
                     v-if="!banksLoading && accounts.length > 0"
                     v-model="selectedBankId"
                     :options="accounts.map(a => ({
                         value: a.id,
-                        label: `${a.bankName} - ${a.accountNumber} (${a.accountName})`
+                        label: `${a.bankName} — ${a.accountNumber}`
                     }))"
-                    placeholder="Select Bank"
+                    placeholder="Select an account"
                 />
-                <div v-else-if="banksLoading" class="text-sm text-text-secondary">Loading accounts...</div>
-                <div v-else class="flex items-center justify-between text-sm text-error bg-error-muted p-3 border border-error/25">
-                    <span>No bank accounts found.</span>
-                    <Button size="sm" variant="outline" class="text-xs h-8" @click="showBankModal = true">
-                        Add Bank
-                    </Button>
+
+                <p v-else-if="banksLoading" class="text-sm text-text-secondary">Loading accounts…</p>
+
+                <div
+                    v-else
+                    class="flex flex-wrap items-center justify-between gap-3 border border-error/30 bg-error-muted px-3 py-2.5 text-sm text-error"
+                >
+                    <span>No payout account yet.</span>
+                    <Button size="sm" variant="outline" @click="showBankModal = true">Add one</Button>
                 </div>
             </div>
 
-            <div class="pt-4 flex justify-end gap-3">
-                <Button variant="ghost" @click="$emit('close')">Cancel</Button>
-                <Button
-                    @click="handleWithdraw"
-                    :disabled="!validAmount || !selectedBankId || submitting"
-                    :loading="submitting"
-                >
-                    {{ submitting ? 'Processing...' : 'Withdraw Funds' }}
-                </Button>
-            </div>
+            <p class="text-xs text-text-tertiary">
+                A flat {{ formatCurrency(100) }} payout fee is deducted by Bachs.
+            </p>
         </div>
+
+        <template #footer>
+            <Button variant="ghost" @click="$emit('close')">Cancel</Button>
+            <Button
+                :disabled="!validAmount || !selectedBankId || submitting"
+                :loading="submitting"
+                @click="handleWithdraw"
+            >
+                Withdraw
+            </Button>
+        </template>
     </Modal>
 
-    <BankModal
-        :isOpen="showBankModal"
-        @close="showBankModal = false"
-        @success="handleBankAdded"
-    />
+    <BankModal :isOpen="showBankModal" @close="showBankModal = false" @success="handleBankAdded" />
 </template>

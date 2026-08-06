@@ -79,9 +79,9 @@ export default {
       },
 
       fontFamily: {
-        sans: ['IBM Plex Sans', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['IBM Plex Sans Condensed', 'IBM Plex Sans', 'ui-sans-serif', 'sans-serif'],
-        mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        sans: ['Karla', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'ui-serif', 'serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
 
       fontSize: {
@@ -100,15 +100,17 @@ export default {
         '7xl': ['4.5rem', { lineHeight: '1', letterSpacing: '-0.035em' }],
       },
 
+      // Cloth has soft edges, but a weave is orthogonal. Small radii read as
+      // crafted; anything larger reads as a generic app.
       borderRadius: {
         none: '0',
-        sm: '0',
-        DEFAULT: '0',
-        md: '0',
-        lg: '0',
-        xl: '0',
-        '2xl': '0',
-        '3xl': '0',
+        sm: '2px',
+        DEFAULT: '3px',
+        md: '3px',
+        lg: '4px',
+        xl: '6px',
+        '2xl': '8px',
+        '3xl': '10px',
         full: '9999px',
       },
 
@@ -129,16 +131,12 @@ export default {
           from: { opacity: '0' },
           to: { opacity: '1' },
         },
-        'print-in': {
-          from: { opacity: '0', transform: 'translateY(-6px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
-        },
-        'fade-in-up': {
-          from: { opacity: '0', transform: 'translateY(8px)' },
+        rise: {
+          from: { opacity: '0', transform: 'translateY(10px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
         'scale-in': {
-          from: { opacity: '0', transform: 'scale(0.98)' },
+          from: { opacity: '0', transform: 'scale(0.97)' },
           to: { opacity: '1', transform: 'scale(1)' },
         },
         shimmer: {
@@ -147,15 +145,15 @@ export default {
       },
 
       animation: {
-        'fade-in': 'fade-in 0.25s ease-out',
-        'print-in': 'print-in 0.32s steps(6, end)',
-        'fade-in-up': 'fade-in-up 0.3s steps(6, end)',
-        'scale-in': 'scale-in 0.18s ease-out',
-        shimmer: 'shimmer 1.6s steps(12, end) infinite',
+        'fade-in': 'fade-in 0.4s ease-out',
+        rise: 'rise 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+        'fade-in-up': 'rise 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+        'scale-in': 'scale-in 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
+        shimmer: 'shimmer 1.8s ease-in-out infinite',
       },
 
       letterSpacing: {
-        label: '0.16em',
+        label: '0.13em',
       },
 
       maxWidth: {

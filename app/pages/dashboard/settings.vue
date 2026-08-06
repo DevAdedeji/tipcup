@@ -6,7 +6,7 @@ import { db } from '~/firebase'
 import Skeleton from '~/components/ui/Skeleton.vue'
 import Select from '~/components/ui/Select.vue'
 import { useBankDetails } from '~/composables/useBankDetails'
-import { User, DollarSign, Link as LinkIcon, CreditCard, Trash2, Plus } from 'lucide-vue-next'
+import { User, Coins, Link as LinkIcon, CreditCard, Trash2, Plus, ExternalLink, X } from 'lucide-vue-next'
 import BankModal from '~/components/dashboard/BankModal.vue'
 import AmountInput from '~/components/ui/AmountInput.vue'
 import { DEFAULT_TIER_AMOUNT, MIN_TIP_AMOUNT, validateAmount, formatCurrency } from '~/utils/format'
@@ -14,12 +14,10 @@ import { DEFAULT_TIER_AMOUNT, MIN_TIP_AMOUNT, validateAmount, formatCurrency } f
 definePageMeta({
   layout: 'dashboard',
   title: 'Settings',
-  subtitle: 'Manage your profile and settings'
+  subtitle: 'Your profile, tiers, links and payouts',
 })
 
-usePageMeta({
-  title: 'Settings',
-})
+usePageMeta({ title: 'Settings' })
 
 const { user, userProfile, loading } = useAuth()
 const toast = useToast()
@@ -28,25 +26,26 @@ const form = reactive({
     displayName: '',
     bio: '',
     tiers: [] as any[],
-    socialLinks: [] as any[]
+    socialLinks: [] as any[],
 })
 
 const emojis = ['☕', '🍕', '🍺', '🍪', '🥐', '🌮', '🍣', '🍦', '🍩', '🍫']
 const getRandomEmoji = () => emojis[Math.floor(Math.random() * emojis.length)]
 
-watch(() => userProfile.value, (newProfile) => {
-    if (newProfile) {
+watch(
+    () => userProfile.value,
+    (newProfile) => {
+        if (!newProfile) return
         form.displayName = newProfile.displayName || ''
         form.bio = newProfile.bio || ''
         form.tiers = newProfile.tiers ? JSON.parse(JSON.stringify(newProfile.tiers)) : []
         form.socialLinks = newProfile.socialLinks ? JSON.parse(JSON.stringify(newProfile.socialLinks)) : []
-        form.tiers.forEach(tier => {
-            if (!tier.emoji) {
-                tier.emoji = getRandomEmoji()
-            }
+        form.tiers.forEach((tier) => {
+            if (!tier.emoji) tier.emoji = getRandomEmoji()
         })
-    }
-}, { immediate: true })
+    },
+    { immediate: true }
+)
 
 const saving = ref(false)
 
@@ -63,64 +62,53 @@ const saveProfile = async () => {
         toast.add({
             title: 'Check your tiers',
             description: `Every tier must be at least ${formatCurrency(MIN_TIP_AMOUNT)}.`,
-            type: 'error'
+            type: 'error',
         })
         return
     }
 
     saving.value = true
-
     try {
-        const userRef = doc(db, 'users', user.value.uid)
-        await updateDoc(userRef, {
+        await updateDoc(doc(db, 'users', user.value.uid), {
             displayName: form.displayName,
             bio: form.bio,
             tiers: form.tiers,
-            socialLinks: form.socialLinks
+            socialLinks: form.socialLinks,
         })
-        toast.add({ title: 'Success', description: 'Profile updated successfully!', type: 'success' })
-    } catch (e: any) {
+        toast.add({ title: 'Saved', description: 'Your page has been updated.', type: 'success' })
+    } catch (e) {
         console.error(e)
-        toast.add({ title: 'Error', description: 'Failed to update profile.', type: 'error' })
+        toast.add({ title: 'Error', description: 'Could not save your changes.', type: 'error' })
     } finally {
         saving.value = false
     }
 }
 
-
-const addTier = () => {
-    form.tiers.push({ price: DEFAULT_TIER_AMOUNT, emoji: getRandomEmoji(), label: 'Support' })
-}
-const removeTier = (index: number) => {
-    form.tiers.splice(index, 1)
-}
-const addSocial = () => {
-    form.socialLinks.push({ platform: 'Twitter', url: '' })
-}
-const removeSocial = (index: number) => {
-    form.socialLinks.splice(index, 1)
-}
+const addTier = () => form.tiers.push({ price: DEFAULT_TIER_AMOUNT, emoji: getRandomEmoji(), label: 'Support' })
+const removeTier = (index: number) => form.tiers.splice(index, 1)
+const addSocial = () => form.socialLinks.push({ platform: 'Twitter', url: '' })
+const removeSocial = (index: number) => form.socialLinks.splice(index, 1)
 
 const platforms = ['Twitter', 'Instagram', 'YouTube', 'LinkedIn', 'Website', 'TikTok']
 
-const { accounts: bankAccounts, loading: bankLoading, fetchAccounts, deleteAccount, setPrimaryAccount } = useBankDetails()
+const {
+    accounts: bankAccounts,
+    loading: bankLoading,
+    fetchAccounts,
+    deleteAccount,
+    setPrimaryAccount,
+} = useBankDetails()
 
 let unsubscribe: (() => void) | undefined
-
 onMounted(() => {
     unsubscribe = fetchAccounts()
 })
-
-onUnmounted(() => {
-    if (unsubscribe) {
-        unsubscribe()
-    }
-})
+onUnmounted(() => unsubscribe?.())
 
 const showBankModal = ref(false)
 
 const handleDeleteBank = async (id: string) => {
-    if (confirm('Are you sure you want to remove this bank account?')) {
+    if (confirm('Remove this bank account?')) {
         await deleteAccount(id)
         toast.add({ title: 'Removed', description: 'Bank account removed.', type: 'success' })
     }
@@ -128,275 +116,268 @@ const handleDeleteBank = async (id: string) => {
 
 const handleSetPrimaryBank = async (id: string) => {
     await setPrimaryAccount(id)
-    toast.add({ title: 'Updated', description: 'Primary payout method updated.', type: 'success' })
+    toast.add({ title: 'Updated', description: 'Primary payout account updated.', type: 'success' })
 }
 </script>
 
 <template>
-    <div class="min-h-screen bg-background text-text-primary pb-24">
-        <div class="mx-auto">
-
-
-            <!-- Loading Skeleton -->
-            <div v-if="loading" class="grid lg:grid-cols-3 gap-8 animate-fade-in-up">
-                 <div class="lg:col-span-2 space-y-8">
-                     <div class="bg-surface border border-border p-6">
-                         <Skeleton class="h-6 w-32 mb-6" />
-                         <div class="space-y-4">
-                             <div>
-                                 <Skeleton class="h-4 w-24 mb-2" />
-                                 <Skeleton class="h-10 w-full" />
-                             </div>
-                             <div>
-                                 <Skeleton class="h-4 w-12 mb-2" />
-                                 <Skeleton class="h-32 w-full" />
-                             </div>
-                         </div>
-                     </div>
-                     <div class="bg-surface border border-border p-6">
-                         <div class="flex justify-between mb-6">
-                             <Skeleton class="h-6 w-32" />
-                             <Skeleton class="h-8 w-24" />
-                         </div>
-                         <div class="space-y-4">
-                             <Skeleton class="h-20 w-full" />
-                             <Skeleton class="h-20 w-full" />
-                         </div>
-                     </div>
-                 </div>
-                 <div class="lg:col-span-1">
-                      <div class="bg-surface border border-border p-6">
-                          <Skeleton class="h-4 w-24 mb-4" />
-                          <Skeleton class="h-64 w-full" />
-                      </div>
-                 </div>
+    <div class="pb-8">
+        <div v-if="loading" class="grid gap-6 lg:grid-cols-3">
+            <div class="space-y-6 lg:col-span-2">
+                <Skeleton class="h-64" />
+                <Skeleton class="h-72" />
             </div>
-
-            <div v-else class="grid lg:grid-cols-3 gap-8 animate-fade-in-up">
-                <div class="lg:col-span-2 space-y-8">
-
-                    <div class="bg-surface border border-primary/20 p-3 lg:p-6 shadow-sm">
-                        <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-                            <div class="p-2 bg-muted text-text-secondary">
-                                <User class="w-5 h-5" />
-                            </div>
-                            <span>Profile Details</span>
-                        </h2>
-
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-text-secondary mb-1">Display Name</label>
-                                <Input v-model="form.displayName" placeholder="e.g. Sarah's Art" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-text-secondary mb-1">Bio</label>
-                                <Textarea v-model="form.bio" placeholder="Tell your supporters about what you do..." class="min-h-[120px]" />
-                                <p class="text-xs text-text-secondary text-right mt-1">{{ form.bio.length }}/160</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-surface border border-primary/20 p-3 lg:p-6 shadow-sm">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-bold flex items-center gap-2">
-                                <div class="p-2 bg-muted text-text-secondary">
-                                    <DollarSign class="w-5 h-5" />
-                                </div>
-                                <span>Support Tiers</span>
-                            </h2>
-                            <Button @click="addTier" variant="outline" size="sm">
-                                <Plus :size="16"/>
-                                <span class="md:block hidden">Add Tier</span>
-                            </Button>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div v-for="(tier, index) in form.tiers" :key="index" class="flex flex-col sm:flex-row gap-3 items-start p-4 bg-background border border-border">
-                                <button @click="removeTier(index)" class="lg:hidden block self-end sm:mt-6 text-error hover:bg-error-muted p-2 transition-colors">
-                                    ✕
-                                </button>
-                                <div class="flex gap-3 w-full sm:contents">
-                                    <div class="w-[20%] sm:w-16">
-                                        <label class="text-xs text-text-secondary mb-1 block">Emoji</label>
-                                        <Input v-model="tier.emoji" class="text-center text-xl" maxlength="1" />
-                                    </div>
-                                    <div class="flex-1 sm:flex-initial sm:w-24">
-                                        <label class="text-xs text-text-secondary mb-1 block">Amount</label>
-                                        <AmountInput v-model="tier.price" />
-                                    </div>
-                                </div>
-                                <div class="w-full sm:flex-1">
-                                    <label class="text-xs text-text-secondary mb-1 block">Label</label>
-                                    <Input v-model="tier.label" placeholder="e.g. Coffee" />
-                                </div>
-                                <button @click="removeTier(index)" class="lg:block hidden self-end sm:mt-6 text-error hover:bg-error-muted p-2 transition-colors">
-                                    ✕
-                                </button>
-                            </div>
-
-                            <div v-if="form.tiers.length === 0" class="text-center py-8 text-text-secondary italic">
-                                No tiers added. Supporters won't have preset options.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-surface border border-primary/20 p-3 lg:p-6 shadow-sm">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-bold flex items-center gap-2">
-                                <div class="p-2 bg-muted text-text-secondary">
-                                    <LinkIcon class="w-5 h-5" />
-                                </div>
-                                <span>Social Links</span>
-                            </h2>
-                            <Button @click="addSocial" variant="outline" size="sm">
-                                <Plus :size="16"/>
-                                <span class="md:block hidden">Add Link</span>
-                            </Button>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div v-for="(link, index) in form.socialLinks" :key="index" class="flex flex-col sm:flex-row gap-3 items-start p-4 bg-background border border-border">
-                                <button @click="removeSocial(index)" class="lg:hidden block self-end sm:self-center text-error hover:bg-error-muted p-2 transition-colors">
-                                    ✕
-                                </button>
-                                <div class="w-full sm:w-48">
-                                    <Select v-model="link.platform" :options="platforms" placeholder="Platform" />
-                                </div>
-                                <div class="flex-1 w-full">
-                                    <Input v-model="link.url" placeholder="https://..." />
-                                </div>
-                                <button @click="removeSocial(index)" class="lg:block hidden self-end sm:self-center text-error hover:bg-error-muted p-2 transition-colors">
-                                    ✕
-                                </button>
-                            </div>
-
-                             <div v-if="form.socialLinks.length === 0" class="text-center py-8 text-text-secondary italic">
-                                Add your social media profiles to appear on your page.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bank Details -->
-                    <div class="bg-surface border border-primary/20 p-3 lg:p-6 shadow-sm">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-bold flex items-center gap-2">
-                                <div class="p-2 bg-muted text-text-secondary">
-                                    <CreditCard class="w-5 h-5" />
-                                </div>
-                                <span>Payout Methods</span>
-                            </h2>
-                            <Button @click="showBankModal = true" variant="outline" size="sm">
-                                <Plus :size="16"/>
-                                <span class="md:block hidden">Add Method</span>
-                            </Button>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div v-if="bankLoading" class="space-y-3">
-                                <Skeleton class="h-16 w-full" />
-                                <Skeleton class="h-16 w-full" />
-                            </div>
-
-                            <template v-else>
-                                <div v-for="account in bankAccounts" :key="account.id"
-                                    class="flex flex-col sm:flex-row gap-4 items-center justify-between p-3 md:p-4 bg-background border transition-all"
-                                    :class="account.isPrimary ? 'border-primary/50 bg-primary/5' : 'border-border'"
-                                >
-                                    <div class="flex items-start md:items-center gap-4 w-full sm:w-auto">
-                                        <div class="p-2 md:p-3 bg-surface border border-border">
-                                            <CreditCard class="size-4 md:size-6 text-text-secondary" />
-                                        </div>
-                                        <div>
-                                            <div class="font-bold flex items-center gap-2">
-                                                <p class="text-sm md:text-base">{{ account.bankName }}</p>
-                                                <span v-if="account.isPrimary" class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
-                                                    Primary
-                                                </span>
-                                            </div>
-                                            <div class="text-sm text-text-secondary">{{ account.accountName }}</div>
-                                            <div class="text-sm text-text-secondary font-mono">{{ account.accountNumber }}</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                                        <Button v-if="!account.isPrimary" @click="handleSetPrimaryBank(account.id)" variant="ghost" size="sm" class="text-xs text-primary">
-                                            Make Primary
-                                        </Button>
-                                        <button @click="handleDeleteBank(account.id)" class="text-text-secondary hover:text-error p-2 transition-colors">
-                                            <Trash2 class="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div v-if="bankAccounts.length === 0" class="text-center py-8 text-text-secondary italic">
-                                    No payout methods added. You won't be able to receive funds.
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
-                    <div class="hidden lg:flex justify-end pt-4">
-                        <Button :loading="saving" @click="saveProfile" size="lg" class="w-full sm:w-auto min-w-[150px]">
-                            Save Changes
-                        </Button>
-                    </div>
-
-                </div>
-
-                <div class="lg:col-span-1">
-                    <div class="sticky top-24 space-y-6">
-                        <div class="bg-surface border border-border p-6 shadow-lg">
-                            <h3 class="font-bold mb-4 text-text-secondary uppercase text-xs tracking-wider">Live Preview</h3>
-
-                            <div class="bg-background overflow-hidden border border-border pb-4">
-                                <!-- Banner -->
-                                <div class="h-28 bg-gradient-to-r from-primary/80 to-accent/80 relative">
-                                    <div class="absolute inset-0 bg-background/10"></div>
-                                </div>
-                                <div class="px-5 relative">
-                                    <!-- Avatar -->
-                                    <div class="-mt-12 mb-3">
-                                        <Avatar :src="userProfile?.avatarUrl" class="w-24 h-24 border-4 border-background shadow-xl" />
-                                    </div>
-
-                                    <!-- Profile Info -->
-                                    <div class="mb-6">
-                                        <h4 class="font-bold text-xl">{{ form.displayName || 'Your Name' }}</h4>
-                                        <p class="text-sm text-text-secondary mb-2">@{{ userProfile?.username }}</p>
-                                        <p class="text-sm text-text-secondary line-clamp-3 leading-relaxed">{{ form.bio || 'Your bio will appear here...' }}</p>
-                                    </div>
-
-                                    <!-- Support Section Preview -->
-                                    <div class="bg-surface border border-primary/20 p-4 shadow-sm">
-                                        <h5 class="font-bold text-sm mb-3 text-center">Support {{ form.displayName?.split(' ')[0] || 'User' }}</h5>
-                                        <div class="grid grid-cols-3 gap-2 mb-3">
-                                            <div v-for="tier in form.tiers.slice(0, 3)" :key="tier.price" class="flex flex-col items-center justify-center p-2 border border-border bg-background hover:border-primary/50 text-center">
-                                                <span class="text-lg mb-1">{{ tier.emoji }}</span>
-                                                <span class="font-bold text-xs break-all px-0.5">{{ formatCurrency(tier.price) }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="h-8 bg-background border border-border w-full mb-2"></div>
-                                        <div class="h-8 bg-primary w-full text-white flex items-center justify-center text-center">Support</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-4">
-                                <Button :to="`/${userProfile?.username}`" variant="outline" class="w-full">
-                                    View Live Page <span class="ml-2">↗</span>
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <Button :loading="saving" @click="saveProfile" size="lg" class="lg:hidden block w-full min-w-[150px]">
-                    Save Changes
-                </Button>
-            </div>
+            <Skeleton class="h-96" />
         </div>
 
-        <!-- Add Bank Modal -->
+        <div v-else class="grid gap-6 lg:grid-cols-3">
+            <div class="space-y-6 lg:col-span-2">
+                <!-- Profile -->
+                <section class="border border-border bg-surface shadow-xs">
+                    <header class="flex items-center gap-2.5 border-b border-border px-5 py-4">
+                        <User class="h-4 w-4 text-text-tertiary" />
+                        <h2 class="font-display text-lg font-semibold tracking-tight">Profile</h2>
+                    </header>
+
+                    <div class="space-y-4 p-5">
+                        <Input v-model="form.displayName" label="Display name" placeholder="e.g. Ada Obi" />
+                        <Textarea
+                            v-model="form.bio"
+                            label="Bio"
+                            :rows="3"
+                            :maxlength="160"
+                            placeholder="Tell supporters what you make."
+                        />
+                    </div>
+                </section>
+
+                <!-- Tiers -->
+                <section class="border border-border bg-surface shadow-xs">
+                    <header class="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+                        <div class="flex items-center gap-2.5">
+                            <Coins class="h-4 w-4 text-text-tertiary" />
+                            <h2 class="font-display text-lg font-semibold tracking-tight">Support tiers</h2>
+                        </div>
+                        <Button variant="outline" size="sm" @click="addTier">
+                            <template #prefix><Plus class="h-3.5 w-3.5" /></template>
+                            Add
+                        </Button>
+                    </header>
+
+                    <div class="space-y-3 p-5">
+                        <div
+                            v-for="(tier, index) in form.tiers"
+                            :key="index"
+                            class="flex flex-wrap items-start gap-3 border border-border bg-surface-sunken p-3"
+                        >
+                            <div class="w-16 shrink-0">
+                                <Input v-model="tier.emoji" label="Icon" maxlength="2" class="text-center" />
+                            </div>
+                            <div class="w-32 shrink-0">
+                                <AmountInput v-model="tier.price" label="Amount" size="md" />
+                            </div>
+                            <div class="min-w-[8rem] flex-1">
+                                <Input v-model="tier.label" label="Label" placeholder="Coffee" />
+                            </div>
+                            <button
+                                class="mt-7 flex h-11 w-9 shrink-0 items-center justify-center text-text-tertiary transition-colors hover:bg-error-muted hover:text-error"
+                                :title="`Remove ${tier.label || 'tier'}`"
+                                @click="removeTier(index)"
+                            >
+                                <X class="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <p
+                            v-if="form.tiers.length === 0"
+                            class="border border-dashed border-border px-4 py-8 text-center text-sm text-text-secondary"
+                        >
+                            No tiers yet — supporters won't have preset amounts to pick from.
+                        </p>
+
+                        <p class="text-xs text-text-tertiary">
+                            Minimum {{ formatCurrency(MIN_TIP_AMOUNT) }} per tier.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Links -->
+                <section class="border border-border bg-surface shadow-xs">
+                    <header class="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+                        <div class="flex items-center gap-2.5">
+                            <LinkIcon class="h-4 w-4 text-text-tertiary" />
+                            <h2 class="font-display text-lg font-semibold tracking-tight">Links</h2>
+                        </div>
+                        <Button variant="outline" size="sm" @click="addSocial">
+                            <template #prefix><Plus class="h-3.5 w-3.5" /></template>
+                            Add
+                        </Button>
+                    </header>
+
+                    <div class="space-y-3 p-5">
+                        <div
+                            v-for="(link, index) in form.socialLinks"
+                            :key="index"
+                            class="flex flex-wrap items-center gap-3 border border-border bg-surface-sunken p-3"
+                        >
+                            <div class="w-full sm:w-44">
+                                <Select v-model="link.platform" :options="platforms" placeholder="Platform" />
+                            </div>
+                            <div class="min-w-[10rem] flex-1">
+                                <Input v-model="link.url" placeholder="https://…" />
+                            </div>
+                            <button
+                                class="flex h-11 w-9 shrink-0 items-center justify-center text-text-tertiary transition-colors hover:bg-error-muted hover:text-error"
+                                title="Remove link"
+                                @click="removeSocial(index)"
+                            >
+                                <X class="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <p
+                            v-if="form.socialLinks.length === 0"
+                            class="border border-dashed border-border px-4 py-8 text-center text-sm text-text-secondary"
+                        >
+                            Add your socials so everything lives on one page.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Payouts -->
+                <section class="border border-border bg-surface shadow-xs">
+                    <header class="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+                        <div class="flex items-center gap-2.5">
+                            <CreditCard class="h-4 w-4 text-text-tertiary" />
+                            <h2 class="font-display text-lg font-semibold tracking-tight">Payout accounts</h2>
+                        </div>
+                        <Button variant="outline" size="sm" @click="showBankModal = true">
+                            <template #prefix><Plus class="h-3.5 w-3.5" /></template>
+                            Add
+                        </Button>
+                    </header>
+
+                    <div class="space-y-3 p-5">
+                        <template v-if="bankLoading">
+                            <Skeleton class="h-20" />
+                            <Skeleton class="h-20" />
+                        </template>
+
+                        <template v-else>
+                            <div
+                                v-for="account in bankAccounts"
+                                :key="account.id"
+                                class="flex flex-wrap items-center justify-between gap-3 border p-4"
+                                :class="account.isPrimary ? 'border-accent bg-accent-muted' : 'border-border bg-surface-sunken'"
+                            >
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <p class="font-semibold">{{ account.bankName }}</p>
+                                        <Badge v-if="account.isPrimary" variant="accent">Primary</Badge>
+                                    </div>
+                                    <p class="mt-0.5 text-sm text-text-secondary">{{ account.accountName }}</p>
+                                    <p class="tabular text-sm text-text-tertiary">{{ account.accountNumber }}</p>
+                                </div>
+
+                                <div class="flex items-center gap-1">
+                                    <Button
+                                        v-if="!account.isPrimary"
+                                        variant="ghost"
+                                        size="sm"
+                                        @click="handleSetPrimaryBank(account.id)"
+                                    >
+                                        Make primary
+                                    </Button>
+                                    <button
+                                        class="flex h-9 w-9 items-center justify-center text-text-tertiary transition-colors hover:bg-error-muted hover:text-error"
+                                        title="Remove account"
+                                        @click="handleDeleteBank(account.id)"
+                                    >
+                                        <Trash2 class="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p
+                                v-if="bankAccounts.length === 0"
+                                class="border border-dashed border-border px-4 py-8 text-center text-sm text-text-secondary"
+                            >
+                                Add a bank account so you can withdraw what you earn.
+                            </p>
+                        </template>
+                    </div>
+                </section>
+
+                <div class="hidden justify-end lg:flex">
+                    <Button size="lg" :loading="saving" @click="saveProfile">Save changes</Button>
+                </div>
+            </div>
+
+            <!-- Live preview -->
+            <aside class="lg:col-span-1">
+                <div class="sticky top-24 space-y-4">
+                    <p class="field-label">Live preview</p>
+
+                    <div class="border border-border bg-background shadow-sm">
+                        <AdireCloth :seed="userProfile?.username" class="h-20 w-full" />
+
+                        <div class="px-4 pb-5">
+                            <Avatar
+                                :src="userProfile?.avatarUrl"
+                                :alt="form.displayName || 'You'"
+                                size="xl"
+                                class="-mt-8 h-16 w-16 border-4 border-background"
+                            />
+
+                            <h3 class="mt-3 font-display text-xl font-semibold tracking-tight">
+                                {{ form.displayName || 'Your name' }}
+                            </h3>
+                            <p class="text-sm text-text-tertiary">@{{ userProfile?.username }}</p>
+                            <p class="mt-2 line-clamp-3 text-sm leading-relaxed text-text-secondary">
+                                {{ form.bio || 'Your bio will appear here.' }}
+                            </p>
+
+                            <div class="mt-4 border border-border bg-surface p-3">
+                                <p class="text-center text-sm font-semibold">
+                                    Support {{ form.displayName?.split(' ')[0] || 'you' }}
+                                </p>
+
+                                <div class="mt-3 grid grid-cols-3 gap-1.5">
+                                    <div
+                                        v-for="tier in form.tiers.slice(0, 3)"
+                                        :key="tier.price"
+                                        class="flex flex-col items-center gap-0.5 border border-border bg-surface-sunken px-1 py-2"
+                                    >
+                                        <span class="text-sm leading-none">{{ tier.emoji }}</span>
+                                        <span class="amount text-2xs font-bold">{{ formatCurrency(tier.price) }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 bg-primary py-2 text-center text-xs font-medium text-primary-foreground">
+                                    Send
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <Button
+                        v-if="userProfile?.username"
+                        :href="`/${userProfile.username}`"
+                        target="_blank"
+                        variant="outline"
+                        block
+                    >
+                        View live page
+                        <template #suffix><ExternalLink class="h-3.5 w-3.5" /></template>
+                    </Button>
+                </div>
+            </aside>
+
+            <Button size="lg" block class="lg:hidden" :loading="saving" @click="saveProfile">
+                Save changes
+            </Button>
+        </div>
+
         <BankModal :isOpen="showBankModal" @close="showBankModal = false" />
     </div>
 </template>

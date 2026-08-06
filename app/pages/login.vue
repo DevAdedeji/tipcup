@@ -1,71 +1,106 @@
 <script setup lang="ts">
-import { useAuth } from '~/composables/useAuth'
-import { Loader2 } from 'lucide-vue-next'
-import Modal from '~/components/ui/Modal.vue'
+import { useAuth, authErrorMessage } from '~/composables/useAuth'
 
-const route = useRoute()
-const isSignup = computed(() => route.path === '/signup')
+const { signInWithGoogle, signInWithEmail, userProfile } = useAuth()
 
-const { signInWithGoogle, user, userProfile } = useAuth()
-const isLoading = ref(false)
-const showAuthCheckModal = ref(false)
+useHead({ title: 'Log in' })
 
-useHead({
-  title: computed(() => (isSignup.value ? 'Sign up' : 'Log in')),
-})
+const email = ref('')
+const password = ref('')
+const submitting = ref(false)
+const googleLoading = ref(false)
+const formError = ref('')
 
-const handleLogin = async () => {
-  isLoading.value = true
+const canSubmit = computed(() => email.value.trim().length > 3 && password.value.length >= 6)
+
+const routeAfterAuth = () => navigateTo(userProfile.value ? '/dashboard' : '/onboarding')
+
+const handleEmailLogin = async () => {
+  if (!canSubmit.value || submitting.value) return
+
+  formError.value = ''
+  submitting.value = true
+  try {
+    await signInWithEmail(email.value, password.value)
+    routeAfterAuth()
+  } catch (error: any) {
+    formError.value = authErrorMessage(error)
+  } finally {
+    submitting.value = false
+  }
+}
+
+const handleGoogle = async () => {
+  googleLoading.value = true
+  formError.value = ''
   try {
     await signInWithGoogle()
-
-    showAuthCheckModal.value = true
-
-    navigateTo(userProfile.value ? '/dashboard' : '/onboarding')
+    routeAfterAuth()
   } catch (error: any) {
-    useToast().add({
-      title: 'Sign-in failed',
-      description: error?.message || 'Could not sign you in. Please try again.',
-      type: 'error',
-    })
+    formError.value = authErrorMessage(error)
   } finally {
-    isLoading.value = false
-    if (!user.value) showAuthCheckModal.value = false
+    googleLoading.value = false
   }
 }
 </script>
 
 <template>
-  <div class="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-background px-4 py-12">
-    <div
-      class="pointer-events-none absolute left-1/2 top-0 h-72 w-[600px] max-w-[140%] -translate-x-1/2 bg-accent/10 blur-[100px]"
-      aria-hidden="true"
-    />
+  <div class="relative flex min-h-[100dvh] flex-col bg-background">
+    <AdireCloth seed="tipcup" class="h-2 w-full" />
 
-    <div class="absolute right-4 top-4">
-      <ThemeToggle />
-    </div>
+    <div class="absolute right-4 top-6"><ThemeToggle /></div>
 
-    <div class="relative w-full max-w-sm">
-      <div class=" border border-border bg-surface p-8 shadow-lg">
+    <div class="flex flex-1 items-center justify-center px-5 py-12">
+      <div class="w-full max-w-sm">
         <div class="text-center">
-          <img src="/logo.png" alt="" class="mx-auto mb-5 h-11 w-11 object-contain" />
-          <h1 class="font-display text-2xl font-bold tracking-tight">
-            {{ isSignup ? 'Create your account' : 'Welcome back' }}
-          </h1>
-          <p class="mt-2 text-md text-text-secondary">
-            {{ isSignup ? 'Your page takes a minute to set up.' : 'Sign in to manage your page.' }}
-          </p>
+          <NuxtLink to="/" class="font-display text-2xl font-semibold tracking-tight">TipCup</NuxtLink>
+          <h1 class="mt-6 font-display text-3xl font-semibold tracking-tight">Welcome back</h1>
+          <p class="mt-2 text-md text-text-secondary">Sign in to manage your page.</p>
         </div>
 
-        <Button
-          variant="outline"
-          size="xl"
-          block
-          class="mt-7"
-          :loading="isLoading"
-          @click="handleLogin"
-        >
+        <form class="mt-8 space-y-4" @submit.prevent="handleEmailLogin">
+          <Input
+            v-model="email"
+            label="Email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+          />
+
+          <Input
+            v-model="password"
+            label="Password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+          />
+
+          <p
+            v-if="formError"
+            role="alert"
+            class="border border-error/30 bg-error-muted px-3 py-2 text-sm text-error"
+          >
+            {{ formError }}
+          </p>
+
+          <Button
+            type="submit"
+            size="xl"
+            block
+            :loading="submitting"
+            :disabled="!canSubmit || submitting"
+          >
+            Log in
+          </Button>
+        </form>
+
+        <div class="my-6 flex items-center gap-3">
+          <span class="h-px flex-1 bg-border" />
+          <span class="text-2xs uppercase tracking-label text-text-tertiary">or</span>
+          <span class="h-px flex-1 bg-border" />
+        </div>
+
+        <Button variant="outline" size="xl" block :loading="googleLoading" @click="handleGoogle">
           <template #prefix>
             <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -77,28 +112,11 @@ const handleLogin = async () => {
           Continue with Google
         </Button>
 
-        <p class="mt-5 text-center text-xs leading-relaxed text-text-tertiary">
-          By continuing you agree to our Terms of Service and Privacy Policy.
+        <p class="mt-7 text-center text-sm text-text-secondary">
+          Don't have an account?
+          <NuxtLink to="/signup" class="ml-1 font-semibold text-accent hover:underline">Sign up</NuxtLink>
         </p>
       </div>
-
-      <p class="mt-5 text-center text-sm text-text-secondary">
-        {{ isSignup ? 'Already have an account?' : "Don't have an account?" }}
-        <NuxtLink
-          :to="isSignup ? '/login' : '/signup'"
-          class="ml-1 font-medium text-accent hover:underline"
-        >
-          {{ isSignup ? 'Log in' : 'Sign up' }}
-        </NuxtLink>
-      </p>
     </div>
-
-    <Modal :isOpen="showAuthCheckModal" width="max-w-xs">
-      <div class="flex flex-col items-center justify-center gap-3 py-6 text-center">
-        <Loader2 class="h-8 w-8 animate-spin text-accent" />
-        <h2 class="font-display text-md font-semibold text-text-primary">Loading your account</h2>
-        <p class="text-sm text-text-secondary">Setting things up…</p>
-      </div>
-    </Modal>
   </div>
 </template>

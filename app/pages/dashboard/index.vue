@@ -74,7 +74,7 @@ const canWithdraw = computed(() => (userProfile.value?.currentBalance || 0) > 0)
                     label="Available balance"
                     :value="formatCurrency(userProfile?.currentBalance || 0)"
                     :icon="Wallet"
-                    
+                    emphasis
                     :caption="`${formatCurrency(userProfile?.totalEarnings || 0)} earned all time`"
                 >
                     <template #action>
@@ -93,7 +93,6 @@ const canWithdraw = computed(() => (userProfile.value?.currentBalance || 0) > 0)
                     label="Supporters"
                     :value="userProfile?.supporterCount || 0"
                     :icon="Heart"
-                    
                     caption="Unique people who supported you"
                 />
 
@@ -101,21 +100,20 @@ const canWithdraw = computed(() => (userProfile.value?.currentBalance || 0) > 0)
                     label="Page views"
                     :value="userProfile?.views || 0"
                     :icon="Eye"
-                    
                     caption="All-time visits to your page"
                 />
             </div>
 
             <div class="grid gap-4 lg:grid-cols-3">
-                <Card class="lg:col-span-2" padding="lg">
-                    <h2 class="font-display text-md font-semibold tracking-tight">Views over time</h2>
+                <div class="border border-border bg-surface p-5 shadow-xs lg:col-span-2">
+                    <h2 class="font-display text-xl font-semibold tracking-tight">Views over time</h2>
                     <div class="mt-5">
                         <ViewsChart :analytics="userProfile?.analytics" />
                     </div>
-                </Card>
+                </div>
 
-                <Card padding="lg">
-                    <h2 class="font-display text-md font-semibold tracking-tight">Share your page</h2>
+                <div class="border border-border bg-surface p-5 shadow-xs">
+                    <h2 class="font-display text-xl font-semibold tracking-tight">Share your page</h2>
                     <p class="mt-1.5 text-sm text-text-secondary">
                         This link is how people find and support you.
                     </p>
@@ -144,11 +142,11 @@ const canWithdraw = computed(() => (userProfile.value?.currentBalance || 0) > 0)
                         Open public page
                         <ExternalLink class="h-3.5 w-3.5" />
                     </a>
-                </Card>
+                </div>
             </div>
 
             <div class="space-y-3">
-                <h2 class="font-display text-md font-semibold tracking-tight">Recent supporters</h2>
+                <h2 class="font-display text-xl font-semibold tracking-tight">Recent supporters</h2>
 
                 <Table
                     :columns="[
@@ -171,7 +169,7 @@ const canWithdraw = computed(() => (userProfile.value?.currentBalance || 0) > 0)
                     </template>
 
                     <template #amount="{ row }">
-                        <span class="tabular font-semibold text-success">
+                        <span class="amount font-bold text-success">
                             +{{ formatCurrency(row.amount) }}
                         </span>
                     </template>

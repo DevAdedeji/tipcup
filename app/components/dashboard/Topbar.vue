@@ -35,7 +35,7 @@ onUnmounted(() => clearTimeout(resetTimer))
         class="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border bg-background/85 px-4 py-3 backdrop-blur-md md:px-8"
     >
         <div class="ml-12 min-w-0 md:ml-0">
-            <h1 class="truncate font-display text-lg font-semibold tracking-tight text-text-primary">
+            <h1 class="truncate font-display text-xl font-semibold tracking-tight text-text-primary">
                 {{ title }}
             </h1>
             <p v-if="subtitle" class="mt-0.5 truncate text-sm text-text-secondary">{{ subtitle }}</p>
@@ -44,7 +44,7 @@ onUnmounted(() => clearTimeout(resetTimer))
         <div class="flex shrink-0 items-center gap-2">
             <button
                 v-if="shareLink"
-                class="hidden items-center gap-2 border border-border bg-surface px-3 py-2 text-xs font-medium text-text-secondary shadow-xs transition-all duration-200 hover:bg-surface-hover hover:text-text-primary sm:flex"
+                class="hidden items-center gap-2 border border-border bg-surface px-3 py-2 text-xs font-medium text-text-secondary transition-colors duration-200 hover:bg-surface-hover hover:text-text-primary sm:flex"
                 @click="copyLink"
             >
                 <Check v-if="copied" class="h-3.5 w-3.5 text-success" />

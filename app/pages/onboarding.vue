@@ -15,6 +15,7 @@ usePageMeta({
 const { user } = useAuth()
 const { checkUsernameAvailability, completeOnboarding } = useOnboarding()
 const { addAccount, fetchBanks, resolveAccount } = useBankDetails()
+const { consumeUsername, clearUsername } = usePendingUsername()
 
 const step = ref(1)
 const steps = ['Claim link', 'Profile', 'Tiers', 'Payouts']
@@ -41,6 +42,13 @@ const loadingBanks = ref(false)
 const verifyingAccount = ref(false)
 
 onMounted(async () => {
+    const claimed = consumeUsername()
+    if (claimed) {
+        formData.username = claimed
+        usernameAvailable.value = true
+        if (step.value === 1) step.value = 2
+    }
+
     loadingBanks.value = true
     try {
         const response: any = await fetchBanks()
@@ -188,6 +196,7 @@ const complete = async () => {
             }
         }
 
+        clearUsername()
         navigateTo('/dashboard')
     } catch (error: any) {
         console.error('Onboarding failed:', error)
@@ -199,171 +208,168 @@ const complete = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-background text-text-primary px-4 py-12 font-sans">
-      <div class="max-w-2xl mx-auto">
-          <div class="flex items-start justify-between mb-12 relative px-4">
-              <div class="absolute top-5 left-16 right-16 h-[2px] bg-border"></div>
+  <div class="min-h-[100dvh] bg-background text-text-primary">
+    <!-- The band previews the cloth their username weaves. -->
+    <AdireCloth :seed="formData.username" class="h-2 w-full transition-all duration-500" />
 
-              <div v-for="(s, i) in steps" :key="s" class="flex flex-col items-center relative z-10 w-24">
-                  <div class="w-10 h-10 flex items-center justify-center text-sm font-bold border transition-all duration-300 transform bg-background"
-                    :class="[
-                        step > i + 1 ? 'bg-primary border-primary text-white scale-100' :
-                        step === i + 1 ? 'border-primary text-primary bg-background scale-110 shadow-accent' :
-                        'border-border text-text-secondary bg-background'
-                    ]">
-                      <span v-if="step > i + 1">✓</span>
-                      <span v-else>{{ i + 1 }}</span>
-                  </div>
-                  <span class="text-xs mt-3 font-medium transition-colors duration-300"
-                    :class="step === i + 1 ? 'text-primary' : step > i + 1 ? 'text-text-primary' : 'text-text-secondary/50'">
-                    {{ s }}
-                  </span>
-              </div>
+    <div class="mx-auto max-w-xl px-5 py-10 sm:py-14">
+      <!-- Progress -->
+      <ol class="mb-10 flex items-center gap-2">
+        <li v-for="(s, i) in steps" :key="s" class="flex flex-1 flex-col gap-1.5">
+          <span
+            class="h-1 w-full transition-colors duration-300"
+            :class="step > i ? 'bg-accent' : 'bg-border'"
+          />
+          <span
+            class="truncate text-2xs font-semibold uppercase tracking-label transition-colors duration-300"
+            :class="step === i + 1 ? 'text-accent' : step > i + 1 ? 'text-text-secondary' : 'text-text-tertiary'"
+          >
+            {{ s }}
+          </span>
+        </li>
+      </ol>
+
+      <!-- 1 — username -->
+      <section v-if="step === 1" class="animate-rise">
+        <h1 class="font-display text-3xl font-semibold tracking-tight">Claim your link</h1>
+        <p class="mt-2 text-md text-text-secondary">
+          This becomes your public page — and the pattern it's woven with.
+        </p>
+
+        <div class="mt-7 border border-border bg-surface p-5 shadow-xs">
+          <label for="ob-username" class="mb-1.5 block text-sm font-medium">Username</label>
+          <div
+            class="flex items-center border bg-surface transition-colors"
+            :class="usernameAvailable ? 'border-success' : usernameError ? 'border-error' : 'border-input focus-within:border-ring'"
+          >
+            <span class="shrink-0 pl-3 text-sm text-text-tertiary">tipcup.adedeji.xyz/</span>
+            <input
+              id="ob-username"
+              v-model="formData.username"
+              type="text"
+              spellcheck="false"
+              placeholder="yourname"
+              class="h-11 min-w-0 flex-1 bg-transparent pr-3 text-md focus:outline-none"
+            />
           </div>
 
-          <!-- Step 1: Claim Link -->
-          <div v-if="step === 1" class="space-y-6 animate-fade-in-up pt-8">
-              <div class="text-center space-y-2">
-                  <h1 class="text-3xl font-bold">Claim your link</h1>
-                  <p class="text-text-secondary">Choose a unique username for your page.</p>
-              </div>
+          <p v-if="isCheckingUsername" class="mt-1.5 text-xs text-text-tertiary">Checking…</p>
+          <p v-else-if="usernameAvailable && formData.username" class="mt-1.5 text-xs font-medium text-success">
+            Available — this is yours.
+          </p>
+          <p v-else-if="usernameError" class="mt-1.5 text-xs font-medium text-error">{{ usernameError }}</p>
 
-              <div class="bg-surface shadow-lg border border-primary/20 p-8 max-w-lg mx-auto">
-                  <div class="space-y-6">
-                      <div>
-                          <label class="block text-sm font-medium mb-4 ml-1">Username</label>
-                          <div class="flex shadow-sm border border-border focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
-                              <span class="inline-flex items-center px-2 sm:px-4 bg-surface-sunken text-text-secondary text-sm border-r border-border">
-                                  tipcup.adedeji.xyz/
-                              </span>
-                              <input
-                                v-model="formData.username"
-                                type="text"
-                                class=" flex-1 py-2 sm:py-4 px-2 sm:px-4 text-base sm:text-lg focus:outline-none bg-transparent"
-                                placeholder="yourname"
-                              />
-                          </div>
-                           <div class="mt-2 h-6 flex items-center justify-between px-1">
-                                <span v-if="isCheckingUsername" class="text-sm text-text-secondary animate-pulse">Checking...</span>
-                                <span v-else-if="usernameAvailable && formData.username" class="text-success text-sm font-medium">✓ Available</span>
-                                <span v-else class="text-sm text-error font-medium">{{ usernameError }}</span>
-                          </div>
-                      </div>
+          <Button size="xl" block class="mt-5" :disabled="!usernameAvailable" @click="nextStep">
+            Continue
+          </Button>
+        </div>
+      </section>
 
-                      <Button @click="nextStep" :disabled="!usernameAvailable" size="lg" class="w-full h-14 text-lg shadow-lg shadow-primary/20">
-                          Next Step
-                      </Button>
-                  </div>
-              </div>
+      <!-- 2 — profile -->
+      <section v-if="step === 2" class="animate-rise">
+        <h1 class="font-display text-3xl font-semibold tracking-tight">Your profile</h1>
+        <p class="mt-2 text-md text-text-secondary">Tell supporters who you are.</p>
+
+        <div class="mt-7 space-y-4 border border-border bg-surface p-5 shadow-xs">
+          <div class="flex justify-center">
+            <Avatar :src="user?.photoURL || undefined" :alt="formData.displayName || 'You'" size="2xl" class="h-20 w-20" />
           </div>
 
-          <!-- Step 2: Profile -->
-          <div v-if="step === 2" class="space-y-6 animate-fade-in-up pt-8">
-              <div class="text-center space-y-2">
-                  <h1 class="text-3xl font-bold">Create your profile</h1>
-                  <p class="text-text-secondary">Tell your supporters who you are.</p>
+          <Input v-model="formData.displayName" label="Display name" placeholder="e.g. Ada Obi" />
+          <Textarea
+            v-model="formData.bio"
+            label="Bio"
+            :rows="3"
+            :maxlength="160"
+            placeholder="I draw Lagos every week."
+          />
+
+          <Button size="xl" block @click="nextStep">Continue</Button>
+        </div>
+      </section>
+
+      <!-- 3 — tiers -->
+      <section v-if="step === 3" class="animate-rise">
+        <h1 class="font-display text-3xl font-semibold tracking-tight">Set your amounts</h1>
+        <p class="mt-2 text-md text-text-secondary">
+          What can people send you? Minimum {{ formatCurrency(MIN_TIP_AMOUNT) }}.
+        </p>
+
+        <div class="mt-7 space-y-3 border border-border bg-surface p-5 shadow-xs">
+          <div
+            v-for="(tier, index) in formData.tiers"
+            :key="index"
+            class="border border-border bg-surface-sunken p-3"
+          >
+            <div class="flex flex-wrap items-start gap-3">
+              <div class="w-32 shrink-0">
+                <AmountInput v-model="tier.price" label="Amount" />
               </div>
-
-              <div class="bg-surface shadow-lg border border-primary/20 p-8 max-w-lg mx-auto space-y-6">
-                   <div class="flex justify-center">
-                        <Avatar :src="user?.photoURL || undefined" size="lg" class="w-24 h-24 ring-4 ring-gray-50" />
-                   </div>
-
-                   <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Display Name</label>
-                            <Input v-model="formData.displayName" placeholder="e.g. Sarah's Art" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Bio</label>
-                            <Textarea v-model="formData.bio" placeholder="I create digital art and tutorials..." class="min-h-[120px]" />
-                        </div>
-                   </div>
-
-                   <Button @click="nextStep" size="lg" class="w-full h-12">Next Step</Button>
+              <div class="min-w-[8rem] flex-1">
+                <Input v-model="tier.label" label="Label" placeholder="Coffee" />
               </div>
+              <button
+                class="mt-7 flex h-11 w-9 shrink-0 items-center justify-center text-text-tertiary transition-colors hover:bg-error-muted hover:text-error"
+                title="Remove tier"
+                @click="removeTier(index)"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
-          <!-- Step 3: Tiers -->
-          <div v-if="step === 3" class="space-y-6 animate-fade-in-up pt-8">
-               <div class="text-center space-y-2">
-                  <h1 class="text-3xl font-bold">Setup Membership</h1>
-                  <p class="text-text-secondary">Give your fans ways to support you.</p>
-              </div>
+          <Button variant="outline" block @click="addTier">Add another</Button>
+          <Button size="xl" block @click="nextStep">Continue</Button>
+        </div>
+      </section>
 
-              <div class="bg-surface shadow-lg border border-primary/20 p-8 max-w-lg mx-auto space-y-4">
-                  <div v-for="(tier, index) in formData.tiers" :key="index" class="bg-surface-sunken border border-border p-4 relative group hover:border-primary/50 transition-colors">
-                        <button @click="removeTier(index)" class="absolute top-2 right-2 p-1 text-text-secondary hover:text-error opacity-0 group-hover:opacity-100 transition-opacity">
-                             ✕
-                        </button>
-                        <div class="grid grid-cols-3 items-center gap-4">
-                             <div class="col-span-1">
-                                <label class="text-xs text-text-secondary block mb-1">Amount</label>
-                                 <AmountInput v-model="tier.price" />
-                             </div>
-                             <div class="col-span-2">
-                                 <label class="text-xs text-text-secondary block mb-1">Label</label>
-                                 <Input v-model="tier.label" />
-                             </div>
-                             <div class="col-span-3">
-                                 <Input v-model="tier.description" placeholder="Description (optional)" />
-                             </div>
-                        </div>
-                  </div>
+      <!-- 4 — payouts -->
+      <section v-if="step === 4" class="animate-rise">
+        <h1 class="font-display text-3xl font-semibold tracking-tight">Where to pay you</h1>
+        <p class="mt-2 text-md text-text-secondary">
+          You can add this later, but you'll need it to withdraw.
+        </p>
 
-                  <Button @click="addTier" variant="outline" class="w-full border-dashed border-2 hover:border-primary/50 hover:bg-primary/5">
-                      + Add another tier
-                  </Button>
-
-                  <Button @click="nextStep" size="lg" class="w-full h-12 mt-4">Next Step</Button>
-              </div>
+        <div class="mt-7 space-y-4 border border-border bg-surface p-5 shadow-xs">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium">Bank</label>
+            <Select
+              v-if="!loadingBanks"
+              v-model="formData.payoutDetails.bankCode"
+              :options="banks.map(b => ({ value: b.code, label: b.name }))"
+              placeholder="Select a bank"
+            />
+            <div v-else class="flex h-11 items-center text-sm text-text-tertiary">Loading banks…</div>
           </div>
 
-          <!-- Step 4: Payouts -->
-          <div v-if="step === 4" class="space-y-6 animate-fade-in-up pt-8">
-              <div class="text-center space-y-2">
-                  <h1 class="text-3xl font-bold">Get Paid</h1>
-                  <p class="text-text-secondary">Where should we send your earnings?</p>
+          <Input
+            v-model="formData.payoutDetails.accountNumber"
+            label="Account number"
+            inputmode="numeric"
+            maxlength="10"
+            placeholder="0123456789"
+          />
+
+          <div>
+            <label class="mb-1.5 block text-sm font-medium">Account name</label>
+            <div class="relative">
+              <Input
+                v-model="formData.payoutDetails.accountName"
+                placeholder="Verified automatically"
+                disabled
+              />
+              <div v-if="verifyingAccount" class="absolute right-3 top-3.5">
+                <div class="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
               </div>
-
-               <div class="bg-surface shadow-lg border border-border p-8 max-w-lg mx-auto space-y-6">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Bank Name</label>
-                            <Select
-                                v-if="!loadingBanks"
-                                v-model="formData.payoutDetails.bankCode"
-                                :options="banks.map(b => ({ value: b.code, label: b.name }))"
-                                placeholder="Select a bank"
-                            />
-                            <div v-else class="text-sm text-text-secondary h-10 flex items-center">Loading banks...</div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Account Number</label>
-                            <Input v-model="formData.payoutDetails.accountNumber" placeholder="•••• •••• •••• 1234" maxlength="10" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Account Name</label>
-                             <div class="relative">
-                                <Input v-model="formData.payoutDetails.accountName" placeholder="Fetched automatically..." disabled class="opacity-70 cursor-not-allowed bg-surface-sunken" />
-                                <div v-if="verifyingAccount" class="absolute right-3 top-2.5">
-                                    <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-3 pt-2">
-                        <Button @click="complete" :loading="isLoading" size="lg" class="w-full h-12">
-                            Complete Setup
-                        </Button>
-                        <Button @click="complete" variant="ghost" class="w-full text-text-secondary">
-                            Skip for now
-                        </Button>
-                    </div>
-               </div>
+            </div>
           </div>
 
-      </div>
+          <div class="space-y-2 pt-1">
+            <Button size="xl" block :loading="isLoading" @click="complete">Finish setup</Button>
+            <Button variant="ghost" block @click="complete">Skip for now</Button>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 </template>

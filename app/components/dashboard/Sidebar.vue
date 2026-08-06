@@ -28,6 +28,7 @@ const profileUrl = computed(() => {
 
 const isOpen = ref(false)
 
+
 watch(() => route.path, () => { isOpen.value = false })
 </script>
 
@@ -60,10 +61,11 @@ watch(() => route.path, () => { isOpen.value = false })
             class="fixed left-0 top-0 z-40 flex h-[100dvh] w-64 transform flex-col border-r border-border bg-surface transition-transform duration-300 ease-out md:translate-x-0"
             :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
         >
+            <AdireCloth :seed="userProfile?.username" class="h-1.5 w-full shrink-0" />
+
             <div class="flex h-16 shrink-0 items-center border-b border-border px-5">
-                <NuxtLink to="/dashboard" class="flex items-center gap-2.5">
-                    <img src="/logo.png" alt="" class="h-7 w-7" />
-                    <span class="font-display text-lg font-bold tracking-tight text-text-primary">TipCup</span>
+                <NuxtLink to="/dashboard" class="font-display text-xl font-semibold tracking-tight text-text-primary">
+                    TipCup
                 </NuxtLink>
             </div>
 
@@ -89,9 +91,7 @@ watch(() => route.path, () => { isOpen.value = false })
                 </NuxtLink>
 
                 <div v-if="profileUrl" class="mt-4 border-t border-border pt-4">
-                    <p class="mb-1.5 px-3 text-2xs font-semibold uppercase tracking-wider text-text-tertiary">
-                        Your page
-                    </p>
+                    <p class="field-label mb-1.5 px-3">Your page</p>
                     <a
                         :href="profileUrl"
                         target="_blank"

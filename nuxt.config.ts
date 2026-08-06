@@ -52,8 +52,8 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'description', content: SITE_DESCRIPTION },
-        { name: 'theme-color', content: '#EDEFEA', media: '(prefers-color-scheme: light)' },
-        { name: 'theme-color', content: '#0E100C', media: '(prefers-color-scheme: dark)' },
+        { name: 'theme-color', content: '#EDE6D6', media: '(prefers-color-scheme: light)' },
+        { name: 'theme-color', content: '#0C1725', media: '(prefers-color-scheme: dark)' },
         { property: 'og:site_name', content: 'TipCup' },
         { property: 'og:type', content: 'website' },
         { property: 'og:url', content: SITE_URL },
@@ -67,7 +67,9 @@ export default defineNuxtConfig({
         { name: 'twitter:image', content: `${SITE_URL}/og-image.png` },
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'alternate icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/favicon.svg' },
       ],
       script: [{ innerHTML: THEME_BOOTSTRAP, tagPosition: 'head' }],
     },
@@ -79,9 +81,8 @@ export default defineNuxtConfig({
     display: 'swap',
     preload: true,
     families: {
-      'IBM Plex Sans': [400, 500, 600, 700],
-      'IBM Plex Sans Condensed': [500, 600, 700],
-      'IBM Plex Mono': [400, 500, 600],
+      Karla: [400, 500, 600, 700],
+      Fraunces: [500, 600, 700, 900],
     },
   },
 
