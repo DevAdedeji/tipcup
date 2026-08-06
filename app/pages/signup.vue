@@ -20,7 +20,6 @@ const checkingUsername = ref(false)
 const usernameAvailable = ref(false)
 const usernameError = ref('')
 
-// Debounced so we aren't querying Firestore on every keystroke.
 let debounce: ReturnType<typeof setTimeout>
 watch(username, (value) => {
   clearTimeout(debounce)
@@ -67,8 +66,6 @@ const handleSignup = async () => {
   submitting.value = true
 
   try {
-    // Re-check at submit: the name could have gone while a password was typed.
-    // Onboarding verifies once more before it writes the profile.
     const stillFree = await checkUsernameAvailability(username.value.trim().toLowerCase())
     if (!stillFree) {
       usernameAvailable.value = false
@@ -105,7 +102,6 @@ const handleGoogle = async () => {
 
 <template>
   <div class="relative flex min-h-[100dvh] flex-col bg-background">
-    <!-- The band previews the cloth their username will weave. -->
     <AdireCloth :seed="username" class="h-2 w-full transition-all duration-500" />
 
     <div class="absolute right-4 top-6"><ThemeToggle /></div>

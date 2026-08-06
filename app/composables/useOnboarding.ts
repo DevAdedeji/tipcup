@@ -1,51 +1,25 @@
-import {
-    collection,
-    query,
-    where,
-    getDocs,
-    doc,
-    setDoc,
-    serverTimestamp
-} from 'firebase/firestore'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '~/firebase'
 
 export const useOnboarding = () => {
     const { user } = useAuth()
 
     const checkUsernameAvailability = async (username: string): Promise<boolean> => {
-        if (!username || username.length < 3) return false
-
-        const normalizedUsername = username.toLowerCase()
-
-        // Regex Validation: alphanumeric, hyphens, underscores only. No spaces.
-        const usernameRegex = /^[a-z0-9-_]+$/
-        if (!usernameRegex.test(normalizedUsername)) return false
-
-        // Forbidden usernames (expanded list)
-        const forbidden = [
-            'admin', 'administrator', 'root', 'sysadmin',
-            'support', 'help', 'info', 'contact', 'legal', 'privacy', 'terms',
-            'api', 'app', 'dashboard', 'settings', 'auth', 'login', 'signup',
-            'logout', 'register', 'profile', 'user', 'users', 'group', 'groups',
-            'create', 'edit', 'delete', 'update', 'remove', 'add', 'new',
-            'feed', 'explore', 'search', 'notifications', 'messages', 'inbox',
-            'tipcup', 'tip', 'cup', 'blog', 'news', 'status', 'bot'
-        ]
-        if (forbidden.includes(normalizedUsername)) return false
+        const normalized = (username || '').trim().toLowerCase()
+        if (normalized.length < 3) return false
 
         try {
-            const usersRef = collection(db, 'users')
-            const q = query(usersRef, where('username', '==', normalizedUsername))
-            const querySnapshot = await getDocs(q)
-
-            return querySnapshot.empty
-        } catch (error: any) {
+            const result = await $fetch<{ available: boolean; reason?: string }>(
+                '/api/profile/username-available',
+                { query: { username: normalized } }
+            )
+            return result.available
+        } catch (error) {
             console.error('Error checking username:', error)
-            const toast = useToast()
-            toast.add({
+            useToast().add({
                 title: 'Error',
-                description: 'Could not check username availability. Please try again.',
-                type: 'error'
+                description: 'Could not check that username. Please try again.',
+                type: 'error',
             })
             return false
         }
@@ -70,19 +44,14 @@ export const useOnboarding = () => {
 
         const normalizedUsername = data.username.toLowerCase()
 
-        try {
-            const isAvailable = await checkUsernameAvailability(normalizedUsername)
-            if (!isAvailable) {
-                const toast = useToast()
-                toast.add({
-                    title: 'Username taken',
-                    description: 'This username was just taken. Please choose another.',
-                    type: 'error'
-                })
-                throw new Error('Username taken')
-            }
-        } catch (e) {
-            throw e
+        const isAvailable = await checkUsernameAvailability(normalizedUsername)
+        if (!isAvailable) {
+            useToast().add({
+                title: 'Username taken',
+                description: 'That username was just taken. Please choose another.',
+                type: 'error'
+            })
+            throw new Error('Username taken')
         }
 
         try {

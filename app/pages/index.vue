@@ -19,7 +19,6 @@ const fees = [
   { key: 'NGN settlement', value: 'Instant' },
 ]
 
-// Live proof that no two creators get the same weave.
 const samples = ['adaobi', 'tobi', 'chiamaka', 'devadedeji', 'zainab', 'emeka']
 
 const demoTiers = [
@@ -56,7 +55,6 @@ usePageMeta({
       </nav>
     </div>
 
-    <!-- Hero -->
     <div class="mx-auto max-w-content px-5 sm:px-6">
       <header class="grid items-center gap-12 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:py-24">
         <div>
@@ -94,7 +92,6 @@ usePageMeta({
           </ul>
         </div>
 
-        <!-- The product, with its cloth -->
         <div class="mx-auto w-full max-w-sm">
           <div class="border border-border bg-surface shadow-lg">
             <AdireCloth seed="adaobi" class="h-20 w-full" />
@@ -130,7 +127,6 @@ usePageMeta({
       </header>
     </div>
 
-    <!-- The cloth idea -->
     <section class="border-y border-border bg-surface-sunken px-5 py-16 sm:px-6 lg:py-24">
       <div class="mx-auto max-w-content">
         <div class="max-w-xl">
@@ -154,7 +150,6 @@ usePageMeta({
       </div>
     </section>
 
-    <!-- Steps -->
     <section class="px-5 py-16 sm:px-6 lg:py-24">
       <div class="mx-auto max-w-content">
         <div class="max-w-xl">
@@ -174,7 +169,6 @@ usePageMeta({
       </div>
     </section>
 
-    <!-- Fees -->
     <section class="border-y border-border bg-surface-sunken px-5 py-16 sm:px-6 lg:py-24">
       <div class="mx-auto max-w-content">
         <div class="max-w-xl">
@@ -202,7 +196,6 @@ usePageMeta({
       </div>
     </section>
 
-    <!-- Close -->
     <section class="px-5 py-20 sm:px-6 lg:py-28">
       <div class="mx-auto flex max-w-content flex-col items-start gap-6">
         <AdireCloth seed="tipcup" class="h-10 w-24" />

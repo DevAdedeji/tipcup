@@ -22,6 +22,16 @@ const AUTH_ERRORS: Record<string, string> = {
     'auth/too-many-requests': 'Too many attempts. Try again in a few minutes.',
     'auth/network-request-failed': 'Check your connection and try again.',
     'auth/popup-closed-by-user': 'Sign-in was cancelled.',
+    'auth/popup-blocked': 'Your browser blocked the sign-in popup.',
+    'auth/missing-password': 'Enter your password.',
+    'auth/invalid-login-credentials': 'Email or password is incorrect.',
+    // Enable the provider under Firebase Console -> Authentication -> Sign-in method.
+    'auth/operation-not-allowed': 'This sign-in method is not enabled for this project.',
+    'auth/unauthorized-domain': 'This domain is not authorised in your Firebase project.',
+    'auth/invalid-api-key': 'Firebase is misconfigured — check your FIREBASE_* environment variables.',
+    'auth/account-exists-with-different-credential':
+        'An account with this email already exists using a different sign-in method.',
+    'auth/requires-recent-login': 'Please sign in again to continue.',
 }
 
 export const authErrorMessage = (error: any): string =>
@@ -75,26 +85,21 @@ export const useAuth = () => {
 
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider()
+        provider.setCustomParameters({ prompt: 'select_account' })
+
+        const result = await signInWithPopup(auth, provider)
+        user.value = result.user
+
+        // Sign-in already succeeded; a failed profile read must not undo it.
+        // The auth listener will populate the profile shortly either way.
         try {
-            const result = await signInWithPopup(auth, provider)
-            const docRef = doc(db, 'users', result.user.uid)
-            const docSnap = await getDoc(docRef)
-            if (docSnap.exists()) {
-                userProfile.value = docSnap.data()
-            } else {
-                userProfile.value = null
-            }
-            return result.user
-        } catch (error: any) {
-            console.error('Error signing in with Google:', error)
-            const toast = useToast()
-            toast.add({
-                title: 'Sign in failed',
-                description: error.message || 'Could not sign in with Google.',
-                type: 'error'
-            })
-            throw error
+            const docSnap = await getDoc(doc(db, 'users', result.user.uid))
+            userProfile.value = docSnap.exists() ? docSnap.data() : null
+        } catch (error) {
+            console.error('Could not load profile after sign-in:', error)
         }
+
+        return result.user
     }
 
     const signUpWithEmail = async (email: string, password: string, displayName?: string) => {

@@ -113,7 +113,6 @@ const status = computed(() => {
                 <span class="amount text-sm font-bold text-accent">{{ percentage }}%</span>
             </div>
 
-            <!-- The bar fills with the creator's own cloth. -->
             <div
                 class="h-3.5 w-full border border-border-strong bg-surface p-[2px]"
                 role="progressbar"

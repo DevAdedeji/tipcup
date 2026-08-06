@@ -85,8 +85,6 @@ usePageMeta({
     type: 'profile',
 })
 
-// Compare by price, not object identity: the reactive proxy handed to the
-// click handler is not always the same reference as the item in the list.
 const isSelected = (tier: any) => selectedTier.value?.price === tier?.price
 
 const onSupportClick = () => {
@@ -96,7 +94,6 @@ const onSupportClick = () => {
 
 <template>
     <div class="min-h-[100dvh] bg-background text-text-primary">
-        <!-- Loading -->
         <div v-if="loading">
             <div class="h-28 bg-muted sm:h-32" />
             <div class="mx-auto max-w-xl px-5">
@@ -109,7 +106,6 @@ const onSupportClick = () => {
             </div>
         </div>
 
-        <!-- Not found -->
         <div v-else-if="!profile" class="flex min-h-[100dvh] flex-col items-center justify-center px-5 text-center">
             <AdireCloth seed="404" class="mb-7 h-16 w-16" />
             <h1 class="font-display text-2xl font-semibold tracking-tight">Nothing woven here</h1>
@@ -119,10 +115,7 @@ const onSupportClick = () => {
             <Button to="/" variant="outline" class="mt-7">Go to TipCup</Button>
         </div>
 
-        <!-- Profile -->
         <div v-else class="animate-fade-in">
-            <!-- This creator's cloth. Woven from their username, so it is
-                 theirs and stays theirs. -->
             <div class="relative">
                 <AdireCloth :seed="username" class="h-28 w-full sm:h-32" />
 
@@ -154,7 +147,6 @@ const onSupportClick = () => {
                     </p>
                 </header>
 
-                <!-- Goal: the cloth is dyed as it fills -->
                 <section v-if="goal" class="mt-8">
                     <div class="mb-2 flex items-baseline justify-between gap-3">
                         <p class="field-label">{{ goal.title }}</p>
@@ -184,7 +176,6 @@ const onSupportClick = () => {
                     </p>
                 </section>
 
-                <!-- Support -->
                 <section class="mt-8">
                     <div
                         v-if="verifyingPayment"
@@ -301,7 +292,6 @@ const onSupportClick = () => {
                     </div>
                 </section>
 
-                <!-- Links -->
                 <section v-if="profile.socialLinks?.length" class="mt-8">
                     <p class="field-label mb-2">Elsewhere</p>
                     <div class="stagger grid gap-2">

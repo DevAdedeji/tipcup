@@ -35,7 +35,6 @@ onMounted(() => {
     fetchAccounts()
 })
 
-// Set default bank if available
 watch(() => accounts.value, (newAccounts) => {
     if (newAccounts && newAccounts.length > 0 && !selectedBankId.value) {
         const primary = newAccounts.find(a => a.isPrimary)
@@ -56,8 +55,6 @@ const handleWithdraw = async () => {
 
     submitting.value = true
     try {
-        // The server identifies the creator from this token, not from a
-        // user id in the body.
         const token = await getIdToken()
 
         const response: any = await $fetch('/api/bachs/withdraw', {

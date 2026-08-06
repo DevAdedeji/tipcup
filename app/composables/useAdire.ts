@@ -7,14 +7,6 @@ export interface Cloth {
 
 const MOTIFS = 6
 
-/**
- * Adire is resist-dyed: the pattern emerges where the cloth was tied, so no two
- * pieces are identical. Each creator's cloth is derived from their username, so
- * their page is woven a particular way and stays that way.
- *
- * Deterministic and dependency-free, so the server and the client always agree
- * and SSR never hydrates to a different pattern.
- */
 const hash = (seed: string): number => {
     let h = 2166136261
     for (let i = 0; i < seed.length; i++) {
@@ -33,7 +25,6 @@ export const useAdire = (seed?: MaybeRefOrGetter<string | undefined>) => {
         const h = hash(value)
 
         const motif = (h % MOTIFS) + 1
-        // Keep the weave legible: too fine reads as noise, too coarse as wallpaper.
         const scale = 26 + ((h >> 8) % 5) * 6
 
         return {

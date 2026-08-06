@@ -67,7 +67,6 @@ onMounted(() => {
 
 <template>
     <div class="space-y-6 pb-8">
-        <!-- Balance -->
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
                 label="Available balance"
@@ -96,7 +95,6 @@ onMounted(() => {
             />
         </div>
 
-        <!-- Chart -->
         <div class="border border-border bg-surface p-5 shadow-xs">
             <h2 class="font-display text-xl font-semibold tracking-tight">Earnings over time</h2>
 
@@ -112,7 +110,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Tables -->
         <Tabs v-model="activeTab" :items="tabs">
             <TabPanel class="pt-4 focus:outline-none">
                 <Table

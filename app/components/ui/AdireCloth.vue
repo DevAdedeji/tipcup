@@ -5,7 +5,6 @@ const props = withDefaults(
   defineProps<{
     seed?: string
     class?: string
-    /** Softens the weave where it sits behind content. */
     subtle?: boolean
   }>(),
   { subtle: false }

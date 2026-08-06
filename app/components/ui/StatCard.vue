@@ -6,7 +6,6 @@ interface Props {
   value: string | number
   caption?: string
   icon?: any
-  /** Renders the figure as the headline of the card. */
   emphasis?: boolean
   class?: string
 }

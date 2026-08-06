@@ -28,7 +28,6 @@ const profileUrl = computed(() => {
 
 const isOpen = ref(false)
 
-
 watch(() => route.path, () => { isOpen.value = false })
 </script>
 

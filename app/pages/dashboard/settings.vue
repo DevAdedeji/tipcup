@@ -49,8 +49,6 @@ watch(
 
 const saving = ref(false)
 
-// Bachs rejects any checkout under NGN 1,000, so a tier below that would fail
-// at payment time rather than at save time.
 const invalidTier = computed(() =>
     form.tiers.find((tier: any) => validateAmount(tier.price, MIN_TIP_AMOUNT) !== null)
 )
@@ -132,7 +130,6 @@ const handleSetPrimaryBank = async (id: string) => {
 
         <div v-else class="grid gap-6 lg:grid-cols-3">
             <div class="space-y-6 lg:col-span-2">
-                <!-- Profile -->
                 <section class="border border-border bg-surface shadow-xs">
                     <header class="flex items-center gap-2.5 border-b border-border px-5 py-4">
                         <User class="h-4 w-4 text-text-tertiary" />
@@ -151,7 +148,6 @@ const handleSetPrimaryBank = async (id: string) => {
                     </div>
                 </section>
 
-                <!-- Tiers -->
                 <section class="border border-border bg-surface shadow-xs">
                     <header class="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
                         <div class="flex items-center gap-2.5">
@@ -201,7 +197,6 @@ const handleSetPrimaryBank = async (id: string) => {
                     </div>
                 </section>
 
-                <!-- Links -->
                 <section class="border border-border bg-surface shadow-xs">
                     <header class="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
                         <div class="flex items-center gap-2.5">
@@ -244,7 +239,6 @@ const handleSetPrimaryBank = async (id: string) => {
                     </div>
                 </section>
 
-                <!-- Payouts -->
                 <section class="border border-border bg-surface shadow-xs">
                     <header class="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
                         <div class="flex items-center gap-2.5">
@@ -313,7 +307,6 @@ const handleSetPrimaryBank = async (id: string) => {
                 </div>
             </div>
 
-            <!-- Live preview -->
             <aside class="lg:col-span-1">
                 <div class="sticky top-24 space-y-4">
                     <p class="field-label">Live preview</p>

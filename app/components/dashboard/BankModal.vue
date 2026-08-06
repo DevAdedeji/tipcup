@@ -25,7 +25,6 @@ const form = reactive({
 
 const error = ref('')
 
-// Fetch banks on mount
 onMounted(async () => {
     listLoading.value = true
     try {
@@ -35,7 +34,6 @@ onMounted(async () => {
                 label: b.name,
                 value: b.code
             }))
-            // Auto-select Access Bank for test mode
             const accessBank = banks.value.find((b: any) => b.value === '044' || b.label.toLowerCase().includes('access'))
             if (accessBank) {
                 form.bankCode = accessBank.value
@@ -73,7 +71,6 @@ const handleResolve = async () => {
     }
 }
 
-// Watch for changes to trigger resolution
 watch(() => [form.accountNumber, form.bankCode], () => {
     if (form.accountNumber.length === 10 && form.bankCode) {
         handleResolve()
@@ -82,7 +79,6 @@ watch(() => [form.accountNumber, form.bankCode], () => {
         error.value = ''
     }
 })
-
 
 const handleSubmit = async () => {
     if (!form.accountName) return
@@ -101,7 +97,6 @@ const handleSubmit = async () => {
 
         if (success) {
             emit('success')
-            // Reset form
             form.bankCode = ''
             form.accountNumber = ''
             form.accountName = ''

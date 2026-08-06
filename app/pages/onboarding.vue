@@ -95,7 +95,6 @@ watch(() => [formData.payoutDetails.accountNumber, formData.payoutDetails.bankCo
     }
 })
 
-// Update bank name when bank code changes
 watch(() => formData.payoutDetails.bankCode, (code) => {
     if (code) {
         const bank = banks.value.find(b => b.code === code)
@@ -146,8 +145,6 @@ const removeTier = (index: number) => {
     formData.tiers.splice(index, 1)
 }
 
-// Bachs rejects any checkout under NGN 1,000, so block it here rather than
-// letting a supporter hit the failure at payment time.
 const invalidTier = computed(() =>
     formData.tiers.find((tier: any) => validateAmount(tier.price, MIN_TIP_AMOUNT) !== null)
 )
@@ -172,7 +169,6 @@ const complete = async () => {
     const toast = useToast()
 
     try {
-        // 1. Create Profile
         await completeOnboarding({
             username: formData.username,
             displayName: formData.displayName,
@@ -181,7 +177,6 @@ const complete = async () => {
             payoutDetails: null // Don't save to profile doc anymore
         })
 
-        // 2. Add Bank Account if provided
         if (formData.payoutDetails.bankCode && formData.payoutDetails.accountNumber && formData.payoutDetails.accountName) {
             try {
                 await addAccount({
@@ -209,11 +204,9 @@ const complete = async () => {
 
 <template>
   <div class="min-h-[100dvh] bg-background text-text-primary">
-    <!-- The band previews the cloth their username weaves. -->
     <AdireCloth :seed="formData.username" class="h-2 w-full transition-all duration-500" />
 
     <div class="mx-auto max-w-xl px-5 py-10 sm:py-14">
-      <!-- Progress -->
       <ol class="mb-10 flex items-center gap-2">
         <li v-for="(s, i) in steps" :key="s" class="flex flex-1 flex-col gap-1.5">
           <span
@@ -229,7 +222,6 @@ const complete = async () => {
         </li>
       </ol>
 
-      <!-- 1 — username -->
       <section v-if="step === 1" class="animate-rise">
         <h1 class="font-display text-3xl font-semibold tracking-tight">Claim your link</h1>
         <p class="mt-2 text-md text-text-secondary">
@@ -265,7 +257,6 @@ const complete = async () => {
         </div>
       </section>
 
-      <!-- 2 — profile -->
       <section v-if="step === 2" class="animate-rise">
         <h1 class="font-display text-3xl font-semibold tracking-tight">Your profile</h1>
         <p class="mt-2 text-md text-text-secondary">Tell supporters who you are.</p>
@@ -288,7 +279,6 @@ const complete = async () => {
         </div>
       </section>
 
-      <!-- 3 — tiers -->
       <section v-if="step === 3" class="animate-rise">
         <h1 class="font-display text-3xl font-semibold tracking-tight">Set your amounts</h1>
         <p class="mt-2 text-md text-text-secondary">
@@ -323,7 +313,6 @@ const complete = async () => {
         </div>
       </section>
 
-      <!-- 4 — payouts -->
       <section v-if="step === 4" class="animate-rise">
         <h1 class="font-display text-3xl font-semibold tracking-tight">Where to pay you</h1>
         <p class="mt-2 text-md text-text-secondary">
