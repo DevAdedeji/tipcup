@@ -201,24 +201,27 @@ export interface ResolvedAccount {
     bank_name?: string
 }
 
+// Success returns the account object directly, not the { status, data }
+// envelope the spec documents. Both `code` and `nibss_bank_code` resolve.
 export const resolveBankAccount = async (
     accountNumber: string,
     bankCode: string
 ): Promise<ResolvedAccount> => {
-    const response = await bachsFetch<BachsListResponse<ResolvedAccount>>('/payouts/resolve-account', {
-        method: 'POST',
-        body: { account_number: accountNumber, bank_code: bankCode },
+    const response = await bachsFetch<ResolvedAccount & Partial<BachsListResponse<ResolvedAccount>>>(
+        '/payouts/resolve-account',
+        { method: 'POST', body: { account_number: accountNumber, bank_code: bankCode } }
+    )
+
+    if (response?.account_name) return response as ResolvedAccount
+    if (response?.status && response.data) return response.data
+
+    throw createError({
+        statusCode: 400,
+        statusMessage:
+            response?.error ||
+            response?.message ||
+            'Could not verify that account. Check the number and that the bank matches.',
     })
-
-    if (!response.status || !response.data) {
-        throw createError({
-            statusCode: 400,
-            statusMessage:
-                response.error || response.message || 'Could not resolve account. Please check the details.',
-        })
-    }
-
-    return response.data
 }
 
 export interface CreateWithdrawalInput {
